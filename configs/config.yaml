@@ -1,0 +1,24 @@
+# Application Configuration
+app:
+  name: "Template Go BFF"
+  version: "1.0.0"
+
+# Server Configuration
+server:
+  port: 8000
+  gin_mode: "debug"  # Mode: "debug", "release"
+  log_level: "info"  # Logging level: "debug", "info", "warn", "error"
+
+# Database Configuration (PostgreSQL)
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "bff_db"
+  sslmode: "disable"
+
+# External Services Configuration
+services:
+  agreement_api:
+    base_url: "http://localhost:8001/api/v1"

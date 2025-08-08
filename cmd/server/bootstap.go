@@ -1,11 +1,11 @@
 package main
 
 import (
+	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
 	"case-management/internal/platform/database"
 	"case-management/pkg/config"
 	"case-management/pkg/logger"
-	"case-management/pkg/monitoring"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -13,12 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// initializeApp wires up the application's dependencies
 func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engine, error) {
 	appLogger.Info("Initializing application components...")
 
 	// Setup monitoring with Prometheus
-	prom := monitoring.NewPrometheus("template_go_bff")
+	// prom := monitoring.NewPrometheus("template_go_bff")
 
 	// Setup database connection and run migrations
 	db, err := setupDatabase(cfg.Database, appLogger)
@@ -27,28 +26,32 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	}
 
 	// --- Dependency Injection (from innermost to outermost layer) ---
-
 	// Platform Layer: Concrete implementations for database and external clients
+
+	// Domain Layer: Repositories
+	// User repository
 	userDBRepo := database.NewUserPg(db)
-	// agreementAPIClient := client.NewAgreementAPIClient(cfg.Services.AgreementAPI.BaseURL)
+	userUsecase := usecase.NewUserUseCase(userDBRepo)
 
-	// Usecase Layer: Core business logic, depends on platform implementations
-	userUsecase := usecase.NewUserUsecase(userDBRepo)
-	// agreementUsecase := usecase.NewAgreementUsecase(agreementAPIClient)
+	// Master data repository
+	masterDataRepo := database.NewMasterDataPg(db)
+	masterDataUsecase := usecase.NewMasterDataUseCase(masterDataRepo)
 
-	// Handler Layer: Handles HTTP requests, depends on use cases
-	userHandler := v1.NewUserHandler(userUsecase)
-	// agreementHandler := v1.NewAgreementHandler(agreementUsecase)
+	// Auth repository
+	authRepo := database.NewAuthPg(db)
+	authUsecase := usecase.NewAuthUseCase(userDBRepo, authRepo)
+
+	// Application Layer: HTTP handlers
+	http.InitHandlers(userUsecase, masterDataUsecase, authUsecase)
 
 	// Setup Gin engine and middlewares
 	gin.SetMode(cfg.Server.GinMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(logger.GinLogger(appLogger))
-	// router.Use(v1.RequestIDMiddleware())
 
 	// Register all HTTP routes
-	// http_handler.SetupRoutes(router, prom, customerHandler, agreementHandler)
+	http.SetupRoutes(router)
 	appLogger.Info("HTTP routes configured")
 
 	return router, nil

@@ -3,6 +3,7 @@ package database
 import (
 	"case-management/internal/domain/model"
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -56,5 +57,24 @@ func InitPostgresDBStore(dsn string) (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) error {
-	return db.AutoMigrate(&model.User{})
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+
+	modelsToMigrate := []interface{}{
+		&model.User{},
+		&model.Role{},
+		&model.Team{},
+		&model.Center{},
+		&model.Permission{},
+		&model.Department{},
+		&model.AccessLogs{},
+		&model.Queue{},
+	}
+
+	for _, model := range modelsToMigrate {
+		if err := db.AutoMigrate(model); err != nil {
+			return fmt.Errorf("failed to migrate model %T: %w", model, err)
+		}
+	}
+
+	return nil
 }

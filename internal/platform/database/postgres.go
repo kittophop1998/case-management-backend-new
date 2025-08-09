@@ -62,7 +62,7 @@ func Migrate(db *gorm.DB) error {
 	modelsToMigrate := []interface{}{
 		&model.User{},
 		&model.Role{},
-		&model.Team{},
+		&model.Section{},
 		&model.Center{},
 		&model.Permission{},
 		&model.Department{},

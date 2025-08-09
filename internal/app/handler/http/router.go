@@ -1,6 +1,10 @@
 package http
 
-import "github.com/gin-gonic/gin"
+import (
+	"case-management/internal/app/handler"
+
+	"github.com/gin-gonic/gin"
+)
 
 func SetupRoutes(
 	router *gin.Engine,
@@ -15,10 +19,11 @@ func SetupRoutes(
 		{
 			authRoutes.POST("/login", H.Auth.Login)
 			authRoutes.POST("/logout", H.Auth.Logout)
-			authRoutes.POST("/profile", H.Auth.Profile)
+			authRoutes.GET("/profile", handler.ValidateToken(), H.Auth.Profile)
 		}
 
 		userRoutes := apiV1.Group("/users")
+		// userRoutes.Use(handler.ValidateToken())
 		{
 			userRoutes.GET("/", H.User.GetAllUsers)
 			userRoutes.GET("/:id", H.User.GetUserByID)
@@ -26,25 +31,30 @@ func SetupRoutes(
 		}
 
 		masterDataRoutes := apiV1.Group("/master-data")
+		// masterDataRoutes.Use(handler.ValidateToken())
 		{
 			masterDataRoutes.GET("/lookups", H.MasterData.GetAllLookups)
 		}
 
 		permissionRoutes := apiV1.Group("/permissions")
+		permissionRoutes.Use(handler.ValidateToken())
 		{
 			permissionRoutes.GET("/", H.Permission.GetAllPermissions)
 			permissionRoutes.PATCH("/update", H.Permission.UpdatePermission)
 		}
 
 		logRoutes := apiV1.Group("/logs")
+		logRoutes.Use(handler.ValidateToken())
 		{
 			logRoutes.GET("/", H.Log.GetAllApiLogs)
 		}
 
-		// caseManagementRoutes := apiV1.Group("/case-management")
-		// {
-
-		// }
+		caseManagementRoutes := apiV1.Group("/case-management")
+		caseManagementRoutes.Use(handler.ValidateToken())
+		{
+			caseManagementRoutes.POST("/cases", H.Case.CreateCase)
+			caseManagementRoutes.GET("/cases", H.Case.GetAllCases)
+			caseManagementRoutes.GET("/cases/:id", H.Case.GetCaseByID)
+		}
 	}
-
 }

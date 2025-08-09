@@ -18,11 +18,11 @@ func NewMasterDataPg(db *gorm.DB) *MasterDataPg {
 func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 
-	var teams []model.Team
-	if err := repo.db.WithContext(ctx).Model(&model.Team{}).Find(&teams).Error; err != nil {
+	var sections []model.Section
+	if err := repo.db.WithContext(ctx).Model(&model.Section{}).Find(&sections).Error; err != nil {
 		return nil, err
 	}
-	result["teams"] = teams
+	result["sections"] = sections
 
 	var queues []model.Queue
 	if err := repo.db.WithContext(ctx).Model(&model.Queue{}).Find(&queues).Error; err != nil {

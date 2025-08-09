@@ -27,7 +27,7 @@ func InitHandlers(
 	caseUC *usecase.CaseUseCase,
 ) {
 	H = &Handlers{
-		Auth:       &AuthHandler{UseCase: *authUC},
+		Auth:       &AuthHandler{UseCase: *authUC, UserUseCase: *userUC},
 		User:       &UserHandler{UseCase: *userUC},
 		MasterData: &MasterDataHandler{UseCase: *masterDataUC},
 		Permission: &PermissionHandler{UseCase: *permissionUC},

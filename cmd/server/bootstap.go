@@ -1,11 +1,13 @@
 package main
 
 import (
+	"case-management/infrastructure/config"
+	"case-management/infrastructure/logger"
+	"case-management/infrastructure/seed"
 	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
 	"case-management/internal/platform/database"
-	"case-management/pkg/config"
-	"case-management/pkg/logger"
+
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -94,6 +96,8 @@ func setupDatabase(dbConfig config.DatabaseConfig, logger *zap.SugaredLogger) (*
 	if err != nil {
 		return nil, fmt.Errorf("database migration failed: %w", err)
 	}
+	_ = seed.SeedAllData(db)
+
 	logger.Info("Database migrations completed")
 
 	return db, nil

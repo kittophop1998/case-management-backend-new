@@ -16,8 +16,8 @@
 package main
 
 import (
-	"case-management/pkg/config"
-	"case-management/pkg/logger"
+	"case-management/infrastructure/config"
+	"case-management/infrastructure/logger"
 	"context"
 	"fmt"
 	"log"

@@ -25,12 +25,12 @@ func (repo *UserPg) GetAll(ctx *gin.Context) ([]*model.User, error) {
 	query := repo.db.WithContext(ctx).Model(&model.User{}).
 		Preload("Role").
 		Preload("Center").
-		Preload("Team").
+		Preload("Section").
 		Preload("Department").
 		Preload("Queue").
 		Joins("LEFT JOIN roles ON roles.id = users.role_id").
 		Joins("LEFT JOIN centers ON centers.id = users.center_id").
-		Joins("LEFT JOIN teams ON teams.id = users.team_id").
+		Joins("LEFT JOIN sections ON sections.id = users.section_id").
 		Joins("LEFT JOIN departments ON departments.id = users.department_id").
 		Joins("LEFT JOIN queues ON queues.id = users.queue_id")
 
@@ -83,8 +83,9 @@ func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
+		Preload("Queue").
 		Preload("Role.Permissions").
-		Where("id=?", id).First(&user).Error; err != nil {
+		Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -98,9 +99,9 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Role").
 		Preload("Center").
 		Preload("Role.Permissions").
-		Preload("Team").
+		Preload("Section").
 		Preload("Queue").
-		Where("username = ?", username).
+		Where("name = ?", username).
 		First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -127,13 +128,13 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		AgentID:      user.AgentID,
 		Name:         user.Name,
 		OperatorID:   user.OperatorID,
-		TeamID:       user.TeamID,
+		SectionID:    user.SectionID,
 		QueueID:      user.QueueID,
 		CenterID:     user.CenterID,
 		RoleID:       user.RoleID,
 		DepartmentID: user.DepartmentID,
 		Email:        user.Email,
-		IsActive:     &user.IsActive,
+		IsActive:     user.IsActive,
 	}
 
 	// แยก domain name จาก email
@@ -156,7 +157,7 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 	return userToSave.ID, nil
 }
 
-func (repo *UserPg) Update(ctx *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error {
+func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpdateUserRequest) error {
 	updateData := map[string]interface{}{}
 
 	if input.Name != "" {
@@ -165,21 +166,34 @@ func (repo *UserPg) Update(ctx *gin.Context, userID uuid.UUID, input model.Creat
 	if input.RoleID != uuid.Nil {
 		updateData["role_id"] = input.RoleID
 	}
-	if input.TeamID != uuid.Nil {
-		updateData["team_id"] = input.TeamID
-	}
-	if input.TeamID != uuid.Nil {
-		updateData["team_id"] = input.TeamID
+	if input.SectionID != uuid.Nil {
+		updateData["section_id"] = input.SectionID
 	}
 	if input.CenterID != uuid.Nil {
 		updateData["center_id"] = input.CenterID
+	}
+
+	if input.QueueID != uuid.Nil {
+		updateData["queue_id"] = input.QueueID
+	}
+
+	if input.DepartmentID != uuid.Nil {
+		updateData["department_id"] = input.DepartmentID
+	}
+
+	if input.Email != "" {
+		updateData["email"] = input.Email
+	}
+
+	if input.IsActive != nil {
+		updateData["is_active"] = *input.IsActive
 	}
 
 	if len(updateData) == 0 {
 		return errors.New("no valid fields to update")
 	}
 
-	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(updateData).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Updates(updateData).Error; err != nil {
 		return err
 	}
 
@@ -199,7 +213,7 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 	query := repo.db.WithContext(ctx).Model(&model.User{}).
 		Joins("LEFT JOIN roles ON roles.id = users.role_id").
 		Joins("LEFT JOIN centers ON centers.id = users.center_id").
-		Joins("LEFT JOIN teams ON teams.id = users.team_id")
+		Joins("LEFT JOIN sections ON sections.id = users.section_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("users.is_active = ?", *filter.IsActive)
@@ -213,12 +227,12 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 		query = query.Where("roles.id = ?", filter.RoleID)
 	}
 
-	if filter.Team.Name != "" {
-		query = query.Where("teams.name = ?", strings.TrimSpace(filter.Team.Name))
+	if filter.Section.Name != "" {
+		query = query.Where("sections.name = ?", strings.TrimSpace(filter.Section.Name))
 	}
 
-	if filter.TeamID != uuid.Nil {
-		query = query.Where("teams.id = ?", filter.TeamID)
+	if filter.SectionID != uuid.Nil {
+		query = query.Where("sections.id = ?", filter.SectionID)
 	}
 
 	if filter.Center != "" {

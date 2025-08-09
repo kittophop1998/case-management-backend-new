@@ -6,10 +6,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
-	UseCase usecase.AuthUseCase
+	UseCase     usecase.AuthUseCase
+	UserUseCase usecase.UserUseCase
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
@@ -63,7 +65,19 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Profile(ctx *gin.Context) {
-	user, err := h.UseCase.GetProfile(ctx)
+	id, exists := ctx.Get("userId")
+	if !exists {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userId, err := uuid.Parse(id.(string))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	user, err := h.UserUseCase.GetById(ctx, userId)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to fetch profile",

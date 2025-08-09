@@ -25,39 +25,38 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 
 func (h *UserHandler) GetUserByID(ctx *gin.Context) {
 	id := ctx.Param("id")
-	uid, err := uuid.Parse(id)
+	userId, err := uuid.Parse(id)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	user, err := h.UseCase.GetById(ctx, uid)
+	user, err := h.UseCase.GetById(ctx, userId)
 	if err != nil {
-		ctx.JSON(404, gin.H{"error": "User not found"})
+		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	ctx.JSON(200, user)
+	ctx.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
 	var input model.CreateUpdateUserRequest
-
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	idParam := ctx.Param("id")
-	userID, err := uuid.Parse(idParam)
+	id := ctx.Param("id")
+	userId, err := uuid.Parse(id)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	err = h.UseCase.Update(ctx, userID, input)
+	err = h.UseCase.UpdateUserById(ctx, userId, input)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Can't update user"})
 		return
 	}
 

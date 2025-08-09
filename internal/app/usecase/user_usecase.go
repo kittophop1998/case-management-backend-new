@@ -32,8 +32,8 @@ func (u *UserUseCase) Create(ctx *gin.Context, user *model.CreateUpdateUserReque
 	return u.repo.Create(ctx, user)
 }
 
-func (u *UserUseCase) Update(ctx *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error {
-	return u.repo.Update(ctx, userID, input)
+func (u *UserUseCase) UpdateUserById(ctx *gin.Context, id uuid.UUID, input model.CreateUpdateUserRequest) error {
+	return u.repo.Update(ctx, id, input)
 }
 
 func (u *UserUseCase) Count(ctx *gin.Context) (int, error) {

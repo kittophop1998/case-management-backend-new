@@ -9,15 +9,15 @@ import (
 )
 
 type AuthHandler struct {
-	useCase usecase.AuthUseCase
+	UseCase usecase.AuthUseCase
 }
 
-func (h *AuthHandler) Login(c *gin.Context) {
+func (h *AuthHandler) Login(ctx *gin.Context) {
 	var req model.LoginRequest
 
 	// Validate body
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid request body",
 			"details": err.Error(),
 		})
@@ -25,7 +25,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	if req.Username == "" || req.Password == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   "Missing credentials",
 			"details": "Please provide username and password",
 		})
@@ -33,44 +33,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Main login use case
-	resp, err := h.useCase.Login(c, req)
+	resp, err := h.UseCase.Login(ctx, req)
 	success := err == nil
 
 	// Log access (even on failure)
-	_ = h.useCase.SaveAccessLog(c, req.Username, success)
+	_ = h.UseCase.SaveAccessLog(ctx, req.Username, success)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   "Login failed",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusOK, resp)
 }
 
-func (h *AuthHandler) Logout(c *gin.Context) {
-	if err := h.useCase.Logout(c); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+func (h *AuthHandler) Logout(ctx *gin.Context) {
+	if err := h.UseCase.Logout(ctx); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   "Logout failed",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
-func (h *AuthHandler) Profile(c *gin.Context) {
-	user, err := h.useCase.GetProfile(c)
+func (h *AuthHandler) Profile(ctx *gin.Context) {
+	user, err := h.UseCase.GetProfile(ctx)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to fetch profile",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, user)
 }

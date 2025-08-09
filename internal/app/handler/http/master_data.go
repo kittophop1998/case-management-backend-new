@@ -11,12 +11,12 @@ type MasterDataHandler struct {
 	UseCase usecase.MasterDataUseCase
 }
 
-func (h *MasterDataHandler) GetAllLookups(c *gin.Context) {
-	data, err := h.UseCase.GetAllLookups(c)
+func (h *MasterDataHandler) GetAllLookups(ctx *gin.Context) {
+	data, err := h.UseCase.GetAllLookups(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": data})
+	ctx.JSON(http.StatusOK, gin.H{"data": data})
 }

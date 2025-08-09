@@ -8,11 +8,11 @@ import (
 )
 
 type UserRepository interface {
-	GetAll(c *gin.Context) ([]*model.User, error)
-	GetById(c *gin.Context, id uuid.UUID) (*model.User, error)
-	GetByUsername(c *gin.Context, username string) (*model.User, error)
-	Create(c *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error)
-	Update(c *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error
-	Count(c *gin.Context) (int, error)
-	CountWithFilter(c *gin.Context, filter model.UserFilter) (int, error)
+	GetAll(ctx *gin.Context) ([]*model.User, error)
+	GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
+	GetByUsername(ctx *gin.Context, username string) (*model.User, error)
+	Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error)
+	Update(ctx *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error
+	Count(ctx *gin.Context) (int, error)
+	CountWithFilter(ctx *gin.Context, filter model.UserFilter) (int, error)
 }

@@ -10,56 +10,56 @@ import (
 )
 
 type UserHandler struct {
-	useCase usecase.UserUseCase
+	UseCase usecase.UserUseCase
 }
 
-func (h *UserHandler) GetAllUsers(c *gin.Context) {
-	users, err := h.useCase.GetAll(c)
+func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
+	users, err := h.UseCase.GetAll(ctx)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, users)
+	ctx.JSON(200, users)
 }
 
-func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id := c.Param("id")
+func (h *UserHandler) GetUserByID(ctx *gin.Context) {
+	id := ctx.Param("id")
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	user, err := h.useCase.GetById(c, uid)
+	user, err := h.UseCase.GetById(ctx, uid)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "User not found"})
+		ctx.JSON(404, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(200, user)
+	ctx.JSON(200, user)
 }
 
-func (h *UserHandler) UpdateUserByID(c *gin.Context) {
+func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
 	var input model.CreateUpdateUserRequest
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	idParam := c.Param("id")
+	idParam := ctx.Param("id")
 	userID, err := uuid.Parse(idParam)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	err = h.useCase.Update(c, userID, input)
+	err = h.UseCase.Update(ctx, userID, input)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 }

@@ -5,8 +5,8 @@ import "github.com/gin-gonic/gin"
 func SetupRoutes(
 	router *gin.Engine,
 ) {
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+	router.GET("/health", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{"status": "ok"})
 	})
 
 	apiV1 := router.Group("/api/v1")
@@ -29,6 +29,22 @@ func SetupRoutes(
 		{
 			masterDataRoutes.GET("/lookups", H.MasterData.GetAllLookups)
 		}
+
+		permissionRoutes := apiV1.Group("/permissions")
+		{
+			permissionRoutes.GET("/", H.Permission.GetAllPermissions)
+			permissionRoutes.PATCH("/update", H.Permission.UpdatePermission)
+		}
+
+		logRoutes := apiV1.Group("/logs")
+		{
+			logRoutes.GET("/", H.Log.GetAllApiLogs)
+		}
+
+		// caseManagementRoutes := apiV1.Group("/case-management")
+		// {
+
+		// }
 	}
 
 }

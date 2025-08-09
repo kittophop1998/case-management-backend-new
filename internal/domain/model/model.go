@@ -19,11 +19,6 @@ type AccessTokenRequest struct {
 	Access_token string `json:"access_token" binding:"required"`
 }
 
-type UpdatePermissionRolesRequest struct {
-	Permission string   `json:"permission" binding:"required"`
-	Roles      []string `json:"roles" binding:"required"`
-}
-
 type PermissionWithRolesResponse struct {
 	Permission string   `json:"permission"`
 	Name       string   `json:"name"`

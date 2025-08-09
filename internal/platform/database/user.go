@@ -19,10 +19,10 @@ func NewUserPg(db *gorm.DB) *UserPg {
 	return &UserPg{db: db}
 }
 
-func (repo *UserPg) GetAll(c *gin.Context) ([]*model.User, error) {
+func (repo *UserPg) GetAll(ctx *gin.Context) ([]*model.User, error) {
 	var users []*model.User
 
-	query := repo.db.WithContext(c).Model(&model.User{}).
+	query := repo.db.WithContext(ctx).Model(&model.User{}).
 		Preload("Role").
 		Preload("Center").
 		Preload("Team").
@@ -75,10 +75,10 @@ func (repo *UserPg) GetAll(c *gin.Context) ([]*model.User, error) {
 	return users, nil
 }
 
-func (repo *UserPg) GetById(c *gin.Context, id uuid.UUID) (*model.User, error) {
+func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
 
-	if err := repo.db.WithContext(c).
+	if err := repo.db.WithContext(ctx).
 		Preload("Role").
 		Preload("Center").
 		Preload("Section").
@@ -91,10 +91,10 @@ func (repo *UserPg) GetById(c *gin.Context, id uuid.UUID) (*model.User, error) {
 	return &user, nil
 }
 
-func (repo *UserPg) GetByUsername(c *gin.Context, username string) (*model.User, error) {
+func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.User, error) {
 	var user model.User
 
-	if err := repo.db.WithContext(c).
+	if err := repo.db.WithContext(ctx).
 		Preload("Role").
 		Preload("Center").
 		Preload("Role.Permissions").
@@ -108,16 +108,16 @@ func (repo *UserPg) GetByUsername(c *gin.Context, username string) (*model.User,
 	return &user, nil
 }
 
-func (repo *UserPg) Create(c *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
+func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
 	var existingUser model.User
 
-	if err := repo.db.WithContext(c).Where("agent_id = ?", user.AgentID).First(&existingUser).Error; err == nil {
+	if err := repo.db.WithContext(ctx).Where("agent_id = ?", user.AgentID).First(&existingUser).Error; err == nil {
 		return uuid.Nil, fmt.Errorf("agentId %d already exists", user.AgentID)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return uuid.Nil, err
 	}
 
-	if err := repo.db.WithContext(c).Where("operator_id = ?", user.OperatorID).First(&existingUser).Error; err == nil {
+	if err := repo.db.WithContext(ctx).Where("operator_id = ?", user.OperatorID).First(&existingUser).Error; err == nil {
 		return uuid.Nil, fmt.Errorf("operatorId %d already exists", user.OperatorID)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return uuid.Nil, err
@@ -156,7 +156,7 @@ func (repo *UserPg) Create(c *gin.Context, user *model.CreateUpdateUserRequest) 
 	return userToSave.ID, nil
 }
 
-func (repo *UserPg) Update(c *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error {
+func (repo *UserPg) Update(ctx *gin.Context, userID uuid.UUID, input model.CreateUpdateUserRequest) error {
 	updateData := map[string]interface{}{}
 
 	if input.Name != "" {
@@ -179,24 +179,24 @@ func (repo *UserPg) Update(c *gin.Context, userID uuid.UUID, input model.CreateU
 		return errors.New("no valid fields to update")
 	}
 
-	if err := repo.db.WithContext(c).Model(&model.User{}).Where("id = ?", userID).Updates(updateData).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(updateData).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (repo *UserPg) Count(c *gin.Context) (int, error) {
+func (repo *UserPg) Count(ctx *gin.Context) (int, error) {
 	var count int64
-	if err := repo.db.WithContext(c).Model(&model.User{}).Count(&count).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Model(&model.User{}).Count(&count).Error; err != nil {
 		return 0, err
 	}
 	return int(count), nil
 }
 
-func (repo *UserPg) CountWithFilter(c *gin.Context, filter model.UserFilter) (int, error) {
+func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (int, error) {
 	var count int64
-	query := repo.db.WithContext(c).Model(&model.User{}).
+	query := repo.db.WithContext(ctx).Model(&model.User{}).
 		Joins("LEFT JOIN roles ON roles.id = users.role_id").
 		Joins("LEFT JOIN centers ON centers.id = users.center_id").
 		Joins("LEFT JOIN teams ON teams.id = users.team_id")

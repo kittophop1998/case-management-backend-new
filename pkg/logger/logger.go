@@ -34,29 +34,29 @@ func New(level string) *zap.SugaredLogger {
 }
 
 func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
-	return func(c *gin.Context) {
+	return func(ctx *gin.Context) {
 		start := time.Now()
-		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
+		path := ctx.Request.URL.Path
+		query := ctx.Request.URL.RawQuery
 
-		c.Next()
+		ctx.Next()
 
 		end := time.Now()
 		latency := end.Sub(start)
 
-		if len(c.Errors) > 0 {
-			for _, e := range c.Errors.Errors() {
+		if len(ctx.Errors) > 0 {
+			for _, e := range ctx.Errors.Errors() {
 				logger.Error(e)
 			}
 		} else {
 			logger.Infow("Request handled",
-				"status", c.Writer.Status(),
-				"method", c.Request.Method,
+				"status", ctx.Writer.Status(),
+				"method", ctx.Request.Method,
 				"path", path,
 				"query", query,
-				"ip", c.ClientIP(),
+				"ip", ctx.ClientIP(),
 				"latency", latency.String(),
-				"user-agent", c.Request.UserAgent(),
+				"user-agent", ctx.Request.UserAgent(),
 			)
 		}
 	}

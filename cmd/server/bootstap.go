@@ -25,10 +25,8 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		return nil, fmt.Errorf("database setup failed: %w", err)
 	}
 
-	// --- Dependency Injection (from innermost to outermost layer) ---
-	// Platform Layer: Concrete implementations for database and external clients
+	// ##### Application Layer: Use Cases #####
 
-	// Domain Layer: Repositories
 	// User repository
 	userDBRepo := database.NewUserPg(db)
 	userUsecase := usecase.NewUserUseCase(userDBRepo)
@@ -41,8 +39,24 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	authRepo := database.NewAuthPg(db)
 	authUsecase := usecase.NewAuthUseCase(userDBRepo, authRepo)
 
+	// Permission repository
+	permissionRepo := database.NewPermissionPg(db)
+	permissionUsecase := usecase.NewPermissionUseCase(permissionRepo)
+
+	// Log repository
+	logRepo := database.NewLogPg(db)
+	logUsecase := usecase.NewLogUseCase(logRepo)
+
+	// ##### Application Layer: Handlers #####
+
 	// Application Layer: HTTP handlers
-	http.InitHandlers(userUsecase, masterDataUsecase, authUsecase)
+	http.InitHandlers(
+		userUsecase,
+		masterDataUsecase,
+		authUsecase,
+		permissionUsecase,
+		logUsecase,
+	)
 
 	// Setup Gin engine and middlewares
 	gin.SetMode(cfg.Server.GinMode)

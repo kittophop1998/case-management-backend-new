@@ -7,5 +7,5 @@ import (
 )
 
 type AuthRepository interface {
-	SaveAccessLog(c *gin.Context, accessLog *model.AccessLogs) error
+	SaveAccessLog(ctx *gin.Context, accessLog *model.AccessLogs) error
 }

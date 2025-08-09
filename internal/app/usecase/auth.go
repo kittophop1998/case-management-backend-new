@@ -24,14 +24,14 @@ func NewAuthUseCase(repo repository.UserRepository, authRepo repository.AuthRepo
 	}
 }
 
-func (a *AuthUseCase) Login(c *gin.Context, req model.LoginRequest) (*model.LoginResponse, error) {
+func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.LoginResponse, error) {
 	// Authenticate via LDAP
 	if err := a.authenticateWithLDAP(req.Username, req.Password); err != nil {
 		return nil, err
 	}
 
 	// Fetch user from DB
-	user, err := a.repo.GetByUsername(c, req.Username)
+	user, err := a.repo.GetByUsername(ctx, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -97,19 +97,19 @@ func (a *AuthUseCase) GenerateToken(ttl time.Duration, metadata *auth.Metadata) 
 	return signedToken, nil
 }
 
-func (a *AuthUseCase) SaveAccessLog(c *gin.Context, username string, success bool) error {
+func (a *AuthUseCase) SaveAccessLog(ctx *gin.Context, username string, success bool) error {
 
-	userIdStr := c.GetString("userId")
+	userIdStr := ctx.GetString("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
 		return err
 	}
 
-	return a.authRepo.SaveAccessLog(c, &model.AccessLogs{
+	return a.authRepo.SaveAccessLog(ctx, &model.AccessLogs{
 		UserID:        userId,
 		Action:        "login",
-		IPAddress:     c.ClientIP(),
-		UserAgent:     c.GetHeader("User-Agent"),
+		IPAddress:     ctx.ClientIP(),
+		UserAgent:     ctx.GetHeader("User-Agent"),
 		Details:       nil,
 		CreatedAt:     time.Now(),
 		Username:      username,
@@ -118,18 +118,18 @@ func (a *AuthUseCase) SaveAccessLog(c *gin.Context, username string, success boo
 	})
 }
 
-func (a *AuthUseCase) Logout(c *gin.Context) error {
-	userIdStr := c.GetString("userId")
+func (a *AuthUseCase) Logout(ctx *gin.Context) error {
+	userIdStr := ctx.GetString("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
 		return err
 	}
 
-	return a.authRepo.SaveAccessLog(c, &model.AccessLogs{
+	return a.authRepo.SaveAccessLog(ctx, &model.AccessLogs{
 		UserID:        userId,
 		Action:        "logout",
-		IPAddress:     c.ClientIP(),
-		UserAgent:     c.GetHeader("User-Agent"),
+		IPAddress:     ctx.ClientIP(),
+		UserAgent:     ctx.GetHeader("User-Agent"),
 		Details:       nil,
 		CreatedAt:     time.Now(),
 		LogonDatetime: time.Now(),
@@ -137,14 +137,14 @@ func (a *AuthUseCase) Logout(c *gin.Context) error {
 	})
 }
 
-func (a *AuthUseCase) GetProfile(c *gin.Context) (*model.User, error) {
-	userIdStr := c.GetString("userId")
+func (a *AuthUseCase) GetProfile(ctx *gin.Context) (*model.User, error) {
+	userIdStr := ctx.GetString("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := a.repo.GetById(c, userId)
+	user, err := a.repo.GetById(ctx, userId)
 	if err != nil {
 		return nil, err
 	}

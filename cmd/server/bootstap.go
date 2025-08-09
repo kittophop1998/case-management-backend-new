@@ -47,6 +47,10 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	logRepo := database.NewLogPg(db)
 	logUsecase := usecase.NewLogUseCase(logRepo)
 
+	// Case repository
+	caseRepo := database.NewCasePg(db)
+	caseUsecase := usecase.NewCaseUseCase(caseRepo)
+
 	// ##### Application Layer: Handlers #####
 
 	// Application Layer: HTTP handlers
@@ -56,6 +60,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		authUsecase,
 		permissionUsecase,
 		logUsecase,
+		caseUsecase,
 	)
 
 	// Setup Gin engine and middlewares

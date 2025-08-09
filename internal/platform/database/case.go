@@ -2,10 +2,12 @@ package database
 
 import (
 	"case-management/internal/domain/model"
+	"encoding/json"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -95,4 +97,48 @@ func (c *CasePg) GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, erro
 		return nil, err
 	}
 	return &cases, nil
+}
+
+func (c *CasePg) AddInitialDescription(ctx *gin.Context, caseID uuid.UUID, newDescription string) error {
+	var caseRecord struct {
+		InitialDescriptions datatypes.JSON `gorm:"type:jsonb"`
+	}
+
+	err := c.db.WithContext(ctx).
+		Model(&model.Cases{}).
+		Select("initial_descriptions").
+		Where("id = ?", caseID).
+		Take(&caseRecord).Error
+	if err != nil {
+		return err
+	}
+
+	var descriptions []string
+	if len(caseRecord.InitialDescriptions) > 0 {
+		if err := json.Unmarshal(caseRecord.InitialDescriptions, &descriptions); err != nil {
+			descriptions = []string{}
+		}
+	} else {
+		descriptions = []string{}
+	}
+
+	descriptions = append(descriptions, newDescription)
+
+	updatedJSON, err := json.Marshal(descriptions)
+	if err != nil {
+		return err
+	}
+
+	return c.db.WithContext(ctx).
+		Model(&model.Cases{}).
+		Where("id = ?", caseID).
+		Update("initial_descriptions", datatypes.JSON(updatedJSON)).Error
+}
+
+func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model.NoteTypes, error) {
+	var noteType model.NoteTypes
+	if err := c.db.WithContext(ctx).Where("id = ?", noteTypeID).First(&noteType).Error; err != nil {
+		return nil, err
+	}
+	return &noteType, nil
 }

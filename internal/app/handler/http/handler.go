@@ -14,6 +14,7 @@ type Handlers struct {
 	Permission *PermissionHandler
 	Log        *LogHandler
 	Case       *CaseHandler
+	Customer   *CustomerHandler
 }
 
 var H *Handlers
@@ -25,6 +26,7 @@ func InitHandlers(
 	permissionUC *usecase.PermissionUseCase,
 	logUC *usecase.LogUseCase,
 	caseUC *usecase.CaseUseCase,
+	customerUC *usecase.CustomerUseCase,
 ) {
 	H = &Handlers{
 		Auth:       &AuthHandler{UseCase: *authUC, UserUseCase: *userUC},
@@ -33,6 +35,7 @@ func InitHandlers(
 		Permission: &PermissionHandler{UseCase: *permissionUC},
 		Log:        &LogHandler{UseCase: *logUC},
 		Case:       &CaseHandler{UseCase: *caseUC},
+		Customer:   &CustomerHandler{UseCase: *customerUC},
 	}
 }
 

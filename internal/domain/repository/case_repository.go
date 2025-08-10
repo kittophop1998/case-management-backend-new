@@ -8,7 +8,7 @@ import (
 )
 
 type CaseRepository interface {
-	CreateCase(ctx *gin.Context, c *model.Cases) (uuid.UUID, error)
+	CreateCase(ctx *gin.Context, c *model.CreateCaseRequest) (uuid.UUID, error)
 	GetAllCase(ctx *gin.Context, limit, offset int, filter model.CaseFilter) ([]*model.Cases, error)
 	GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error)
 	AddInitialDescription(ctx *gin.Context, caseID uuid.UUID, newDescription string) error

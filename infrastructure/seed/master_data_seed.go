@@ -2,7 +2,6 @@ package seed
 
 import (
 	"case-management/internal/domain/model"
-	"log"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -20,57 +19,92 @@ type SectionMap map[string]uuid.UUID
 type CenterMap map[string]uuid.UUID
 type DepartmentMap map[string]uuid.UUID
 type QueueMap map[string]uuid.UUID
+type DispositionMainMap map[string]uuid.UUID
 
-func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap, QueueMap) {
+func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap, QueueMap, DispositionMainMap) {
 	roleMap := make(RoleMap)
+	permissionMap := make(PermissionMap)
 	sectionMap := make(SectionMap)
 	centerMap := make(CenterMap)
 	departmentMap := make(DepartmentMap)
 	queueMap := make(QueueMap)
+	dispositionMainMap := make(DispositionMainMap)
 
 	seedEntities(db, []Seedable{
 		&model.Role{Name: "Admin"},
 		&model.Role{Name: "Staff"},
 		&model.Role{Name: "Supervisor"},
 		&model.Role{Name: "AsstManager Up"},
-	}, func(name string, id uuid.UUID) { roleMap[name] = id })
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		roleMap[name] = id
+	})
+
+	seedEntities(db, []Seedable{
+		&model.Permission{Key: "user.login", Name: "Login"},
+		&model.Permission{Key: "user.logout", Name: "Logout"},
+		&model.Permission{Key: "user.management", Name: "User Management"},
+		&model.Permission{Key: "user.profile", Name: "View profile"},
+		&model.Permission{Key: "user.assess", Name: "Assess Control"},
+		&model.Permission{Key: "user.customersearch", Name: "Customer Search"},
+		&model.Permission{Key: "user.verifycustomer", Name: "Verify Customer"},
+		&model.Permission{Key: "user.customerdashboard", Name: "Customer Dashboard"},
+		&model.Permission{Key: "case.management", Name: "Case Management"},
+		&model.Permission{Key: "case.exporthistorical", Name: "Export Case Historical"},
+		&model.Permission{Key: "case.standardreport", Name: "Standard Report"},
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("key = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		permissionMap[name] = id
+	})
 
 	seedEntities(db, []Seedable{
 		&model.Section{Name: "Inbound"},
 		&model.Section{Name: "Outbound"},
-	}, func(name string, id uuid.UUID) { sectionMap[name] = id })
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		sectionMap[name] = id
+	})
 
 	seedEntities(db, []Seedable{
 		&model.Center{Name: "BKK"},
 		&model.Center{Name: "HY"},
 		&model.Center{Name: "KK"},
-	}, func(name string, id uuid.UUID) { centerMap[name] = id })
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		centerMap[name] = id
+	})
 
 	seedEntities(db, []Seedable{
 		&model.Department{Name: "Marketing"},
 		&model.Department{Name: "Sales"},
 		&model.Department{Name: "Support"},
-	}, func(name string, id uuid.UUID) { departmentMap[name] = id })
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		departmentMap[name] = id
+	})
 
 	seedEntities(db, []Seedable{
 		&model.Queue{Name: "Inbound Agent Supervisor BKK Queue"},
 		&model.Queue{Name: "Outbound Agent Supervisor HY Queue"},
-	}, func(name string, id uuid.UUID) { queueMap[name] = id })
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		queueMap[name] = id
+	})
 
-	return roleMap, sectionMap, centerMap, departmentMap, queueMap
-}
+	seedEntities(db, []Seedable{
+		&model.DispositionMain{Name: "Check loan", Description: "General inquiries about products or services"},
+		&model.DispositionMain{Name: "Inquire about product", Description: "Assistance with technical issues"},
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		dispositionMainMap[name] = id
+	})
 
-func seedEntities(db *gorm.DB, items []Seedable, mapSetter func(string, uuid.UUID)) {
-	for _, item := range items {
-		key := item.GetIdentifier()
-		if key == "" {
-			log.Println("Skipping empty identifier")
-			continue
-		}
-		if err := db.Where("name = ?", key).FirstOrCreate(item).Error; err != nil {
-			log.Printf("Failed to seed %T %s: %v", item, key, err)
-		} else {
-			mapSetter(key, item.GetID())
-		}
-	}
+	return roleMap, sectionMap, centerMap, departmentMap, queueMap, dispositionMainMap
 }

@@ -68,6 +68,11 @@ func Migrate(db *gorm.DB) error {
 		&model.Department{},
 		&model.AccessLogs{},
 		&model.Queue{},
+		&model.DispositionMain{},
+		&model.DispositionSub{},
+		&model.Cases{},
+		&model.NoteTypes{},
+		&model.CaseTypes{},
 	}
 
 	for _, model := range modelsToMigrate {

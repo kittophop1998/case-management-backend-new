@@ -19,16 +19,23 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) CreateCase(ctx *gin.Context, caseModel *model.Cases) (uuid.UUID, error) {
-	if caseModel.ID == uuid.Nil {
-		caseModel.ID = uuid.New()
+func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uuid.UUID, error) {
+	newToSave := &model.Cases{
+		Title:             data.Title,
+		CustomerId:        data.CustomerId,
+		DispositionMainId: data.DispositionMain,
+		DispositionSubId:  data.DispositionSub,
+		CaseTypeId:        data.CaseTypeId,
+		CaseNote:          data.CaseNote,
+		Resolution:        data.CaseDescription,
+		CreatedBy:         ctx.GetString("user_id"),
 	}
 
-	if err := c.db.Create(caseModel).Error; err != nil {
+	if err := c.db.Create(newToSave).Error; err != nil {
 		return uuid.Nil, err
 	}
 
-	return caseModel.ID, nil
+	return newToSave.ID, nil
 }
 
 func (c *CasePg) GetAllCase(ctx *gin.Context, limit, offset int, filter model.CaseFilter) ([]*model.Cases, error) {

@@ -10,18 +10,32 @@ import (
 type Cases struct {
 	Model
 	Title               string         `json:"title"`
-	CustomerId          string         `json:"customer_id"`
-	CreditCardAccountId string         `json:"credit_card_account_id"`
-	LoanAccountId       string         `json:"loan_account_id"`
-	AssignedToUserId    uuid.UUID      `json:"assigned_to_user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	StatusId            uint           `json:"status_id"`
-	PriorityId          uint           `json:"priority_id"`
-	StartDate           time.Time      `json:"start_date" gorm:"type:date"`
-	EndDate             time.Time      `json:"end_date" gorm:"type:date"`
-	InitialDescriptions datatypes.JSON `json:"initial_descriptions" gorm:"type:jsonb"`
+	CustomerId          string         `json:"customerId"`
+	DispositionMainId   datatypes.JSON `json:"dispositionMainId" gorm:"type:jsonb"`
+	DispositionSubId    datatypes.JSON `json:"dispositionSubId" gorm:"type:jsonb"`
+	CaseTypeId          uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	CreditCardAccountId string         `json:"creditCardAccountId"`
+	LoanAccountId       string         `json:"loanAccountId"`
+	AssignedToUserId    uuid.UUID      `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	StatusId            uint           `json:"statusId"`
+	PriorityId          uint           `json:"priorityId"`
+	StartDate           time.Time      `json:"startDate" gorm:"type:date"`
+	EndDate             time.Time      `json:"endDate" gorm:"type:date"`
+	CaseNote            datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
 	Resolution          string         `json:"resolution" gorm:"type:text"`
-	CreatedBy           string         `json:"created_by"`
-	SLADate             time.Time      `json:"sla_date"`
+	CreatedBy           string         `json:"createdBy"`
+	SLADate             time.Time      `json:"slaDate"`
+}
+
+// Create Case Request Body
+type CreateCaseRequest struct {
+	Title           string         `json:"title"`
+	CustomerId      string         `json:"customerId"`
+	CaseTypeId      uuid.UUID      `json:"caseTypeId"`
+	DispositionMain datatypes.JSON `json:"dispositionMain" gorm:"type:jsonb"`
+	DispositionSub  datatypes.JSON `json:"dispositionSub" gorm:"type:jsonb"`
+	CaseDescription string         `json:"caseDescription" gorm:"type:text"`
+	CaseNote        datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
 }
 
 type CaseFilter struct {
@@ -76,14 +90,6 @@ type VerifyQuestionHistory struct {
 	VeryfyByUserId   uuid.UUID `json:"verify_by_user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
 	VerificationDate time.Time `json:"verification_date"`
 	CaseId           uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-}
-
-type CustomerNote struct {
-	ID          uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	CustomerID  uuid.UUID `json:"customerId"`
-	NoteTypesId uuid.UUID `json:"noteTypeId"`
-	Note        string    `json:"note"`
-	CreatedAt   time.Time `json:"createdAt" gorm:"autoCreateTime"`
 }
 
 func (Cases) TableName() string {

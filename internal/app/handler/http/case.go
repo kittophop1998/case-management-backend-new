@@ -12,7 +12,7 @@ type CaseHandler struct {
 }
 
 func (h *CaseHandler) CreateCase(ctx *gin.Context) {
-	caseData := &model.Cases{}
+	caseData := &model.CreateCaseRequest{}
 	if err := ctx.ShouldBindJSON(caseData); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid case data"})
 		return

@@ -56,5 +56,12 @@ func SetupRoutes(
 			caseManagementRoutes.GET("/cases", H.Case.GetAllCases)
 			caseManagementRoutes.GET("/cases/:id", H.Case.GetCaseByID)
 		}
+
+		customerRoutes := apiV1.Group("/customers")
+		customerRoutes.Use(handler.ValidateToken())
+		{
+			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
+			customerRoutes.GET("/:customer_id/notes", H.Customer.GetAllCustomerNotes)
+		}
 	}
 }

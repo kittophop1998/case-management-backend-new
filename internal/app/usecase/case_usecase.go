@@ -28,7 +28,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, err
 	return uc.repo.GetCaseByID(c, caseID)
 }
 
-func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.Cases) (uuid.UUID, error) {
+func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.CreateCaseRequest) (uuid.UUID, error) {
 	return uc.repo.CreateCase(c, caseData)
 }
 

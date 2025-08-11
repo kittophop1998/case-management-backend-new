@@ -34,10 +34,10 @@ type DatabaseConfig struct {
 }
 
 type ServicesConfig struct {
-	AgreementAPI AgreementAPIConfig `yaml:"agreement_api"`
+	ConnectorAPI ConnectorAPIConfig `yaml:"connector_api"`
 }
 
-type AgreementAPIConfig struct {
+type ConnectorAPIConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 

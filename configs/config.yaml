@@ -20,5 +20,5 @@ database:
 
 # External Services Configuration
 services:
-  agreement_api:
+  connector_api:
     base_url: "http://localhost:8001/api/v1"

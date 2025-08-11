@@ -1,13 +1,18 @@
 package http
 
-import "github.com/gin-gonic/gin"
+import (
+	"case-management/pkg/monitoring"
+
+	"github.com/gin-gonic/gin"
+)
 
 func SetupRoutes(
 	router *gin.Engine,
+	prom *monitoring.Prometheus,
 ) {
-	router.GET("/health", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"status": "ok"})
-	})
+
+	router.GET("/api/healthz", HealthCheck)
+	router.GET("/api/metrics", prom.Handler())
 
 	apiV1 := router.Group("/api/v1")
 	{
@@ -23,6 +28,13 @@ func SetupRoutes(
 			userRoutes.GET("/", H.User.GetAllUsers)
 			userRoutes.GET("/:id", H.User.GetUserByID)
 			userRoutes.PUT("/:id", H.User.UpdateUserByID)
+		}
+
+		dashboardRoutes := apiV1.Group("/dashboard")
+		{
+			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustomerInfo)
+			//dashboardRoutes.GET("/custprofile", H.Dashboard.GetCustomerProfile)
+			//dashboardRoutes.GET("/custsegment", H.Dashboard.GetCustomerSegment)
 		}
 
 		masterDataRoutes := apiV1.Group("/master-data")

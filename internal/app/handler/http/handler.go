@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handlers struct {
@@ -14,7 +15,10 @@ type Handlers struct {
 	Permission *PermissionHandler
 	Log        *LogHandler
 	Case       *CaseHandler
+	Dashboard  *DashboardHandler
 }
+
+const RequestIDKey = "requestID"
 
 var H *Handlers
 
@@ -25,6 +29,7 @@ func InitHandlers(
 	permissionUC *usecase.PermissionUseCase,
 	logUC *usecase.LogUseCase,
 	caseUC *usecase.CaseUseCase,
+	dashboardUC *usecase.DashboardUseCase,
 ) {
 	H = &Handlers{
 		Auth:       &AuthHandler{UseCase: *authUC},
@@ -33,6 +38,7 @@ func InitHandlers(
 		Permission: &PermissionHandler{UseCase: *permissionUC},
 		Log:        &LogHandler{UseCase: *logUC},
 		Case:       &CaseHandler{UseCase: *caseUC},
+		Dashboard:  &DashboardHandler{UseCase: *dashboardUC},
 	}
 }
 
@@ -64,4 +70,13 @@ func getPage(ctx *gin.Context) (int, error) {
 	}
 
 	return page, nil
+}
+
+func RequestIDMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestID := uuid.NewString()
+		c.Set(RequestIDKey, requestID)
+		c.Writer.Header().Set("X-Request-ID", requestID)
+		c.Next()
+	}
 }

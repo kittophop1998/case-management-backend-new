@@ -3,9 +3,11 @@ package main
 import (
 	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
+	"case-management/internal/platform/api"
 	"case-management/internal/platform/database"
 	"case-management/pkg/config"
 	"case-management/pkg/logger"
+	"case-management/pkg/monitoring"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +16,11 @@ import (
 )
 
 func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engine, error) {
+
 	appLogger.Info("Initializing application components...")
 
 	// Setup monitoring with Prometheus
-	// prom := monitoring.NewPrometheus("template_go_bff")
+	prom := monitoring.NewPrometheus("case-management")
 
 	// Setup database connection and run migrations
 	db, err := setupDatabase(cfg.Database, appLogger)
@@ -51,6 +54,10 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	caseRepo := database.NewCasePg(db)
 	caseUsecase := usecase.NewCaseUseCase(caseRepo)
 
+	// Dashboard repository
+	dashboardAPIClient := api.NewDashboardAPIClient(cfg.Services.ConnectorAPI.BaseURL)
+	dashboardUsecase := usecase.NewDashboardUseCase(dashboardAPIClient)
+
 	// ##### Application Layer: Handlers #####
 
 	// Application Layer: HTTP handlers
@@ -61,6 +68,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		permissionUsecase,
 		logUsecase,
 		caseUsecase,
+		dashboardUsecase,
 	)
 
 	// Setup Gin engine and middlewares
@@ -70,7 +78,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	router.Use(logger.GinLogger(appLogger))
 
 	// Register all HTTP routes
-	http.SetupRoutes(router)
+	http.SetupRoutes(router, prom)
 	appLogger.Info("HTTP routes configured")
 
 	return router, nil

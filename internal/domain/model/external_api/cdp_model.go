@@ -44,3 +44,18 @@ type Item struct {
 type Key struct {
 	AeonID string `json:"aeon_id"`
 }
+
+type Attributes struct {
+	VvipCustomerGroupFlag       string     `json:"vvip_customer_group_flag" validate:"required"`
+	VvipCustomerPosition        string     `json:"vvip_customer_position"`
+	SweetheartCustomerGroupFlag string     `json:"sweetheart_customer_group_flag"`
+	CustomerLevel               string     `json:"customer_level" validate:"required"`
+	ComplaintGroup              string     `json:"complaint_group" validate:"required"`
+	ComplaintTopic              string     `json:"complaint_topic" validate:"required"`
+	CustomerType                string     `json:"customer_type"`
+	MemberStatus                string     `json:"member_status" validate:"required"`
+	CbaSegment                  string     `json:"cba_segment" validate:"required"`
+	UpdateData                  string     `json:"update_data" validate:"required"`
+	NameOfCards                 string     `json:"name_of_cards" validate:"required"`
+	PromotionArray              [][]string `json:"promotion_array"`
+}

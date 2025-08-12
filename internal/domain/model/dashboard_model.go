@@ -1,6 +1,6 @@
 package model
 
-type GetCustomerInfoResponse struct {
+type GetCustInfoResponse struct {
 	NationalID      string `json:"national_id"`
 	CustomerNameEng string `json:"customer_name_eng"`
 	CustomerNameTH  string `json:"customer_name_th"`
@@ -9,7 +9,7 @@ type GetCustomerInfoResponse struct {
 	MailTo          string `json:"mail_to"`
 }
 
-type GetCustomerProfileResponse struct {
+type GetCustProfileResponse struct {
 	ErrorSystem                   string `json:"error_system"`
 	LastCardApplyDate             string `json:"last_card_apply_date"`
 	CustomerSentiment             string `json:"customer_sentiment"`
@@ -31,4 +31,30 @@ type GetCustomerProfileResponse struct {
 	DayPastDue                    string `json:"day_past_due"`
 	LastOverdueDate               string `json:"last_overdue_date"`
 	// MailTo                        string `json:"mail_to"`
+}
+
+type GetCustSegmentResponse struct {
+	Sweetheart      string `json:"sweetheart"`
+	ComplaintLevel  string `json:"complaint_level"`
+	CustomerGroup   string `json:"customer_group"`
+	ComplaintGroup  string `json:"complaint_group"`
+	CustomerType    string `json:"customer_type"`
+	MemberStatus    string `json:"member_status"`
+	CustomerSegment string `json:"customer_segment"`
+	UpdateData      string `json:"update_data"`
+}
+
+type GetCustSuggestionResponse struct {
+	SuggestCards      []string                             `json:"suggest_cards"`
+	SuggestPromotions []GetCustSuggestionPromotionResponse `json:"suggest_promotions"`
+}
+
+type GetCustSuggestionPromotionResponse struct {
+	PromotionCode            string   `json:"promotion_code"`
+	PromotionName            string   `json:"promotion_name"`
+	PromotionDetails         string   `json:"promotion_details"`
+	Action                   string   `json:"action"`
+	PromotionResultTimestamp string   `json:"promotion_result_timestamp"`
+	Period                   string   `json:"period"`
+	EligibleCard             []string `json:"eligible_card"`
 }

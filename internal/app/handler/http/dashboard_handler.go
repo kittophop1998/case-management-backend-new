@@ -11,9 +11,9 @@ type DashboardHandler struct {
 	UseCase usecase.DashboardUseCase
 }
 
-func (h *DashboardHandler) GetCustomerInfo(ctx *gin.Context) {
+func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 	id := ctx.Param("id")
-	customer, err := h.UseCase.CustomerInfo(ctx, id)
+	customer, err := h.UseCase.CustInfo(ctx, id)
 	if err != nil {
 		HandleError(ctx, err)
 		return
@@ -21,9 +21,29 @@ func (h *DashboardHandler) GetCustomerInfo(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, customer)
 }
 
-func (h *DashboardHandler) GetCustomerProfile(ctx *gin.Context) {
+func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {
 	id := ctx.Param("id")
-	customer, err := h.UseCase.CustomerProfile(ctx, id)
+	customer, err := h.UseCase.CustProfile(ctx, id)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, customer)
+}
+
+func (h *DashboardHandler) GetCustSegment(ctx *gin.Context) {
+	id := ctx.Param("id")
+	customer, err := h.UseCase.CustSegment(ctx, id)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, customer)
+}
+
+func (h *DashboardHandler) GetCustSuggestion(ctx *gin.Context) {
+	id := ctx.Param("id")
+	customer, err := h.UseCase.CustSuggestion(ctx, id)
 	if err != nil {
 		HandleError(ctx, err)
 		return

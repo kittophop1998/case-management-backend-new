@@ -33,8 +33,9 @@ func SetupRoutes(
 		dashboardRoutes := apiV1.Group("/dashboard")
 		{
 			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustomerInfo)
-			//dashboardRoutes.GET("/custprofile", H.Dashboard.GetCustomerProfile)
+			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustomerProfile)
 			//dashboardRoutes.GET("/custsegment", H.Dashboard.GetCustomerSegment)
+			//dashboardRoutes.GET("/suggestion", H.Dashboard.GetCustomerSegment)
 		}
 
 		masterDataRoutes := apiV1.Group("/master-data")

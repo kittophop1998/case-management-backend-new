@@ -6,5 +6,6 @@ import (
 )
 
 type DashboardRepository interface {
-	FindByAeonID(ctx context.Context, aeonID string) (*model.GetCustomerInfoResponse, error)
+	GetCustInfoByAeonID(ctx context.Context, aeonID string) (*model.GetCustomerInfoResponse, error)
+	GetCustProfileByAeonID(ctx context.Context, aeonID string) (*model.GetCustomerProfileResponse, error)
 }

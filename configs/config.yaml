@@ -21,4 +21,6 @@ database:
 # External Services Configuration
 services:
   connector_api:
-    base_url: "http://localhost:8001/api/v1"
+    base_url: "https://connectorapi.aeonth.com/Api"
+  cdp_api:
+    base_url: "https://cdp.in.treasuredata.com/cdp/lookup/collect/segments"

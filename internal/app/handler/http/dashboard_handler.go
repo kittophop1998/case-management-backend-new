@@ -20,3 +20,13 @@ func (h *DashboardHandler) GetCustomerInfo(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, customer)
 }
+
+func (h *DashboardHandler) GetCustomerProfile(ctx *gin.Context) {
+	id := ctx.Param("id")
+	customer, err := h.UseCase.CustomerProfile(ctx, id)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, customer)
+}

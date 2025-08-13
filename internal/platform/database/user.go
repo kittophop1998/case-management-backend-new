@@ -19,7 +19,7 @@ func NewUserPg(db *gorm.DB) *UserPg {
 	return &UserPg{db: db}
 }
 
-func (repo *UserPg) GetAll(ctx *gin.Context) ([]*model.User, error) {
+func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model.UserFilter) ([]*model.User, error) {
 	var users []*model.User
 
 	query := repo.db.WithContext(ctx).Model(&model.User{}).
@@ -27,50 +27,48 @@ func (repo *UserPg) GetAll(ctx *gin.Context) ([]*model.User, error) {
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Preload("Queue").
 		Joins("LEFT JOIN roles ON roles.id = users.role_id").
 		Joins("LEFT JOIN centers ON centers.id = users.center_id").
 		Joins("LEFT JOIN sections ON sections.id = users.section_id").
-		Joins("LEFT JOIN departments ON departments.id = users.department_id").
-		Joins("LEFT JOIN queues ON queues.id = users.queue_id")
+		Joins("LEFT JOIN departments ON departments.id = users.department_id")
 
 	if err := query.Find(&users).Error; err != nil {
 		return nil, err
 	}
 
-	// if filter.Keyword != "" {
-	// 	kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
-	// 	query = query.Where(
-	// 		r.DB.Where("users.name ILIKE ?", kw).
-	// 			Or("users.username ILIKE ?", kw).
-	// 			Or("users.email ILIKE ?", kw).
-	// 			Or("CAST(users.agent_id AS TEXT) ILIKE ?", kw),
-	// 	)
-	// }
+	if filter.Keyword != "" {
+		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
+		query = query.Where(
+			repo.db.Where("users.name ILIKE ?", kw).
+				Or("users.username ILIKE ?", kw).
+				Or("users.email ILIKE ?", kw).
+				Or("CAST(users.agent_id AS TEXT) ILIKE ?", kw),
+		)
+	}
 
-	// if filter.IsActive != nil {
-	// 	query = query.Where("users.is_active = ?", *filter.IsActive)
-	// }
+	if filter.IsActive != nil {
+		query = query.Where("users.is_active = ?", *filter.IsActive)
+	}
 
-	// if filter.RoleID != uuid.Nil {
-	// 	query = query.Where("roles.id = ?", filter.RoleID)
-	// }
+	if filter.RoleID != uuid.Nil {
+		query = query.Where("roles.id = ?", filter.RoleID)
+	}
 
-	// if filter.TeamID != uuid.Nil {
-	// 	query = query.Where("teams.id = ?", filter.TeamID)
-	// }
+	if filter.SectionID != uuid.Nil {
+		query = query.Where("sections.id = ?", filter.SectionID)
+	}
 
-	// if filter.CenterID != uuid.Nil {
-	// 	query = query.Where("centers.id = ?", filter.CenterID)
-	// }
+	if filter.CenterID != uuid.Nil {
+		query = query.Where("centers.id = ?", filter.CenterID)
+	}
 
-	// if filter.Sort != "" {
-	// 	query = query.Order(filter.Sort)
-	// }
+	if filter.Sort != "" {
+		query = query.Order(filter.Sort)
+	}
 
-	// if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
-	// 	return nil, err
-	// }
+	if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+		return nil, err
+	}
 
 	return users, nil
 }
@@ -83,7 +81,6 @@ func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Preload("Queue").
 		Preload("Role.Permissions").
 		Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
@@ -100,7 +97,6 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Center").
 		Preload("Role.Permissions").
 		Preload("Section").
-		Preload("Queue").
 		Where("name = ?", username).
 		First(&user).Error; err != nil {
 		return nil, err
@@ -129,7 +125,6 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		Name:         user.Name,
 		OperatorID:   user.OperatorID,
 		SectionID:    user.SectionID,
-		QueueID:      user.QueueID,
 		CenterID:     user.CenterID,
 		RoleID:       user.RoleID,
 		DepartmentID: user.DepartmentID,
@@ -171,10 +166,6 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpd
 	}
 	if input.CenterID != uuid.Nil {
 		updateData["center_id"] = input.CenterID
-	}
-
-	if input.QueueID != uuid.Nil {
-		updateData["queue_id"] = input.QueueID
 	}
 
 	if input.DepartmentID != uuid.Nil {

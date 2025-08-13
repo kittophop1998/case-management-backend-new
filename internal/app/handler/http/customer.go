@@ -1,14 +1,26 @@
 package http
 
 import (
+	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CustomerHandler struct {
 	UseCase usecase.CustomerUseCase
+}
+
+func (h *CustomerHandler) SearchByCustomerId(ctx *gin.Context) {
+	customerID := ctx.Param("id")
+	if customerID == "1234" {
+		lib.NewResponse(ctx, http.StatusOK, customerID)
+		return
+	} else {
+		lib.NewResponse(ctx, http.StatusNotFound, "Customer not found")
+	}
 }
 
 func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
@@ -26,11 +38,12 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 }
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {
-	customerID := ctx.Param("customer_id")
+	customerID := ctx.Param("customerId")
 	notes, err := h.UseCase.GetAllCustomerNotes(customerID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve customer notes"})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
-	ctx.JSON(200, gin.H{"data": notes})
+
+	lib.NewResponse(ctx, http.StatusOK, notes)
 }

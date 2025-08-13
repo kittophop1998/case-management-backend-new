@@ -15,8 +15,6 @@ type User struct {
 	Center       Center     `gorm:"foreignKey:CenterID" json:"center"`
 	RoleID       uuid.UUID  `json:"roleId"`
 	Role         Role       `gorm:"foreignKey:RoleID" json:"role"`
-	QueueID      uuid.UUID  `json:"queueId"`
-	Queue        Queue      `gorm:"foreignKey:QueueID" json:"queue"`
 	OperatorID   uint       `json:"operatorId"`
 	Department   Department `gorm:"foreignKey:DepartmentID" json:"department"`
 	DepartmentID uuid.UUID  `json:"departmentId"`
@@ -31,7 +29,6 @@ type CreateUpdateUserRequest struct {
 	OperatorID   uint      `json:"operatorId" validate:"required" example:"1233"`
 	CenterID     uuid.UUID `json:"centerId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
 	RoleID       uuid.UUID `json:"roleId" validate:"required" example:"538cd6c5-4cb3-4463-b7d5-ac6645815476"`
-	QueueID      uuid.UUID `json:"queueId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
 	DepartmentID uuid.UUID `json:"departmentId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
 	IsActive     *bool     `json:"isActive" validate:"required" example:"true"`
 }

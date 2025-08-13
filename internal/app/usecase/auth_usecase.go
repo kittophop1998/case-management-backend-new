@@ -45,7 +45,6 @@ func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.Lo
 		Name:      user.Name,
 		CenterId:  user.Center.ID,
 		SectionId: user.SectionID,
-		QueueId:   user.Queue.ID,
 	})
 	if err != nil {
 		return nil, err
@@ -56,7 +55,6 @@ func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.Lo
 		Name:      user.Name,
 		CenterId:  user.Center.ID,
 		SectionId: user.SectionID,
-		QueueId:   user.Queue.ID,
 	})
 	if err != nil {
 		return nil, err
@@ -153,7 +151,6 @@ func (a *AuthUseCase) loginAsAdmin(ctx *gin.Context, username string) (*model.Lo
 		Name:      user.Name,
 		CenterId:  user.Center.ID,
 		SectionId: user.SectionID,
-		QueueId:   user.Queue.ID,
 	})
 	if err != nil {
 		return nil, err
@@ -164,7 +161,6 @@ func (a *AuthUseCase) loginAsAdmin(ctx *gin.Context, username string) (*model.Lo
 		Name:      user.Name,
 		CenterId:  user.Center.ID,
 		SectionId: user.SectionID,
-		QueueId:   user.Queue.ID,
 	})
 	if err != nil {
 		return nil, err

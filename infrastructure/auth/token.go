@@ -10,7 +10,6 @@ type Metadata struct {
 	UserId    uuid.UUID `json:"userId"`
 	CenterId  uuid.UUID `json:"centerId"`
 	SectionId uuid.UUID `json:"sectionId"`
-	QueueId   uuid.UUID `json:"queueId"`
 }
 
 type JwtClaims struct {

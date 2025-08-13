@@ -7,9 +7,11 @@ import (
 	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
 	"case-management/internal/platform/database"
+	"time"
 
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -28,7 +30,6 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	}
 
 	// ##### Application Layer: Use Cases #####
-
 	// User repository
 	userDBRepo := database.NewUserPg(db)
 	userUsecase := usecase.NewUserUseCase(userDBRepo)
@@ -73,6 +74,14 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	// Setup Gin engine and middlewares
 	gin.SetMode(cfg.Server.GinMode)
 	router := gin.New()
+
+	config := cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Time-Zone"},
+		MaxAge:       12 * time.Hour,
+	}
+	router.Use(cors.New(config))
 	router.Use(gin.Recovery())
 	router.Use(logger.GinLogger(appLogger))
 

@@ -16,8 +16,19 @@ func NewUserUseCase(repo repository.UserRepository) *UserUseCase {
 	return &UserUseCase{repo: repo}
 }
 
-func (u *UserUseCase) GetAll(ctx *gin.Context) ([]*model.User, error) {
-	return u.repo.GetAll(ctx)
+func (u *UserUseCase) GetAll(ctx *gin.Context, page, limit int, filter model.UserFilter) ([]*model.User, int, error) {
+	offset := (page - 1) * limit
+	users, err := u.repo.GetAll(ctx, offset, limit, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := u.repo.CountWithFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
 }
 
 func (u *UserUseCase) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error) {

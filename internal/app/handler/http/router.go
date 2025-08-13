@@ -18,13 +18,14 @@ func SetupRoutes(
 		authRoutes := apiV1.Group("/auth")
 		{
 			authRoutes.POST("/login", H.Auth.Login)
-			authRoutes.POST("/logout", H.Auth.Logout)
+			authRoutes.POST("/logout", handler.ValidateToken(), H.Auth.Logout)
 			authRoutes.GET("/profile", handler.ValidateToken(), H.Auth.Profile)
 		}
 
 		userRoutes := apiV1.Group("/users")
-		// userRoutes.Use(handler.ValidateToken())
+		userRoutes.Use(handler.ValidateToken())
 		{
+			userRoutes.POST("/", H.User.CreateUser)
 			userRoutes.GET("/", H.User.GetAllUsers)
 			userRoutes.GET("/:id", H.User.GetUserByID)
 			userRoutes.PUT("/:id", H.User.UpdateUserByID)
@@ -60,8 +61,9 @@ func SetupRoutes(
 		customerRoutes := apiV1.Group("/customers")
 		customerRoutes.Use(handler.ValidateToken())
 		{
+			customerRoutes.GET("/search/:id", H.Customer.SearchByCustomerId)
 			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
-			customerRoutes.GET("/:customer_id/notes", H.Customer.GetAllCustomerNotes)
+			customerRoutes.GET("/:customerId/notes", H.Customer.GetAllCustomerNotes)
 		}
 	}
 }

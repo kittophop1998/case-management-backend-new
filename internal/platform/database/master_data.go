@@ -24,11 +24,11 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	}
 	result["sections"] = sections
 
-	var queues []model.Queue
-	if err := repo.db.WithContext(ctx).Model(&model.Queue{}).Find(&queues).Error; err != nil {
-		return nil, err
-	}
-	result["queues"] = queues
+	// var queues []model.Queue
+	// if err := repo.db.WithContext(ctx).Model(&model.Queue{}).Find(&queues).Error; err != nil {
+	// 	return nil, err
+	// }
+	// result["queues"] = queues
 
 	var roles []model.Role
 	if err := repo.db.WithContext(ctx).Preload("Permissions").Find(&roles).Error; err != nil {

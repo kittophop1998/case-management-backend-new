@@ -22,7 +22,6 @@ func SeedUser(
 			SectionID:    sectionMap["Inbound"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			QueueID:      queueMap["Inbound Agent Supervisor BKK Queue"],
 			AgentID:      1,
 			IsActive:     &isActive,
 			Email:        "admin@admin.com",

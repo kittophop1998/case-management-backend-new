@@ -71,9 +71,15 @@ func (h *AuthHandler) Profile(ctx *gin.Context) {
 		return
 	}
 
-	userId, err := uuid.Parse(id.(string))
+	idStr, ok := id.(string)
+	if !ok {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Error id is not string"})
+		return
+	}
+
+	userId, err := uuid.Parse(idStr)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Error parsing user ID"})
 		return
 	}
 

@@ -24,7 +24,7 @@ func ValidateToken() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("userId", claims.UserId)
+		ctx.Set("userId", claims.UserId.String())
 		ctx.Set("username", claims.Name)
 		ctx.Next()
 	}

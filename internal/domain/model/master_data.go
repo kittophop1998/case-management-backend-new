@@ -49,6 +49,7 @@ type DispositionMain struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name        string    `gorm:"type:varchar(100)" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
+	// CreatedBy
 }
 
 type DispositionSub struct {

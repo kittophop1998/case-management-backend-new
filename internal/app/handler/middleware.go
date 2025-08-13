@@ -12,6 +12,12 @@ import (
 
 func ValidateToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if ctx.Request.Method == "OPTIONS" {
+			// Preflight request → skip validation
+			ctx.Next()
+			return
+		}
+
 		token, err := extractBearerToken(ctx)
 		if err != nil {
 			ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized", "details": err.Error()})

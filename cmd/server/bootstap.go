@@ -85,6 +85,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 
 	router.Use(gin.Recovery())
 	router.Use(logger.GinLogger(appLogger))
+	router.RemoveExtraSlash = true
 
 	// Register all HTTP routes
 	http.SetupRoutes(router)

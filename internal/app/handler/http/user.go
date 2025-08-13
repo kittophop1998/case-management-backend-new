@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,8 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
+
+	fmt.Printf("Fetching users with pagination: page=%d, limit=%d\n", page, limit)
 
 	sort := ctx.DefaultQuery("sort", "is_active desc")
 	keyword := ctx.Query("keyword")

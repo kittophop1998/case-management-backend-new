@@ -23,10 +23,10 @@ func SetupRoutes(
 		}
 
 		userRoutes := apiV1.Group("/users")
-		userRoutes.Use(handler.ValidateToken())
+		// userRoutes.Use(handler.ValidateToken())
 		{
 			userRoutes.POST("", H.User.CreateUser)
-			userRoutes.GET("/user", H.User.GetAllUsers)
+			userRoutes.GET("/", H.User.GetAllUsers)
 			userRoutes.GET("/:id", H.User.GetUserByID)
 			userRoutes.PUT("/:id", H.User.UpdateUserByID)
 		}

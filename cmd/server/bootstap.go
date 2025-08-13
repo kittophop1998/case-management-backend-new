@@ -75,13 +75,14 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	gin.SetMode(cfg.Server.GinMode)
 	router := gin.New()
 
-	config := cors.Config{
+	// Set Cors
+	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Time-Zone"},
 		MaxAge:       12 * time.Hour,
-	}
-	router.Use(cors.New(config))
+	}))
+
 	router.Use(gin.Recovery())
 	router.Use(logger.GinLogger(appLogger))
 

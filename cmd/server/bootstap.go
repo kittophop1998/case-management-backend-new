@@ -6,6 +6,7 @@ import (
 	"case-management/infrastructure/seed"
 	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
+	"case-management/internal/platform/api"
 	"case-management/internal/platform/database"
 	"time"
 
@@ -58,18 +59,23 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	customerRepo := database.NewCustomerPg(db)
 	customerUsecase := usecase.NewCustomerUseCase(customerRepo)
 
+	// Dashboard repository
+	dashboardAPIClient := api.NewDashboardAPIClient(cfg.Services.ConnectorAPI.BaseURL)
+	dashboardUsecase := usecase.NewDashboardUseCase(dashboardAPIClient)
+
 	// ##### Application Layer: Handlers #####
 
 	// Application Layer: HTTP handlers
-	http.InitHandlers(
-		userUsecase,
-		masterDataUsecase,
-		authUsecase,
-		permissionUsecase,
-		logUsecase,
-		caseUsecase,
-		customerUsecase,
-	)
+	http.InitHandlers(http.HandlerDeps{
+		UserUC:       userUsecase,
+		MasterDataUC: masterDataUsecase,
+		AuthUC:       authUsecase,
+		PermissionUC: permissionUsecase,
+		LogUC:        logUsecase,
+		CaseUC:       caseUsecase,
+		CustomerUC:   customerUsecase,
+		DashboardUC:  dashboardUsecase,
+	})
 
 	// Setup Gin engine and middlewares
 	gin.SetMode(cfg.Server.GinMode)

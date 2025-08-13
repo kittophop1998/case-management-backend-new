@@ -39,6 +39,10 @@ var (
 		Th: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์",
 		En: "Internal Server Error",
 	}, nil)
+	GatewayTimeout = NewAppError(http.StatusGatewayTimeout, MessageError{
+		Th: "หมดเวลาการเชื่อมต่อ",
+		En: "Gateway Timeout",
+	}, nil)
 )
 
 // HandleError is a centralized error handler for Gin

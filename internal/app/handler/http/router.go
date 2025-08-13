@@ -26,7 +26,7 @@ func SetupRoutes(
 		// userRoutes.Use(handler.ValidateToken())
 		{
 			userRoutes.POST("", H.User.CreateUser)
-			userRoutes.GET("/", H.User.GetAllUsers)
+			userRoutes.GET("", H.User.GetAllUsers)
 			userRoutes.GET("/:id", H.User.GetUserByID)
 			userRoutes.PUT("/:id", H.User.UpdateUserByID)
 		}
@@ -40,14 +40,14 @@ func SetupRoutes(
 		permissionRoutes := apiV1.Group("/permissions")
 		// permissionRoutes.Use(handler.ValidateToken())
 		{
-			permissionRoutes.GET("/", H.Permission.GetAllPermissions)
+			permissionRoutes.GET("", H.Permission.GetAllPermissions)
 			permissionRoutes.PATCH("/update", H.Permission.UpdatePermission)
 		}
 
 		logRoutes := apiV1.Group("/logs")
 		logRoutes.Use(handler.ValidateToken())
 		{
-			logRoutes.GET("/", H.Log.GetAllApiLogs)
+			logRoutes.GET("", H.Log.GetAllApiLogs)
 		}
 
 		caseManagementRoutes := apiV1.Group("/case-management")

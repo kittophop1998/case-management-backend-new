@@ -49,7 +49,7 @@ var (
 )
 
 type ApiErrorResponse struct {
-	Errors ErrorDetail `json:"errors"`
+	Error ErrorDetail `json:"error"`
 }
 
 func timestampNow() string {
@@ -61,7 +61,7 @@ func HandleError(ctx *gin.Context, err error) {
 	var apiError *ErrorDetail
 	if errors.As(err, &apiError) {
 		ctx.AbortWithStatusJSON(apiError.Code, ApiErrorResponse{
-			Errors: ErrorDetail{
+			Error: ErrorDetail{
 				TimeStamp: timestampNow(),
 				Path:      ctx.FullPath(),
 				Code:      apiError.Code,

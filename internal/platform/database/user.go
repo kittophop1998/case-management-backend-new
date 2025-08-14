@@ -124,6 +124,7 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 
 	userToSave := &model.User{
 		StaffID:      user.StaffID,
+		Username:     user.Username,
 		Name:         user.Name,
 		OperatorID:   user.OperatorID,
 		SectionID:    user.SectionID,
@@ -132,13 +133,6 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		DepartmentID: user.DepartmentID,
 		Email:        user.Email,
 		IsActive:     &isActive,
-	}
-
-	parts := strings.Split(user.Email, "@")
-	if len(parts) == 2 {
-		userToSave.Username = parts[0]
-	} else {
-		userToSave.Username = ""
 	}
 
 	if err := repo.db.Create(&userToSave).Error; err != nil {

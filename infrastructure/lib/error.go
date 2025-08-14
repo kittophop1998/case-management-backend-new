@@ -74,7 +74,7 @@ func HandleError(ctx *gin.Context, err error) {
 
 	// fallback for unexpected errors
 	ctx.AbortWithStatusJSON(http.StatusInternalServerError, ApiErrorResponse{
-		Errors: ErrorDetail{
+		Error: ErrorDetail{
 			TimeStamp: timestampNow(),
 			Path:      ctx.FullPath(),
 			Code:      http.StatusInternalServerError,

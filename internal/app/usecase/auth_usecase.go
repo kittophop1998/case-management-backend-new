@@ -25,18 +25,17 @@ func NewAuthUseCase(repo repository.UserRepository, authRepo repository.AuthRepo
 }
 
 func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.LoginResponse, error) {
-	if req.Username == "admin" && req.Password == "admin" {
-		return a.loginAsAdmin(ctx, req.Username)
-	}
-
-	// Authenticate via LDAP
-	if err := a.authenticateWithLDAP(req.Username, req.Password); err != nil {
+	user, err := a.repo.GetByUsername(ctx, req.Username)
+	if err != nil {
 		return nil, err
 	}
 
-	// Fetch user from DB
-	user, err := a.repo.GetByUsername(ctx, req.Username)
-	if err != nil {
+	if user.UserTypes == "local" && req.Username == user.Username && req.Password == user.Password {
+		return a.loginLocal(ctx, user)
+	}
+
+	// ----- LDAP Authentication -----
+	if err := a.authenticateWithLDAP(req.Username, req.Password); err != nil {
 		return nil, err
 	}
 
@@ -140,12 +139,7 @@ func (a *AuthUseCase) Logout(ctx *gin.Context) error {
 }
 
 // Admin login for testing purposes
-func (a *AuthUseCase) loginAsAdmin(ctx *gin.Context, username string) (*model.LoginResponse, error) {
-	user, err := a.repo.GetByUsername(ctx, username)
-	if err != nil {
-		return nil, err
-	}
-
+func (a *AuthUseCase) loginLocal(ctx *gin.Context, user *model.User) (*model.LoginResponse, error) {
 	accesstoken, err := a.GenerateToken(24*time.Hour, &auth.Metadata{
 		UserId:    user.ID,
 		Name:      user.Name,

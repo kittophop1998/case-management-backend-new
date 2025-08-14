@@ -9,11 +9,12 @@ import (
 )
 
 type ErrorDetail struct {
-	TimeStamp string       `json:"timestamp"`
-	Path      string       `json:"path"`
-	Code      int          `json:"code"`
-	Message   MessageError `json:"message"`
-	Detail    interface{}  `json:"detail"`
+	TimeStamp  string       `json:"timestamp"`
+	Path       string       `json:"path"`
+	StatusCode string       `json:"statusCode"`
+	Code       int          `json:"code"`
+	Message    MessageError `json:"message"`
+	Detail     interface{}  `json:"detail"`
 }
 
 type MessageError struct {
@@ -27,28 +28,20 @@ func (e *ErrorDetail) Error() string {
 
 func NewAppError(code int, message MessageError, detail interface{}) *ErrorDetail {
 	return &ErrorDetail{
-		Code:    code,
-		Message: message,
-		Detail:  detail,
+		StatusCode: http.StatusText(code),
+		Code:       code,
+		Message:    message,
+		Detail:     detail,
 	}
 }
 
 // Common predefined errors
 var (
-	BadRequest = NewAppError(http.StatusBadRequest,
-		MessageError{"คำขอไม่ถูกต้อง", "Bad Request"}, nil)
-
-	InternalServer = NewAppError(http.StatusInternalServerError,
-		MessageError{"เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์", "Internal Server Error"}, nil)
-
-	GatewayTimeout = NewAppError(http.StatusGatewayTimeout,
-		MessageError{"หมดเวลาการเชื่อมต่อ", "Gateway Timeout"}, nil)
-
-	Unauthorized = NewAppError(http.StatusUnauthorized,
-		MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
-
-	NotFound = NewAppError(http.StatusNotFound,
-		MessageError{"ไม่พบข้อมูล", "Not Found"}, nil)
+	BadRequest     = NewAppError(http.StatusBadRequest, MessageError{"คำขอไม่ถูกต้อง", "Bad Request"}, nil)
+	InternalServer = NewAppError(http.StatusInternalServerError, MessageError{"เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์", "Internal Server Error"}, nil)
+	GatewayTimeout = NewAppError(http.StatusGatewayTimeout, MessageError{"หมดเวลาการเชื่อมต่อ", "Gateway Timeout"}, nil)
+	Unauthorized   = NewAppError(http.StatusUnauthorized, MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
+	NotFound       = NewAppError(http.StatusNotFound, MessageError{"ไม่พบข้อมูล", "Not Found"}, nil)
 )
 
 type ApiErrorResponse struct {
@@ -65,11 +58,12 @@ func HandleError(ctx *gin.Context, err error) {
 	if errors.As(err, &apiError) {
 		ctx.AbortWithStatusJSON(apiError.Code, ApiErrorResponse{
 			Error: ErrorDetail{
-				TimeStamp: timestampNow(),
-				Path:      ctx.FullPath(),
-				Code:      apiError.Code,
-				Message:   apiError.Message,
-				Detail:    apiError.Detail,
+				TimeStamp:  timestampNow(),
+				Path:       ctx.FullPath(),
+				StatusCode: apiError.StatusCode,
+				Code:       apiError.Code,
+				Message:    apiError.Message,
+				Detail:     apiError.Detail,
 			},
 		})
 		return
@@ -78,11 +72,12 @@ func HandleError(ctx *gin.Context, err error) {
 	// fallback for unexpected errors
 	ctx.AbortWithStatusJSON(http.StatusInternalServerError, ApiErrorResponse{
 		Error: ErrorDetail{
-			TimeStamp: timestampNow(),
-			Path:      ctx.FullPath(),
-			Code:      http.StatusInternalServerError,
-			Message:   MessageError{"เกิดข้อผิดพลาดที่ไม่คาดคิด", "Unexpected Error"},
-			Detail:    err.Error(),
+			TimeStamp:  timestampNow(),
+			Path:       ctx.FullPath(),
+			StatusCode: http.StatusText(apiError.Code),
+			Code:       http.StatusInternalServerError,
+			Message:    MessageError{"เกิดข้อผิดพลาดที่ไม่คาดคิด", "Unexpected Error"},
+			Detail:     err.Error(),
 		},
 	})
 }

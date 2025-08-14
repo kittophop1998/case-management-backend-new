@@ -24,10 +24,7 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 
 	uid, err := h.UseCase.Create(ctx, user)
 	if err != nil {
-		lib.HandleError(ctx, lib.NewAppError(http.StatusInternalServerError, lib.MessageError{
-			Th: "ไม่สามารถสร้างผู้ใช้ได้",
-			En: "Failed to create user",
-		}, err.Error()))
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to create user: "+err.Error()))
 		return
 	}
 
@@ -89,10 +86,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 
 	users, total, err := h.UseCase.GetAll(ctx, page, limit, filter)
 	if err != nil {
-		lib.HandleError(ctx, lib.NewAppError(http.StatusInternalServerError, lib.MessageError{
-			Th: "ไม่สามารถดึงข้อมูลผู้ใช้ได้",
-			En: "Failed to retrieve users",
-		}, err.Error()))
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to fetch users: "+err.Error()))
 		return
 	}
 

@@ -1,7 +1,10 @@
 package config
 
 import (
+	"fmt"
+	"log"
 	"os"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -41,17 +44,59 @@ type ConnectorAPIConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 
-func Load(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
+// allowed environments for config loading
+var allowedEnvs = map[string]struct{}{
+	"dev":  {},
+	"sit":  {},
+	"uat":  {},
+	"prod": {},
+}
+
+var (
+	cfg  *Config
+	once sync.Once
+)
+
+func ValidateEnv(env string) error {
+	if _, ok := allowedEnvs[env]; !ok {
+		return fmt.Errorf("invalid environment: %s (allowed: %v)", env, keys(allowedEnvs))
+	}
+	return nil
+}
+
+func keys(m map[string]struct{}) []string {
+	result := make([]string, 0, len(m))
+	for k := range m {
+		result = append(result, k)
+	}
+	return result
+}
+
+// Load reads the config file for the given environment
+func Load(env string) (*Config, error) {
+	if err := ValidateEnv(env); err != nil {
 		return nil, err
 	}
 
-	var cfg Config
-	err = yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, err
-	}
+	var loadErr error
+	once.Do(func() {
+		log.Printf("Loading config for environment: %s", env)
 
-	return &cfg, nil
+		filename := fmt.Sprintf("configs/%s.yaml", env)
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			loadErr = fmt.Errorf("failed to read config file: %w", err)
+			return
+		}
+
+		var config Config
+		if err := yaml.Unmarshal(data, &config); err != nil {
+			loadErr = fmt.Errorf("failed to parse config: %w", err)
+			return
+		}
+
+		cfg = &config
+	})
+
+	return cfg, loadErr
 }

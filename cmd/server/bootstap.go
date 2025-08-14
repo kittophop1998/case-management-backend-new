@@ -25,7 +25,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	// prom := monitoring.NewPrometheus("template_go_bff")
 
 	// Setup database connection and run migrations
-	db, err := setupDatabase(cfg.Database, appLogger)
+	db, err := setupDatabase(cfg, appLogger)
 	if err != nil {
 		return nil, fmt.Errorf("database setup failed: %w", err)
 	}
@@ -101,10 +101,16 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 }
 
 // setupDatabase creates a new database connection and runs auto-migrations
-func setupDatabase(dbConfig config.DatabaseConfig, logger *zap.SugaredLogger) (*gorm.DB, error) {
+func setupDatabase(cfg *config.Config, logger *zap.SugaredLogger) (*gorm.DB, error) {
 	// Build DSN string config
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
-		dbConfig.Host, dbConfig.User, dbConfig.Password, dbConfig.DBName, dbConfig.Port, dbConfig.SSLMode)
+	var dsn string
+	if cfg.Server.GinMode == "release" {
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
+			cfg.Database.Host, cfg.Database.User, cfg.Database.Password, cfg.Database.DBName, cfg.Database.Port, cfg.Database.SSLMode)
+	} else {
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
+			cfg.Database.Host, cfg.Database.User, cfg.Database.Password, cfg.Database.DBName, cfg.Database.Port, cfg.Database.SSLMode)
+	}
 
 	// Establish connection to the database
 	db, err := database.InitPostgresDBStore(dsn)

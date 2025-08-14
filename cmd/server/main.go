@@ -26,10 +26,14 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	cfg, err := config.Load("./configs/config.yaml")
+	_ = godotenv.Load()
+	env := os.Getenv("ENV_NAME")
+	cfg, err := config.Load(env)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to load configuration: %v", err)
 	}

@@ -1,0 +1,24 @@
+# Application Configuration
+app:
+  name: "Case Management Backend"
+  version: "1.0.0"
+
+# Server Configuration
+server:
+  port: 8000
+  gin_mode: "debug"  # Mode: "debug", "release"
+  log_level: "info"  # Logging level: "debug", "info", "warn", "error"
+
+# Database Configuration (PostgreSQL)
+database:
+  host: "postgres.railway.internal"
+  port: 5432
+  user: "postgres"
+  password: "eRVDZckmPOxaDqNvqGYFACorieIhXtVi"
+  dbname: "railway"
+  sslmode: "disable"
+
+# External Services Configuration
+services:
+  agreement_api:
+    base_url: "http://localhost:8001/api/v1"

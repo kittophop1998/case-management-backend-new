@@ -120,6 +120,8 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		return uuid.Nil, err
 	}
 
+	isActive := true
+
 	userToSave := &model.User{
 		StaffID:      user.StaffID,
 		Name:         user.Name,
@@ -129,10 +131,9 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		RoleID:       user.RoleID,
 		DepartmentID: user.DepartmentID,
 		Email:        user.Email,
-		IsActive:     user.IsActive,
+		IsActive:     &isActive,
 	}
 
-	// แยก domain name จาก email
 	parts := strings.Split(user.Email, "@")
 	if len(parts) == 2 {
 		userToSave.Username = parts[0]
@@ -140,8 +141,7 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		userToSave.Username = ""
 	}
 
-	// บันทึกลงฐานข้อมูล
-	if err := repo.db.Debug().Create(&userToSave).Error; err != nil {
+	if err := repo.db.Create(&userToSave).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate key value") {
 			return uuid.Nil, fmt.Errorf("staffId %d already exists", user.StaffID)
 		}

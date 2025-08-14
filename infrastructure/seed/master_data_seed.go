@@ -100,8 +100,7 @@ func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap,
 	})
 
 	seedEntities(db, []Seedable{
-		&model.DispositionMain{Name: "Check loan", Description: "General inquiries about products or services"},
-		&model.DispositionMain{Name: "Inquire about product", Description: "Assistance with technical issues"},
+		&model.DispositionMain{Name: "Open Credit Card", Description: "open credit card"},
 	}, func(db *gorm.DB, i Seedable) *gorm.DB {
 		return db.Where("name = ?", i.GetIdentifier())
 	}, func(name string, id uuid.UUID) {

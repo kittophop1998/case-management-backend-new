@@ -13,8 +13,8 @@ func SeedDispositionSub(db *gorm.DB, dispositionMain map[string]uuid.UUID) Dispo
 	dispositionSubMap := make(DispositionSubMap)
 
 	seedEntities(db, []Seedable{
-		&model.DispositionSub{Name: "Loan Inquiry", MainID: dispositionMain["Check loan"]},
-		&model.DispositionSub{Name: "Product Inquiry", MainID: dispositionMain["Inquire about product"]},
+		&model.DispositionSub{Name: "Aeon", MainID: dispositionMain["Open Credit Card"]},
+		&model.DispositionSub{Name: "Aeon Thai Smile", MainID: dispositionMain["Open Credit Card"]},
 	}, func(db *gorm.DB, i Seedable) *gorm.DB {
 		return db.Where("name = ?", i.GetIdentifier())
 	}, func(name string, id uuid.UUID) {

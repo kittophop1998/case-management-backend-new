@@ -16,15 +16,15 @@ type CustomerHandler struct {
 func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 	note := &model.CustomerNote{}
 	if err := ctx.ShouldBindJSON(note); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid note data"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	if err := h.UseCase.CreateCustomerNote(note); err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to create customer note"})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
-	ctx.JSON(201, gin.H{"message": "Customer note created successfully"})
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"message": "Customer note created successfully"})
 }
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {

@@ -15,9 +15,9 @@ func SeedAllData(db *gorm.DB) error {
 	SeedDispositionSub(db, dispositionMainMap)
 
 	// Seed role permissions
-	// if err := SeedRolePermission(db); err != nil {
-	// 	return err
-	// }
+	if err := SeedRolePermission(db); err != nil {
+		return err
+	}
 
 	// Seed users
 	SeedUser(db, roleMap, sectionMap, centerMap, departmentMap, queueMap)

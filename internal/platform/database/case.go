@@ -23,8 +23,8 @@ func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uu
 	newToSave := &model.Cases{
 		Title:             data.Title,
 		CustomerId:        data.CustomerId,
-		DispositionMainId: data.DispositionMain,
-		DispositionSubId:  data.DispositionSub,
+		DispositionMainId: data.DispositionMainId,
+		DispositionSubId:  data.DispositionSubId,
 		CaseTypeId:        data.CaseTypeId,
 		CaseNote:          data.CaseNote,
 		Resolution:        data.CaseDescription,
@@ -36,6 +36,36 @@ func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uu
 	}
 
 	return newToSave.ID, nil
+}
+
+func (c *CasePg) CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error {
+	var dispositions []model.CaseDispositionMain
+	if err := json.Unmarshal(data, &dispositions); err != nil {
+		return err
+	}
+
+	for _, disposition := range dispositions {
+		if err := c.db.WithContext(ctx).Create(&disposition).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error {
+	var dispositions []model.CaseDispositionSub
+	if err := json.Unmarshal(data, &dispositions); err != nil {
+		return err
+	}
+
+	for _, disposition := range dispositions {
+		if err := c.db.WithContext(ctx).Create(&disposition).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *CasePg) GetAllCase(ctx *gin.Context, limit, offset int, filter model.CaseFilter) ([]*model.Cases, error) {

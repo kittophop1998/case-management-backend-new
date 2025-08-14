@@ -13,7 +13,6 @@ import (
 func ValidateToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if ctx.Request.Method == "OPTIONS" {
-			// Preflight request → skip validation
 			ctx.Next()
 			return
 		}

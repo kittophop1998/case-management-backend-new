@@ -78,3 +78,11 @@ func (p *PermissionPg) UpdatePermission(ctx *gin.Context, req model.UpdatePermis
 
 	return nil
 }
+
+func (p *PermissionPg) CountPermissions(ctx *gin.Context) (int, error) {
+	var count int64
+	if err := p.db.WithContext(ctx).Model(&model.Permission{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}

@@ -29,7 +29,25 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, err
 }
 
 func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.CreateCaseRequest) (uuid.UUID, error) {
-	return uc.repo.CreateCase(c, caseData)
+	// Create Case
+	caseId, err := uc.repo.CreateCase(c, caseData)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	// Save Case Disposition Main
+	// err := uc.repo.CreateCaseDispositionMains(c, caseData.DispositionMains)
+	// if err != nil {
+	// 	return uuid.Nil, err
+	// }
+
+	// // Save Case Disposition Subs
+	// err = uc.repo.CreateCaseDispositionSubs(c, caseData.DispositionSubs)
+	// if err != nil {
+	// 	return uuid.Nil, err
+	// }
+
+	return caseId, nil
 }
 
 // func (uc *CaseUseCase) CreateNoteType(c *gin.Context, note model.NoteTypes) (*model.NoteTypes, error) {

@@ -7,12 +7,13 @@ import (
 	"gorm.io/datatypes"
 )
 
+// Case Entity
 type Cases struct {
 	Model
 	Title               string         `json:"title"`
 	CustomerId          string         `json:"customerId"`
-	DispositionMainId   datatypes.JSON `json:"dispositionMainId" gorm:"type:jsonb"`
-	DispositionSubId    datatypes.JSON `json:"dispositionSubId" gorm:"type:jsonb"`
+	DispositionMainId   uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
+	DispositionSubId    uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
 	CaseTypeId          uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
 	CreditCardAccountId string         `json:"creditCardAccountId"`
 	LoanAccountId       string         `json:"loanAccountId"`
@@ -29,21 +30,37 @@ type Cases struct {
 
 // Create Case Request Body
 type CreateCaseRequest struct {
-	Title           string         `json:"title"`
-	CustomerId      string         `json:"customerId"`
-	CaseTypeId      uuid.UUID      `json:"caseTypeId"`
-	DispositionMain datatypes.JSON `json:"dispositionMain" gorm:"type:jsonb"`
-	DispositionSub  datatypes.JSON `json:"dispositionSub" gorm:"type:jsonb"`
-	CaseDescription string         `json:"caseDescription" gorm:"type:text"`
-	CaseNote        datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
+	Title             string         `json:"title"`
+	CustomerId        string         `json:"customerId"`
+	CaseTypeId        uuid.UUID      `json:"caseTypeId"`
+	DispositionMainId uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
+	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb"`
+	DispositionSubId  uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
+	DispositionSubs   datatypes.JSON `json:"dispositionSubs" gorm:"type:jsonb"`
+	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
+	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
+}
+
+// Case Disposition Entity
+type CaseDispositionMain struct {
+	Model
+	CaseId            uuid.UUID `json:"caseId" gorm:"type:uuid"`
+	DispositionMainId uuid.UUID `json:"dispositionMainId" gorm:"type:uuid"`
+}
+
+// Case Disposition Sub Entity
+type CaseDispositionSub struct {
+	Model
+	CaseId           uuid.UUID `json:"caseId" gorm:"type:uuid"`
+	DispositionSubId uuid.UUID `json:"dispositionSubId" gorm:"type:uuid"`
 }
 
 type CaseFilter struct {
 	Keyword     string     `form:"keyword" json:"keyword"`
-	StatusID    *uint      `form:"status_id" json:"status_id"`
-	PriorityID  *uint      `form:"priority_id" json:"priority_id"`
-	SLADateFrom *time.Time `form:"sla_date_from" json:"sla_date_from"`
-	SLADateTo   *time.Time `form:"sla_date_to" json:"sla_date_to"`
+	StatusID    *uint      `form:"statusId" json:"statusId"`
+	PriorityID  *uint      `form:"priorityId" json:"priorityId"`
+	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
+	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
 	Sort        string     `form:"sort" json:"sort"`
 }
 
@@ -123,3 +140,6 @@ func (ApiLogs) TableName() string {
 func (CustomerNote) TableName() string {
 	return "customers_note"
 }
+
+func (c CaseTypes) GetIdentifier() string { return c.Name }
+func (c *CaseTypes) GetID() uuid.UUID     { return c.ID }

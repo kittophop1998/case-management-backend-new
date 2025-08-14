@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
 
@@ -14,7 +15,7 @@ type CaseHandler struct {
 func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 	caseData := &model.CreateCaseRequest{}
 	if err := ctx.ShouldBindJSON(caseData); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid case data"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 

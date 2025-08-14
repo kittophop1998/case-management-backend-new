@@ -113,13 +113,13 @@ func (h *UserHandler) GetUserByID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user)
+	lib.NewResponse(ctx, http.StatusOK, user)
 }
 
 func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
 	var input model.CreateUpdateUserRequest
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 

@@ -16,7 +16,12 @@ type CustomerHandler struct {
 func (h *CustomerHandler) SearchByCustomerId(ctx *gin.Context) {
 	customerID := ctx.Param("id")
 	if customerID == "1234" {
-		lib.NewResponse(ctx, http.StatusOK, customerID)
+		lib.NewResponse(ctx, http.StatusOK, gin.H{
+			"customerId":     customerID,
+			"customerName":   "John Doe",
+			"customerEmail":  "john.doe@example.com",
+			"customerMobile": "123-456-7890",
+		})
 		return
 	} else {
 		lib.NewResponse(ctx, http.StatusNotFound, "Customer not found")

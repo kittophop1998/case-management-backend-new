@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
 	"net/http"
@@ -25,13 +26,13 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		return
 	}
 
-	permissions, err := h.UseCase.GetAllPermissions(ctx, page, limit)
+	permissions, total, err := h.UseCase.GetAllPermissions(ctx, page, limit)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(200, permissions)
+	lib.HandlePaginatedResponse(ctx, permissions, page, limit, total)
 }
 
 func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {

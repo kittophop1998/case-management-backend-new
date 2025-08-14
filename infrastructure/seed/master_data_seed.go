@@ -20,6 +20,7 @@ type CenterMap map[string]uuid.UUID
 type DepartmentMap map[string]uuid.UUID
 type QueueMap map[string]uuid.UUID
 type DispositionMainMap map[string]uuid.UUID
+type CaseTypeMap map[string]uuid.UUID
 
 func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap, QueueMap, DispositionMainMap) {
 	roleMap := make(RoleMap)
@@ -29,6 +30,7 @@ func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap,
 	departmentMap := make(DepartmentMap)
 	queueMap := make(QueueMap)
 	dispositionMainMap := make(DispositionMainMap)
+	caseTypeMap := make(CaseTypeMap)
 
 	seedEntities(db, []Seedable{
 		&model.Role{Name: "Admin"},
@@ -104,6 +106,14 @@ func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap,
 		return db.Where("name = ?", i.GetIdentifier())
 	}, func(name string, id uuid.UUID) {
 		dispositionMainMap[name] = id
+	})
+
+	seedEntities(db, []Seedable{
+		&model.CaseTypes{Name: "Inquiry And Disposition"},
+	}, func(db *gorm.DB, i Seedable) *gorm.DB {
+		return db.Where("name = ?", i.GetIdentifier())
+	}, func(name string, id uuid.UUID) {
+		caseTypeMap[name] = id
 	})
 
 	return roleMap, sectionMap, centerMap, departmentMap, queueMap, dispositionMainMap

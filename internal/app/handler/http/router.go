@@ -56,6 +56,7 @@ func SetupRoutes(
 			caseManagementRoutes.POST("/cases", H.Case.CreateCase)
 			caseManagementRoutes.GET("/cases", H.Case.GetAllCases)
 			caseManagementRoutes.GET("/cases/:id", H.Case.GetCaseByID)
+			caseManagementRoutes.GET("/cases/disposition", H.Case.GetAllDisposition)
 		}
 
 		customerRoutes := apiV1.Group("/customers")

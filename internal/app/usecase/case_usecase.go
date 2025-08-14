@@ -73,3 +73,7 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 // func (uc *CaseUseCase) CountCasesWithFilter(c *gin.Context, filter model.CaseFilter) (int, error) {
 // 	return uc.repo.CountWithFilter(c, filter)
 // }
+
+func (u *CaseUseCase) GetAllDisposition(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
+	return u.repo.GetAllDisposition(ctx, filter)
+}

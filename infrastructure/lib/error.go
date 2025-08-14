@@ -46,6 +46,9 @@ var (
 
 	Unauthorized = NewAppError(http.StatusUnauthorized,
 		MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
+
+	NotFound = NewAppError(http.StatusNotFound,
+		MessageError{"ไม่พบข้อมูล", "Not Found"}, nil)
 )
 
 type ApiErrorResponse struct {

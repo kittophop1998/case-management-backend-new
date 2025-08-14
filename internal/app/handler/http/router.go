@@ -71,7 +71,6 @@ func SetupRoutes(
 		customerRoutes := apiV1.Group("/customers")
 		customerRoutes.Use(handler.ValidateToken())
 		{
-			customerRoutes.GET("/search/:id", H.Customer.SearchByCustomerId)
 			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
 			customerRoutes.GET("/:customerId/notes", H.Customer.GetAllCustomerNotes)
 		}

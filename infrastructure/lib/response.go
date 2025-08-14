@@ -18,7 +18,7 @@ type PaginatedResponse struct {
 	TotalPages int         `json:"totalPages"`
 }
 
-func NewResponse[T any](ctx *gin.Context, statusCode int, data T) {
+func HandleResponse[T any](ctx *gin.Context, statusCode int, data T) {
 	ctx.JSON(statusCode, Response[T]{Data: data})
 }
 

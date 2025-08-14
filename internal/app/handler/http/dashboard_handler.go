@@ -30,7 +30,7 @@ func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 		MailTo:          "Home",
 	}
 
-	ctx.JSON(http.StatusOK, customerMock)
+	lib.HandleResponse(ctx, http.StatusOK, customerMock)
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {

@@ -40,9 +40,7 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
 		query = query.Where(
 			repo.db.Where("users.name ILIKE ?", kw).
-				Or("users.username ILIKE ?", kw).
-				Or("users.email ILIKE ?", kw).
-				Or("CAST(users.agent_id AS TEXT) ILIKE ?", kw),
+				Or("users.username ILIKE ?", kw),
 		)
 	}
 

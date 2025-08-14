@@ -183,22 +183,11 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 func (r *CasePg) GetAllDisposition(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
 	var mains []model.DispositionMain
 
-	query := r.db.WithContext(ctx).
-		Model(&model.DispositionMain{}).
-		Preload("Subs") // preload sub ตาม relation
+	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
 
 	if filter.Keyword != "" {
 		like := "%" + filter.Keyword + "%"
-
-		query = query.Where(`
-			disposition_mains.name ILIKE ? OR 
-			disposition_mains.description ILIKE ? OR 
-			id IN (
-				SELECT main_id 
-				FROM disposition_subs 
-				WHERE name ILIKE ? OR description ILIKE ?
-			)`,
-			like, like, like, like)
+		query = query.Where("name ILIKE ? OR description ILIKE ?", like, like)
 	}
 
 	if filter.Limit > 0 {

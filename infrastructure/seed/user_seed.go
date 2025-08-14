@@ -16,16 +16,19 @@ func SeedUser(
 	queueMap map[string]uuid.UUID,
 ) {
 	isActive := true
+
+	staffID := uint(1)
+	operatorID := uint(1)
 	users := []model.User{
 		{
 			Name:         "admin",
 			SectionID:    sectionMap["Inbound"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			AgentID:      1,
+			StaffID:      &staffID,
 			IsActive:     &isActive,
 			Email:        "admin@admin.com",
-			OperatorID:   1,
+			OperatorID:   &operatorID,
 			DepartmentID: departmentMap["Marketing"],
 		},
 	}

@@ -62,8 +62,13 @@ func SeedMasterData(db *gorm.DB) (RoleMap, SectionMap, CenterMap, DepartmentMap,
 	})
 
 	seedEntities(db, []Seedable{
-		&model.Section{Name: "Inbound"},
-		&model.Section{Name: "Outbound"},
+		&model.Section{Name: "CHL"},
+		&model.Section{Name: "CHB"},
+		&model.Section{Name: "CSD"},
+		&model.Section{Name: "ONB"},
+		&model.Section{Name: "ONC"},
+		&model.Section{Name: "ONK"},
+		&model.Section{Name: "ONH"},
 	}, func(db *gorm.DB, i Seedable) *gorm.DB {
 		return db.Where("name = ?", i.GetIdentifier())
 	}, func(name string, id uuid.UUID) {

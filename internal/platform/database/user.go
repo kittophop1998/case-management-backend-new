@@ -108,7 +108,7 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
 	var existingUser model.User
 
-	if err := repo.db.WithContext(ctx).Where("agent_id = ?", user.StaffID).First(&existingUser).Error; err == nil {
+	if err := repo.db.WithContext(ctx).Where("staff_id = ?", user.StaffID).First(&existingUser).Error; err == nil {
 		return uuid.Nil, fmt.Errorf("staffId %d already exists", user.StaffID)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return uuid.Nil, err

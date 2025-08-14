@@ -18,6 +18,8 @@ type User struct {
 	OperatorID   *uint      `json:"operatorId"`
 	Department   Department `gorm:"foreignKey:DepartmentID" json:"department"`
 	DepartmentID uuid.UUID  `json:"departmentId"`
+	Password     string     `json:"password"`
+	UserTypes    string     `json:"userTypes"`
 }
 
 // User UseCase

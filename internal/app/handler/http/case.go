@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,4 +45,22 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(200, caseData)
+}
+
+func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
+	var filter model.DispositionFilter
+	if err := ctx.ShouldBindQuery(&filter); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid query params"})
+		return
+	}
+
+	mains, err := h.UseCase.GetAllDisposition(ctx, filter)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"mains": mains,
+	})
 }

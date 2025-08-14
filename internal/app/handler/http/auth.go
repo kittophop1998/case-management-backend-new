@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
 	"net/http"
@@ -19,36 +20,25 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 
 	// Validate body
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid request body",
-			"details": err.Error(),
-		})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	if req.Username == "" || req.Password == "" {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   "Missing credentials",
-			"details": "Please provide username and password",
-		})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Missing credentials"))
 		return
 	}
 
 	// Main login use case
 	resp, err := h.UseCase.Login(ctx, req)
 	success := err == nil
-
-	// Log access (even on failure)
-	_ = h.UseCase.SaveAccessLog(ctx, req.Username, success)
-
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   "Login failed",
-			"details": err.Error(),
-		})
+	if !success {
+		lib.HandleError(ctx, lib.Unauthorized.WithDetails(err.Error()))
 		return
 	}
 
+	// Log access (even on failure)
+	_ = h.UseCase.SaveAccessLog(ctx, req.Username, success)
 	ctx.JSON(http.StatusOK, resp)
 }
 

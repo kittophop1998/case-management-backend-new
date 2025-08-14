@@ -16,23 +16,44 @@ func SeedUser(
 	queueMap map[string]uuid.UUID,
 ) {
 	isActive := true
+	defaultPassword := "Aeon*123"
+	userType := "local"
+	staffID := uint(1)
+	operatorID := uint(1)
 	users := []model.User{
 		{
-			Name:         "admin",
+			Name:         "Admin",
+			Username:     "admin",
+			Password:     defaultPassword,
+			UserTypes:    userType,
 			SectionID:    sectionMap["Inbound"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			AgentID:      1,
+			StaffID:      &staffID,
 			IsActive:     &isActive,
 			Email:        "admin@admin.com",
-			OperatorID:   1,
+			OperatorID:   &operatorID,
+			DepartmentID: departmentMap["Marketing"],
+		},
+		{
+			Name:         "System-support",
+			Username:     "support",
+			Password:     defaultPassword,
+			UserTypes:    userType,
+			SectionID:    sectionMap["Inbound"],
+			CenterID:     centerMap["BKK"],
+			RoleID:       roleMap["Admin"],
+			StaffID:      &staffID,
+			IsActive:     &isActive,
+			Email:        "admin@admin.com",
+			OperatorID:   &operatorID,
 			DepartmentID: departmentMap["Marketing"],
 		},
 	}
 
 	for _, user := range users {
 		var existingUser model.User
-		if err := db.Where("name = ?", user.Name).First(&existingUser).Error; err != nil {
+		if err := db.Where("username = ?", user.Username).First(&existingUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User does not exist, create it
 				if err := db.Create(&user).Error; err != nil {

@@ -49,7 +49,7 @@ type DispositionMain struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name        string    `gorm:"type:varchar(100)" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
-	// CreatedBy
+	// Subs        []DispositionSub `json:"subs" gorm:"foreignKey:MainID;references:ID"`
 }
 
 type DispositionSub struct {
@@ -57,6 +57,12 @@ type DispositionSub struct {
 	MainID      uuid.UUID `gorm:"type:uuid;not null" json:"main_id"`
 	Name        string    `gorm:"type:varchar(100)" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
+}
+
+type DispositionFilter struct {
+	Keyword string `form:"keyword" json:"keyword"`
+	Limit   int    `form:"limit" json:"limit"`
+	Offset  int    `form:"offset" json:"offset"`
 }
 
 func (r Role) GetIdentifier() string { return r.Name }

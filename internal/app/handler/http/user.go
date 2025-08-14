@@ -24,14 +24,11 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 
 	uid, err := h.UseCase.Create(ctx, user)
 	if err != nil {
-		lib.HandleError(ctx, lib.NewAppError(http.StatusInternalServerError, lib.MessageError{
-			Th: "ไม่สามารถสร้างผู้ใช้ได้",
-			En: "Failed to create user",
-		}, err.Error()))
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to create user: "+err.Error()))
 		return
 	}
 
-	lib.NewResponse(ctx, http.StatusCreated, gin.H{"id": uid})
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"id": uid})
 }
 
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
@@ -89,10 +86,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 
 	users, total, err := h.UseCase.GetAll(ctx, page, limit, filter)
 	if err != nil {
-		lib.HandleError(ctx, lib.NewAppError(http.StatusInternalServerError, lib.MessageError{
-			Th: "ไม่สามารถดึงข้อมูลผู้ใช้ได้",
-			En: "Failed to retrieve users",
-		}, err.Error()))
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to fetch users: "+err.Error()))
 		return
 	}
 
@@ -103,17 +97,17 @@ func (h *UserHandler) GetUserByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	userId, err := uuid.Parse(id)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return
 	}
 
 	user, err := h.UseCase.GetById(ctx, userId)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		lib.HandleError(ctx, lib.NotFound.WithDetails(fmt.Sprintf("User with ID %s not found", id)))
 		return
 	}
 
-	lib.NewResponse(ctx, http.StatusOK, user)
+	lib.HandleResponse(ctx, http.StatusOK, user)
 }
 
 func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
@@ -126,15 +120,15 @@ func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	userId, err := uuid.Parse(id)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return
 	}
 
 	err = h.UseCase.UpdateUserById(ctx, userId, input)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Can't update user"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Can't update user"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"message": "User updated successfully"})
 }

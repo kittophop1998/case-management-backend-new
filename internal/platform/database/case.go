@@ -179,3 +179,28 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 	}
 	return &noteType, nil
 }
+
+func (r *CasePg) GetAllDisposition(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
+	var mains []model.DispositionMain
+
+	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
+
+	if filter.Keyword != "" {
+		like := "%" + filter.Keyword + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ?", like, like)
+	}
+
+	if filter.Limit > 0 {
+		query = query.Limit(filter.Limit)
+	}
+
+	if filter.Offset > 0 {
+		query = query.Offset(filter.Offset)
+	}
+
+	if err := query.Find(&mains).Error; err != nil {
+		return nil, err
+	}
+
+	return mains, nil
+}

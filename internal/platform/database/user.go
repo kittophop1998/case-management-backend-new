@@ -97,7 +97,7 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Center").
 		Preload("Role.Permissions").
 		Preload("Section").
-		Where("name = ?", username).
+		Where("username = ?", username).
 		First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -108,8 +108,8 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
 	var existingUser model.User
 
-	if err := repo.db.WithContext(ctx).Where("agent_id = ?", user.AgentID).First(&existingUser).Error; err == nil {
-		return uuid.Nil, fmt.Errorf("agentId %d already exists", user.AgentID)
+	if err := repo.db.WithContext(ctx).Where("agent_id = ?", user.StaffID).First(&existingUser).Error; err == nil {
+		return uuid.Nil, fmt.Errorf("staffId %d already exists", user.StaffID)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return uuid.Nil, err
 	}
@@ -120,8 +120,10 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		return uuid.Nil, err
 	}
 
+	isActive := true
+
 	userToSave := &model.User{
-		AgentID:      user.AgentID,
+		StaffID:      user.StaffID,
 		Name:         user.Name,
 		OperatorID:   user.OperatorID,
 		SectionID:    user.SectionID,
@@ -129,21 +131,19 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 		RoleID:       user.RoleID,
 		DepartmentID: user.DepartmentID,
 		Email:        user.Email,
-		IsActive:     user.IsActive,
+		IsActive:     &isActive,
 	}
 
-	// แยก domain name จาก email
 	parts := strings.Split(user.Email, "@")
 	if len(parts) == 2 {
-		userToSave.DomainName = parts[0]
+		userToSave.Username = parts[0]
 	} else {
-		userToSave.DomainName = ""
+		userToSave.Username = ""
 	}
 
-	// บันทึกลงฐานข้อมูล
-	if err := repo.db.Debug().Create(&userToSave).Error; err != nil {
+	if err := repo.db.Create(&userToSave).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate key value") {
-			return uuid.Nil, fmt.Errorf("agentId %d already exists", user.AgentID)
+			return uuid.Nil, fmt.Errorf("staffId %d already exists", user.StaffID)
 		}
 
 		return uuid.Nil, err
@@ -167,6 +167,9 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpd
 	if input.CenterID != uuid.Nil {
 		updateData["center_id"] = input.CenterID
 	}
+	if input.Username != "" {
+		updateData["username"] = input.Username
+	}
 
 	if input.DepartmentID != uuid.Nil {
 		updateData["department_id"] = input.DepartmentID
@@ -174,6 +177,13 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpd
 
 	if input.Email != "" {
 		updateData["email"] = input.Email
+	}
+
+	if input.StaffID != nil {
+		updateData["staff_id"] = *input.StaffID
+	}
+	if input.OperatorID != nil {
+		updateData["operator_id"] = *input.OperatorID
 	}
 
 	if input.IsActive != nil {
@@ -184,7 +194,7 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpd
 		return errors.New("no valid fields to update")
 	}
 
-	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Updates(updateData).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Debug().Updates(updateData).Error; err != nil {
 		return err
 	}
 

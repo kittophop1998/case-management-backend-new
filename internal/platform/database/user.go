@@ -97,7 +97,7 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Center").
 		Preload("Role.Permissions").
 		Preload("Section").
-		Where("name = ?", username).
+		Where("username = ?", username).
 		First(&user).Error; err != nil {
 		return nil, err
 	}

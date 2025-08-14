@@ -16,12 +16,30 @@ func SeedUser(
 	queueMap map[string]uuid.UUID,
 ) {
 	isActive := true
-
+	defaultPassword := "Aeon*123"
+	userType := "local"
 	staffID := uint(1)
 	operatorID := uint(1)
 	users := []model.User{
 		{
-			Name:         "admin",
+			Name:         "Admin",
+			Username:     "admin",
+			Password:     defaultPassword,
+			UserTypes:    userType,
+			SectionID:    sectionMap["Inbound"],
+			CenterID:     centerMap["BKK"],
+			RoleID:       roleMap["Admin"],
+			StaffID:      &staffID,
+			IsActive:     &isActive,
+			Email:        "admin@admin.com",
+			OperatorID:   &operatorID,
+			DepartmentID: departmentMap["Marketing"],
+		},
+		{
+			Name:         "System-support",
+			Username:     "support",
+			Password:     defaultPassword,
+			UserTypes:    userType,
 			SectionID:    sectionMap["Inbound"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],

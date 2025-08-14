@@ -3,14 +3,17 @@ package lib
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type ResponseError struct {
-	Code    int          `json:"code"`
-	Message MessageError `json:"message"`
-	Detail  interface{}  `json:"detail"`
+type ErrorDetail struct {
+	TimeStamp string       `json:"timestamp"`
+	Path      string       `json:"path"`
+	Code      int          `json:"code"`
+	Message   MessageError `json:"message"`
+	Detail    interface{}  `json:"detail"`
 }
 
 type MessageError struct {
@@ -18,54 +21,78 @@ type MessageError struct {
 	En string `json:"en"`
 }
 
-func (e *ResponseError) Error() string {
+func (e *ErrorDetail) Error() string {
 	return e.Message.Th
 }
 
-func NewAppError(code int, message MessageError, detail interface{}) *ResponseError {
-	return &ResponseError{
+func NewAppError(code int, message MessageError, detail interface{}) *ErrorDetail {
+	return &ErrorDetail{
 		Code:    code,
 		Message: message,
 		Detail:  detail,
 	}
 }
 
+// Common predefined errors
 var (
-	BadRequest = NewAppError(http.StatusBadRequest, MessageError{
-		Th: "คำขอไม่ถูกต้อง",
-		En: "Bad Request",
-	}, nil)
-	InternalServer = NewAppError(http.StatusInternalServerError, MessageError{
-		Th: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์",
-		En: "Internal Server Error",
-	}, nil)
-	GatewayTimeout = NewAppError(http.StatusGatewayTimeout, MessageError{
-		Th: "หมดเวลาการเชื่อมต่อ",
-		En: "Gateway Timeout",
-	}, nil)
+	BadRequest = NewAppError(http.StatusBadRequest,
+		MessageError{"คำขอไม่ถูกต้อง", "Bad Request"}, nil)
+
+	InternalServer = NewAppError(http.StatusInternalServerError,
+		MessageError{"เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์", "Internal Server Error"}, nil)
+
+	GatewayTimeout = NewAppError(http.StatusGatewayTimeout,
+		MessageError{"หมดเวลาการเชื่อมต่อ", "Gateway Timeout"}, nil)
+
+	Unauthorized = NewAppError(http.StatusUnauthorized,
+		MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
 )
+
+type ApiErrorResponse struct {
+	Errors ErrorDetail `json:"errors"`
+}
+
+func timestampNow() string {
+	return time.Now().UTC().Format(time.RFC3339Nano)
+}
 
 // HandleError is a centralized error handler for Gin
 func HandleError(ctx *gin.Context, err error) {
-	var apiError *ResponseError
+	var apiError *ErrorDetail
 	if errors.As(err, &apiError) {
-		ctx.AbortWithStatusJSON(apiError.Code, apiError)
+		ctx.AbortWithStatusJSON(apiError.Code, ApiErrorResponse{
+			Errors: ErrorDetail{
+				TimeStamp: timestampNow(),
+				Path:      ctx.FullPath(),
+				Code:      apiError.Code,
+				Message:   apiError.Message,
+				Detail:    apiError.Detail,
+			},
+		})
 		return
 	}
+
+	// fallback for unexpected errors
+	ctx.AbortWithStatusJSON(http.StatusInternalServerError, ApiErrorResponse{
+		Errors: ErrorDetail{
+			TimeStamp: timestampNow(),
+			Path:      ctx.FullPath(),
+			Code:      http.StatusInternalServerError,
+			Message:   MessageError{"เกิดข้อผิดพลาดที่ไม่คาดคิด", "Unexpected Error"},
+			Detail:    err.Error(),
+		},
+	})
 }
 
-func (e *ResponseError) WithDetails(details interface{}) *ResponseError {
-	return &ResponseError{
-		Code:    e.Code,
-		Message: e.Message,
-		Detail:  details,
-	}
+// Chainable methods
+func (e *ErrorDetail) WithDetails(details interface{}) *ErrorDetail {
+	newErr := *e
+	newErr.Detail = details
+	return &newErr
 }
 
-func (e *ResponseError) WithMessage(message MessageError) *ResponseError {
-	return &ResponseError{
-		Code:    e.Code,
-		Message: message,
-		Detail:  e.Detail,
-	}
+func (e *ErrorDetail) WithMessage(message MessageError) *ErrorDetail {
+	newErr := *e
+	newErr.Message = message
+	return &newErr
 }

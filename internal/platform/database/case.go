@@ -4,6 +4,7 @@ import (
 	"case-management/internal/domain/model"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,15 +21,24 @@ func NewCasePg(db *gorm.DB) *CasePg {
 }
 
 func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uuid.UUID, error) {
+	userIDStr := ctx.GetString("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
 	newToSave := &model.Cases{
-		Title:             data.Title,
+		Model: model.Model{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		CaseTitle:         data.CaseTitle,
 		CustomerId:        data.CustomerId,
-		DispositionMainId: data.DispositionMainId,
-		DispositionSubId:  data.DispositionSubId,
 		CaseTypeId:        data.CaseTypeId,
-		CaseNote:          data.CaseNote,
-		Resolution:        data.CaseDescription,
-		CreatedBy:         ctx.GetString("user_id"),
+		DispositionMainId: data.DispositionMainId,
+		Description:       data.CaseDescription,
+		CreatedBy:         userID,
+		UpdatedBy:         userID,
 	}
 
 	if err := c.db.Create(newToSave).Error; err != nil {

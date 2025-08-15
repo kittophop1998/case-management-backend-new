@@ -4,64 +4,45 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
 // Case Entity
 type Cases struct {
 	Model
-	Title               string         `json:"title"`
-	CustomerId          string         `json:"customerId"`
-	DispositionMainId   uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
-	DispositionSubId    uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
-	CaseTypeId          uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	CreditCardAccountId string         `json:"creditCardAccountId"`
-	LoanAccountId       string         `json:"loanAccountId"`
-	AssignedToUserId    uuid.UUID      `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	StatusId            uint           `json:"statusId"`
-	PriorityId          uint           `json:"priorityId"`
-	StartDate           time.Time      `json:"startDate" gorm:"type:date"`
-	EndDate             time.Time      `json:"endDate" gorm:"type:date"`
-	CaseNote            datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
-	Resolution          string         `json:"resolution" gorm:"type:text"`
-	CreatedBy           string         `json:"createdBy"`
-	SLADate             time.Time      `json:"slaDate"`
+	CaseTitle         string    `json:"caseTitle"`
+	CaseTypeId        uuid.UUID `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	CustomerId        string    `json:"customerId"`
+	AssignedToUserId  uuid.UUID `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	StatusId          uuid.UUID `json:"statusId"`
+	PriorityId        uuid.UUID `json:"priorityId"`
+	DispositionMainId uuid.UUID `json:"dispositionMainId" gorm:"type:uuid"`
+	StartDate         time.Time `json:"startDate" gorm:"type:date"`
+	EndDate           time.Time `json:"endDate" gorm:"type:date"`
+	Description       string    `json:"description"`
+	CreatedBy         uuid.UUID `json:"createdBy" gorm:"type:uuid"`
+	UpdatedBy         uuid.UUID `json:"updatedBy" gorm:"type:uuid"`
+	DeletedBy         uuid.UUID `json:"deletedBy" gorm:"type:uuid"`
 }
 
-// Create Case Request Body
-type CreateCaseRequest struct {
-	Title             string         `json:"title"`
-	CustomerId        string         `json:"customerId"`
-	CaseTypeId        uuid.UUID      `json:"caseTypeId"`
-	DispositionMainId uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
-	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb"`
-	DispositionSubId  uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
-	DispositionSubs   datatypes.JSON `json:"dispositionSubs" gorm:"type:jsonb"`
-	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
-	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
-}
-
-// Case Disposition Entity
 type CaseDispositionMain struct {
 	Model
 	CaseId            uuid.UUID `json:"caseId" gorm:"type:uuid"`
 	DispositionMainId uuid.UUID `json:"dispositionMainId" gorm:"type:uuid"`
 }
 
-// Case Disposition Sub Entity
 type CaseDispositionSub struct {
 	Model
 	CaseId           uuid.UUID `json:"caseId" gorm:"type:uuid"`
 	DispositionSubId uuid.UUID `json:"dispositionSubId" gorm:"type:uuid"`
 }
 
-type CaseFilter struct {
-	Keyword     string     `form:"keyword" json:"keyword"`
-	StatusID    *uint      `form:"statusId" json:"statusId"`
-	PriorityID  *uint      `form:"priorityId" json:"priorityId"`
-	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
-	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
-	Sort        string     `form:"sort" json:"sort"`
+type CaseNotes struct {
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	CaseId      uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	UserId      uuid.UUID `json:"user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	NoteTypesId uuid.UUID `json:"note_types_id"`
+	Content     string    `json:"content" gorm:"type:text"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type NoteTypes struct {
@@ -87,15 +68,6 @@ type CasePriorities struct {
 	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
 	Name        string    `json:"name"`
 	OrderNumber uint      `json:"order_number"`
-}
-
-type CaseNotes struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	CaseId      uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	UserId      uuid.UUID `json:"user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	NoteTypesId uuid.UUID `json:"note_types_id"`
-	Content     string    `json:"content" gorm:"type:text"`
-	CreatedAt   time.Time `json:"created_at"`
 }
 
 type VerifyQuestionHistory struct {

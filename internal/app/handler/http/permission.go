@@ -32,7 +32,7 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, permissions, page, limit, total)
+	lib.HandlePaginatedResponse(ctx, page, limit, total, permissions)
 }
 
 func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {

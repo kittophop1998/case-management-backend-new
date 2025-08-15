@@ -25,7 +25,8 @@ func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "Failed to create case"})
 		return
 	}
-	ctx.JSON(201, gin.H{"case_id": caseID})
+
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
 }
 
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {

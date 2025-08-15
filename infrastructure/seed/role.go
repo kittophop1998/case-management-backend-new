@@ -17,6 +17,8 @@ func SeedRole(db *gorm.DB) RoleMap {
 		{Name: "Staff"},
 		{Name: "Supervisor"},
 		{Name: "AsstManager Up"},
+		{Name: "System"},
+		{Name: "CMS Admin"},
 	}
 
 	for _, role := range roles {

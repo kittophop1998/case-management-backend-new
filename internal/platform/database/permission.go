@@ -3,6 +3,7 @@ package database
 import (
 	"case-management/internal/domain/model"
 	"errors"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -102,34 +103,66 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 	return result, nil
 }
 
-func (p *PermissionPg) UpdatePermission(ctx *gin.Context, req model.UpdatePermissionRequest) error {
+func (p *PermissionPg) UpdatePermission(
+	ctx *gin.Context,
+	req model.UpdatePermissionRequest,
+	departmentMap map[string]uuid.UUID, // roleName -> departmentID
+	sectionMap map[string]uuid.UUID, // roleName -> sectionID
+) error {
 	var permission model.Permission
 
-	// Check if the permission exists
+	// ตรวจสอบ permission
 	if err := p.db.WithContext(ctx).Where("key = ?", req.Permission).First(&permission).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("permission key does not exist")
 		}
-	}
-
-	var roles []model.Role
-
-	// Check if roles exist
-	if err := p.db.WithContext(ctx).Where("name IN ?", req.Roles).Find(&roles).Error; err != nil {
 		return err
 	}
 
-	// If no roles are found, return an error
+	var roles []model.Role
+	if err := p.db.WithContext(ctx).Where("name IN ?", req.Roles).Find(&roles).Error; err != nil {
+		return err
+	}
 	if len(roles) == 0 {
 		return errors.New("no valid roles found")
 	}
 
-	// Update the permission with the new roles
-	if err := p.db.Model(&permission).Association("Roles").Replace(roles); err != nil {
-		return err
+	// สร้าง RolePermission slice
+	var rolePermissions []model.RolePermission
+	for _, role := range roles {
+		deptID, ok := departmentMap[role.Name]
+		if !ok {
+			return fmt.Errorf("department not found for role: %s", role.Name)
+		}
+		secID, ok := sectionMap[role.Name]
+		if !ok {
+			return fmt.Errorf("section not found for role: %s", role.Name)
+		}
+
+		rp := model.RolePermission{
+			RoleID:       role.ID,
+			PermissionID: permission.ID,
+			DepartmentID: deptID,
+			SectionID:    secID,
+		}
+		rolePermissions = append(rolePermissions, rp)
 	}
 
-	return nil
+	// ใช้ transaction replace
+	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// ลบ RolePermission เดิมของ permission นี้
+		if err := tx.Where("permission_id = ?", permission.ID).Delete(&model.RolePermission{}).Error; err != nil {
+			return err
+		}
+
+		// insert ใหม่
+		if len(rolePermissions) > 0 {
+			if err := tx.Create(&rolePermissions).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // func (p *PermissionPg) CountPermissions(ctx *gin.Context) (int, error) {

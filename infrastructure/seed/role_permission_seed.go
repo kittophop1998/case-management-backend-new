@@ -7,55 +7,45 @@ import (
 	"gorm.io/gorm"
 )
 
-var rolePermissions = map[string][]string{
-	"Staff": {
+var rolesConfig = map[string][]string{
+	"System": {
 		"user.login",
 		"user.profile",
 		"user.assess",
 		"user.customersearch",
 		"user.verifycustomer",
 		"user.customerdashboard",
-	},
-	"AsstManager Up": {
-		"user.login",
-		"user.profile",
-		"user.assess",
-		"user.customersearch",
-		"user.verifycustomer",
-		"user.customerdashboard",
-		"case.management",
-	},
-	"Supervisor": {
-		"user.login",
-		"user.profile",
-		"user.assess",
-		"user.customersearch",
-		"user.verifycustomer",
-		"user.customerdashboard",
-		"case.management",
-	},
-	"Admin": {
-		"user.login",
-		"user.profile",
-		"user.assess",
-		"user.customersearch",
-		"user.verifycustomer",
-		"user.customerdashboard",
-		"case.management",
-		"case.exporthistorical",
-		"case.standardreport",
 	},
 }
 
-func SeedRolePermission(db *gorm.DB, roleMap RoleMap, permissionMap PermissionMap) error {
+func SeedRolePermission(
+	db *gorm.DB,
+	roleMap RoleMap,
+	permissionMap PermissionMap,
+	departmentMap DepartmentMap, // roleName -> departmentID
+	sectionMap SectionMap, // roleName -> sectionID
+) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		for roleName, permKeys := range rolePermissions {
+
+		for roleName, perms := range rolesConfig {
+			fmt.Println("Seeding RolePermission...", roleName)
 			roleID, ok := roleMap[roleName]
+			fmt.Println("Seeding RolePermission...1", roleID)
 			if !ok {
 				return fmt.Errorf("role not found in roleMap: %s", roleName)
 			}
 
-			for _, permKey := range permKeys {
+			deptID, ok := departmentMap[roleName]
+			if !ok {
+				return fmt.Errorf("department not found in departmentMap for role: %s", roleName)
+			}
+
+			secID, ok := sectionMap[roleName]
+			if !ok {
+				return fmt.Errorf("section not found in sectionMap for role: %s", roleName)
+			}
+
+			for _, permKey := range perms {
 				permID, ok := permissionMap[permKey]
 				if !ok {
 					return fmt.Errorf("permission not found in permissionMap: %s", permKey)
@@ -64,10 +54,20 @@ func SeedRolePermission(db *gorm.DB, roleMap RoleMap, permissionMap PermissionMa
 				rp := model.RolePermission{
 					RoleID:       roleID,
 					PermissionID: permID,
+					DepartmentID: deptID,
+					SectionID:    secID,
 				}
 
-				// ถ้ามีแล้วจะไม่ insert ซ้ำ
-				if err := tx.FirstOrCreate(&rp, rp).Error; err != nil {
+				fmt.Println("Seeding RolePermission:", rp)
+
+				condition := map[string]interface{}{
+					"role_id":       roleID,
+					"permission_id": permID,
+					"department_id": deptID,
+					"section_id":    secID,
+				}
+
+				if err := tx.FirstOrCreate(&rp, condition).Error; err != nil {
 					return err
 				}
 			}

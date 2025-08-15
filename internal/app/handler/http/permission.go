@@ -84,7 +84,7 @@ func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.UseCase.UpdatePermission(ctx, req); err != nil {
+	if err := h.UseCase.UpdatePermission(ctx, req, nil, nil); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

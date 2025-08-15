@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"case-management/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -40,10 +41,12 @@ func (u *UserUseCase) GetByUsername(ctx *gin.Context, username string) (*model.U
 }
 
 func (u *UserUseCase) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
+	utils.NormalizeUserInput(user)
 	return u.repo.Create(ctx, user)
 }
 
 func (u *UserUseCase) UpdateUserById(ctx *gin.Context, id uuid.UUID, userUpdate model.CreateUpdateUserRequest) error {
+	utils.NormalizeUserInput(&userUpdate)
 	return u.repo.Update(ctx, id, userUpdate)
 }
 

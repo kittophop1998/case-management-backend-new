@@ -18,8 +18,10 @@ func SeedUser(
 	isActive := true
 	defaultPassword := "Aeon*123"
 	userType := "local"
-	staffID := uint(1)
-	operatorID := uint(1)
+	staffIdAdmin := uint(1)
+	operatorIdAdmin := uint(1)
+	staffIdSupport := uint(2)
+	operatorIdSupport := uint(2)
 	users := []model.User{
 		{
 			Name:         "Admin",
@@ -29,10 +31,10 @@ func SeedUser(
 			SectionID:    sectionMap["CHL"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			StaffID:      &staffID,
+			StaffID:      &staffIdAdmin,
 			IsActive:     &isActive,
 			Email:        "admin@admin.com",
-			OperatorID:   &operatorID,
+			OperatorID:   &operatorIdAdmin,
 			DepartmentID: departmentMap["Marketing"],
 		},
 		{
@@ -43,10 +45,10 @@ func SeedUser(
 			SectionID:    sectionMap["CHL"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			StaffID:      &staffID,
+			StaffID:      &staffIdSupport,
 			IsActive:     &isActive,
 			Email:        "admin@admin.com",
-			OperatorID:   &operatorID,
+			OperatorID:   &operatorIdSupport,
 			DepartmentID: departmentMap["Marketing"],
 		},
 	}

@@ -28,7 +28,7 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"id": uid})
+	lib.HandleResponse(ctx, http.StatusCreated, uid)
 }
 
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
@@ -51,6 +51,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 	roleIdStr := ctx.Query("roleId")
 	sectionIdStr := ctx.Query("sectionId")
 	centerIdStr := ctx.Query("centerId")
+	departmentIdStr := ctx.Query("departmentId")
 	isActiveStr := ctx.Query("isActive")
 	var isActive *bool = nil
 	if isActiveStr != "" {
@@ -58,7 +59,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		isActive = &val
 	}
 
-	var roleID, sectionIdID, centerID uuid.UUID
+	var roleID, sectionIdID, centerID, departmentID uuid.UUID
 	if roleIdStr != "" {
 		if id, err := uuid.Parse(roleIdStr); err == nil {
 			roleID = id
@@ -74,14 +75,20 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 			centerID = id
 		}
 	}
+	if departmentIdStr != "" {
+		if id, err := uuid.Parse(departmentIdStr); err == nil {
+			departmentID = id
+		}
+	}
 
 	filter := model.UserFilter{
-		Keyword:   keyword,
-		Sort:      sort,
-		IsActive:  isActive,
-		RoleID:    roleID,
-		SectionID: sectionIdID,
-		CenterID:  centerID,
+		Keyword:      keyword,
+		Sort:         sort,
+		IsActive:     isActive,
+		RoleID:       roleID,
+		SectionID:    sectionIdID,
+		CenterID:     centerID,
+		DepartmentID: departmentID,
 	}
 
 	users, total, err := h.UseCase.GetAll(ctx, page, limit, filter)
@@ -90,7 +97,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, users, page, limit, total)
+	lib.HandlePaginatedResponse(ctx, page, limit, total, users)
 }
 
 func (h *UserHandler) GetUserByID(ctx *gin.Context) {
@@ -111,8 +118,8 @@ func (h *UserHandler) GetUserByID(ctx *gin.Context) {
 }
 
 func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
-	var input model.CreateUpdateUserRequest
-	if err := ctx.ShouldBindJSON(&input); err != nil {
+	var userUpdate model.CreateUpdateUserRequest
+	if err := ctx.ShouldBindJSON(&userUpdate); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
@@ -124,9 +131,9 @@ func (h *UserHandler) UpdateUserByID(ctx *gin.Context) {
 		return
 	}
 
-	err = h.UseCase.UpdateUserById(ctx, userId, input)
+	err = h.UseCase.UpdateUserById(ctx, userId, userUpdate)
 	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails("Can't update user"))
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 

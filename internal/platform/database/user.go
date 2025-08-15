@@ -27,10 +27,10 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Joins("LEFT JOIN roles ON roles.id = users.role_id").
-		Joins("LEFT JOIN centers ON centers.id = users.center_id").
-		Joins("LEFT JOIN sections ON sections.id = users.section_id").
-		Joins("LEFT JOIN departments ON departments.id = users.department_id")
+		Joins("LEFT JOIN roles as role ON role.id = users.role_id").
+		Joins("LEFT JOIN centers as center ON center.id = users.center_id").
+		Joins("LEFT JOIN sections as section ON section.id = users.section_id").
+		Joins("LEFT JOIN departments as department ON department.id = users.department_id")
 
 	if err := query.Find(&users).Error; err != nil {
 		return nil, err
@@ -58,6 +58,10 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 
 	if filter.CenterID != uuid.Nil {
 		query = query.Where("centers.id = ?", filter.CenterID)
+	}
+
+	if filter.DepartmentID != uuid.Nil {
+		query = query.Where("departments.id = ?", filter.DepartmentID)
 	}
 
 	if filter.Sort != "" {
@@ -104,17 +108,19 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 }
 
 func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
-	var existingUser model.User
-
-	if err := repo.db.WithContext(ctx).Where("staff_id = ?", user.StaffID).First(&existingUser).Error; err == nil {
-		return uuid.Nil, fmt.Errorf("staffId %d already exists", user.StaffID)
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID); err != nil {
 		return uuid.Nil, err
 	}
 
-	if err := repo.db.WithContext(ctx).Where("operator_id = ?", user.OperatorID).First(&existingUser).Error; err == nil {
-		return uuid.Nil, fmt.Errorf("operatorId %d already exists", user.OperatorID)
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := repo.isDuplicate(ctx, "username", user.Username); err != nil {
+		return uuid.Nil, err
+	}
+
+	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID); err != nil {
+		return uuid.Nil, err
+	}
+
+	if err := repo.isDuplicate(ctx, "email", user.Email); err != nil {
 		return uuid.Nil, err
 	}
 
@@ -144,42 +150,59 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 	return userToSave.ID, nil
 }
 
-func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, input model.CreateUpdateUserRequest) error {
+func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpdateUserRequest) error {
+	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID); err != nil {
+		return err
+	}
+
+	if err := repo.isDuplicate(ctx, "username", user.Username); err != nil {
+		return err
+	}
+
+	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID); err != nil {
+		return err
+	}
+
+	if err := repo.isDuplicate(ctx, "email", user.Email); err != nil {
+		return err
+	}
+
 	updateData := map[string]interface{}{}
 
-	if input.Name != "" {
-		updateData["name"] = input.Name
+	if user.Name != "" {
+		updateData["name"] = user.Name
 	}
-	if input.RoleID != uuid.Nil {
-		updateData["role_id"] = input.RoleID
+	if user.RoleID != uuid.Nil {
+		updateData["role_id"] = user.RoleID
 	}
-	if input.SectionID != uuid.Nil {
-		updateData["section_id"] = input.SectionID
+	if user.SectionID != uuid.Nil {
+		updateData["section_id"] = user.SectionID
 	}
-	if input.CenterID != uuid.Nil {
-		updateData["center_id"] = input.CenterID
+	if user.CenterID != uuid.Nil {
+		updateData["center_id"] = user.CenterID
 	}
-	if input.Username != "" {
-		updateData["username"] = input.Username
-	}
-
-	if input.DepartmentID != uuid.Nil {
-		updateData["department_id"] = input.DepartmentID
+	if user.Username != "" {
+		updateData["username"] = user.Username
 	}
 
-	if input.Email != "" {
-		updateData["email"] = input.Email
+	if user.DepartmentID != uuid.Nil {
+		updateData["department_id"] = user.DepartmentID
 	}
 
-	if input.StaffID != nil {
-		updateData["staff_id"] = *input.StaffID
-	}
-	if input.OperatorID != nil {
-		updateData["operator_id"] = *input.OperatorID
+	if user.Email != "" {
+		updateData["email"] = user.Email
 	}
 
-	if input.IsActive != nil {
-		updateData["is_active"] = *input.IsActive
+	if user.StaffID != nil {
+		updateData["staff_id"] = *user.StaffID
+	}
+
+	if user.OperatorID != nil {
+		updateData["operator_id"] = *user.OperatorID
+	}
+
+	if user.IsActive != nil {
+		updateData["is_active"] = *user.IsActive
 	}
 
 	if len(updateData) == 0 {
@@ -241,4 +264,14 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 	}
 
 	return int(count), nil
+}
+
+func (repo *UserPg) isDuplicate(ctx *gin.Context, field string, value interface{}) error {
+	var existingUser model.User
+	if err := repo.db.WithContext(ctx).Where(fmt.Sprintf("%s = ?", field), value).First(&existingUser).Error; err == nil {
+		return fmt.Errorf("%s %v already exists", field, value)
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	return nil
 }

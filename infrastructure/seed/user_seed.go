@@ -20,8 +20,8 @@ func SeedUser(
 	userType := "local"
 	staffIdAdmin := uint(1)
 	operatorIdAdmin := uint(1)
-	staffIdSupport := uint(2)
-	operatorIdSupport := uint(2)
+	// staffIdSupport := uint(2)
+	// operatorIdSupport := uint(2)
 	users := []model.User{
 		{
 			Name:         "Admin",
@@ -37,33 +37,25 @@ func SeedUser(
 			OperatorID:   &operatorIdAdmin,
 			DepartmentID: departmentMap["Marketing"],
 		},
-		{
-			Name:         "System-support",
-			Username:     "support",
-			Password:     defaultPassword,
-			UserTypes:    userType,
-			SectionID:    sectionMap["CHL"],
-			CenterID:     centerMap["BKK"],
-			RoleID:       roleMap["Admin"],
-			StaffID:      &staffIdSupport,
-			IsActive:     &isActive,
-			Email:        "support@admin.com",
-			OperatorID:   &operatorIdSupport,
-			DepartmentID: departmentMap["Marketing"],
-		},
+		// {
+		// 	Name:         "System-support",
+		// 	Username:     "support",
+		// 	Password:     defaultPassword,
+		// 	UserTypes:    userType,
+		// 	SectionID:    sectionMap["CHL"],
+		// 	CenterID:     centerMap["BKK"],
+		// 	RoleID:       roleMap["Admin"],
+		// 	StaffID:      &staffIdSupport,
+		// 	IsActive:     &isActive,
+		// 	Email:        "support@admin.com",
+		// 	OperatorID:   &operatorIdSupport,
+		// 	DepartmentID: departmentMap["Marketing"],
+		// },
 	}
 
 	for _, user := range users {
-		var existingUser model.User
-		if err := db.Where("username = ?", user.Username).First(&existingUser).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// User does not exist, create it
-				if err := db.Create(&user).Error; err != nil {
-					panic("Failed to seed user: " + err.Error())
-				}
-			} else {
-				panic("Failed to check existing user: " + err.Error())
-			}
+		if err := db.FirstOrCreate(&model.User{}, user).Error; err != nil {
+			panic("Failed to seed user: " + err.Error())
 		}
 	}
 }

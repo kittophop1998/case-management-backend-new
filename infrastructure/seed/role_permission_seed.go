@@ -2,6 +2,7 @@ package seed
 
 import (
 	"case-management/internal/domain/model"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -46,26 +47,29 @@ var rolePermissions = map[string][]string{
 	},
 }
 
-func SeedRolePermission(db *gorm.DB) error {
+func SeedRolePermission(db *gorm.DB, roleMap RoleMap, permissionMap PermissionMap) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		for roleName, permKeys := range rolePermissions {
-			var role model.Role
-			if err := tx.Where("name = ?", roleName).First(&role).Error; err != nil {
-				return err
+			roleID, ok := roleMap[roleName]
+			if !ok {
+				return fmt.Errorf("role not found in roleMap: %s", roleName)
 			}
 
-			var permissions []model.Permission
 			for _, permKey := range permKeys {
-				var permission model.Permission
-				if err := tx.Where("key = ?", permKey).First(&permission).Error; err != nil {
+				permID, ok := permissionMap[permKey]
+				if !ok {
+					return fmt.Errorf("permission not found in permissionMap: %s", permKey)
+				}
+
+				rp := model.RolePermission{
+					RoleID:       roleID,
+					PermissionID: permID,
+				}
+
+				// ถ้ามีแล้วจะไม่ insert ซ้ำ
+				if err := tx.FirstOrCreate(&rp, rp).Error; err != nil {
 					return err
 				}
-				permissions = append(permissions, permission)
-			}
-
-			// Replace ทั้งก้อนในรอบเดียว
-			if err := tx.Model(&role).Association("Permissions").Replace(permissions); err != nil {
-				return err
 			}
 		}
 		return nil

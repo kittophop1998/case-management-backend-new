@@ -9,18 +9,15 @@ import (
 
 func SeedAllData(db *gorm.DB) error {
 	// Seed master data
-	roleMap, sectionMap, centerMap, departmentMap, queueMap, dispositionMainMap := SeedMasterData(db)
+	sectionMap, centerMap, departmentMap, queueMap, dispositionMainMap := SeedMasterData(db)
+
+	roleMap := SeedRole(db)
+	permissionMap := SeedPermission(db)
+	SeedRolePermission(db, roleMap, permissionMap)
+	SeedUser(db, roleMap, sectionMap, centerMap, departmentMap, queueMap)
 
 	// Seed disposition sub data
 	SeedDispositionSub(db, dispositionMainMap)
-
-	// Seed role permissions
-	if err := SeedRolePermission(db); err != nil {
-		return err
-	}
-
-	// Seed users
-	SeedUser(db, roleMap, sectionMap, centerMap, departmentMap, queueMap)
 
 	return nil
 }

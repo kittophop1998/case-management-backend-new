@@ -1,7 +1,11 @@
 package http
 
 import (
+	"case-management/infrastructure/lib"
 	"case-management/internal/app/handler"
+	"encoding/json"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,5 +78,24 @@ func SetupRoutes(
 			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
 			customerRoutes.GET("/:customerId/notes", H.Customer.GetAllCustomerNotes)
 		}
+
+		// TODO: delete
+		apiV1.GET("/mock/*any", func(c *gin.Context) {
+			if c.Query("isError") != "" && c.Query("isError") != "false" {
+				time.Sleep(2 * time.Second)
+				lib.HandleError(c, lib.InternalServer)
+				return
+			}
+			datamock := c.Query("datamock")
+			var parsedData map[string]interface{}
+			if err := json.Unmarshal([]byte(datamock), &parsedData); err != nil {
+				lib.HandleError(c, lib.InternalServer)
+				return
+			}
+			time.Sleep(2 * time.Second)
+			c.JSON(http.StatusOK, gin.H{
+				"data": parsedData,
+			})
+		})
 	}
 }

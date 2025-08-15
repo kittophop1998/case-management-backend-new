@@ -49,19 +49,19 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 	}
 
 	if filter.RoleID != uuid.Nil {
-		query = query.Where("roles.id = ?", filter.RoleID)
+		query = query.Where("role.id = ?", filter.RoleID)
 	}
 
 	if filter.SectionID != uuid.Nil {
-		query = query.Where("sections.id = ?", filter.SectionID)
+		query = query.Where("section.id = ?", filter.SectionID)
 	}
 
 	if filter.CenterID != uuid.Nil {
-		query = query.Where("centers.id = ?", filter.CenterID)
+		query = query.Where("center.id = ?", filter.CenterID)
 	}
 
 	if filter.DepartmentID != uuid.Nil {
-		query = query.Where("departments.id = ?", filter.DepartmentID)
+		query = query.Where("department.id = ?", filter.DepartmentID)
 	}
 
 	if filter.Sort != "" {
@@ -108,19 +108,19 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 }
 
 func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest) (uuid.UUID, error) {
-	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID); err != nil {
+	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID, uuid.Nil); err != nil {
 		return uuid.Nil, err
 	}
 
-	if err := repo.isDuplicate(ctx, "username", user.Username); err != nil {
+	if err := repo.isDuplicate(ctx, "username", user.Username, uuid.Nil); err != nil {
 		return uuid.Nil, err
 	}
 
-	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID); err != nil {
+	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID, uuid.Nil); err != nil {
 		return uuid.Nil, err
 	}
 
-	if err := repo.isDuplicate(ctx, "email", user.Email); err != nil {
+	if err := repo.isDuplicate(ctx, "email", user.Email, uuid.Nil); err != nil {
 		return uuid.Nil, err
 	}
 
@@ -151,19 +151,19 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 }
 
 func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpdateUserRequest) error {
-	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID); err != nil {
+	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID, id); err != nil {
 		return err
 	}
 
-	if err := repo.isDuplicate(ctx, "username", user.Username); err != nil {
+	if err := repo.isDuplicate(ctx, "username", user.Username, id); err != nil {
 		return err
 	}
 
-	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID); err != nil {
+	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID, id); err != nil {
 		return err
 	}
 
-	if err := repo.isDuplicate(ctx, "email", user.Email); err != nil {
+	if err := repo.isDuplicate(ctx, "email", user.Email, id); err != nil {
 		return err
 	}
 
@@ -266,12 +266,19 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 	return int(count), nil
 }
 
-func (repo *UserPg) isDuplicate(ctx *gin.Context, field string, value interface{}) error {
+func (repo *UserPg) isDuplicate(ctx *gin.Context, field string, value interface{}, excludeID uuid.UUID) error {
 	var existingUser model.User
-	if err := repo.db.WithContext(ctx).Where(fmt.Sprintf("%s = ?", field), value).First(&existingUser).Error; err == nil {
+	query := repo.db.WithContext(ctx).Where(fmt.Sprintf("%s = ?", field), value)
+
+	if excludeID != uuid.Nil {
+		query = query.Where("id <> ?", excludeID)
+	}
+
+	if err := query.First(&existingUser).Error; err == nil {
 		return fmt.Errorf("%s %v already exists", field, value)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
+
 	return nil
 }

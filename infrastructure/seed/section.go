@@ -14,6 +14,7 @@ func SeedSection(db *gorm.DB) SectionMap {
 
 	sections := []model.Section{
 		{Name: "System"},
+		{Name: "CHL"},
 	}
 
 	for _, section := range sections {

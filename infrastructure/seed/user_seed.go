@@ -20,8 +20,8 @@ func SeedUser(
 	userType := "local"
 	staffIdAdmin := uint(1)
 	operatorIdAdmin := uint(1)
-	// staffIdSupport := uint(2)
-	// operatorIdSupport := uint(2)
+	staffIdSupport := uint(2)
+	operatorIdSupport := uint(2)
 	users := []model.User{
 		{
 			Name:         "Admin",
@@ -37,20 +37,20 @@ func SeedUser(
 			OperatorID:   &operatorIdAdmin,
 			DepartmentID: departmentMap["System"],
 		},
-		// {
-		// 	Name:         "System-support",
-		// 	Username:     "support",
-		// 	Password:     defaultPassword,
-		// 	UserTypes:    userType,
-		// 	SectionID:    sectionMap["CHL"],
-		// 	CenterID:     centerMap["BKK"],
-		// 	RoleID:       roleMap["Admin"],
-		// 	StaffID:      &staffIdSupport,
-		// 	IsActive:     &isActive,
-		// 	Email:        "support@admin.com",
-		// 	OperatorID:   &operatorIdSupport,
-		// 	DepartmentID: departmentMap["Marketing"],
-		// },
+		{
+			Name:         "System-support",
+			Username:     "support",
+			Password:     defaultPassword,
+			UserTypes:    userType,
+			SectionID:    sectionMap["System"],
+			CenterID:     centerMap["BKK"],
+			RoleID:       roleMap["Admin"],
+			StaffID:      &staffIdSupport,
+			IsActive:     &isActive,
+			Email:        "support@admin.com",
+			OperatorID:   &operatorIdSupport,
+			DepartmentID: departmentMap["System"],
+		},
 	}
 
 	for _, user := range users {

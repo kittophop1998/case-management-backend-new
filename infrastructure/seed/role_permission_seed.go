@@ -58,8 +58,6 @@ func SeedRolePermission(
 					SectionID:    secID,
 				}
 
-				fmt.Println("Seeding RolePermission:", rp)
-
 				condition := map[string]interface{}{
 					"role_id":       roleID,
 					"permission_id": permID,

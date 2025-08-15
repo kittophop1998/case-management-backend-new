@@ -16,8 +16,10 @@ type Role struct {
 }
 
 type RolePermission struct {
-	RoleID       uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
-	PermissionID uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
+	RoleID       uuid.UUID  `gorm:"type:uuid;not null;primaryKey"`
+	PermissionID uuid.UUID  `gorm:"type:uuid;not null;primaryKey"`
+	SectionID    *uuid.UUID `gorm:"type:uuid"`
+	DepartmentID *uuid.UUID `gorm:"type:uuid"`
 }
 
 type Center struct {

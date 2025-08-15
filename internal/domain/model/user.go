@@ -4,8 +4,8 @@ import "github.com/google/uuid"
 
 type User struct {
 	Model
-	StaffID      *uint      `json:"staffId" gorm:"unique"`
-	Username     string     `gorm:"type:varchar(50)" json:"username" example:"user"`
+	StaffID      *uint      `json:"staffId" gorm:"uniqueIndex"`
+	Username     string     `gorm:"uniqueIndex;type:varchar(50)" json:"username" example:"user"`
 	Email        string     `gorm:"type:varchar(100)" json:"email" example:"user@example.com"`
 	Name         string     `gorm:"type:varchar(100)" json:"name"`
 	SectionID    uuid.UUID  `json:"sectionId"`

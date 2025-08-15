@@ -47,7 +47,7 @@ func SeedUser(
 			RoleID:       roleMap["Admin"],
 			StaffID:      &staffIdSupport,
 			IsActive:     &isActive,
-			Email:        "admin@admin.com",
+			Email:        "support@admin.com",
 			OperatorID:   &operatorIdSupport,
 			DepartmentID: departmentMap["Marketing"],
 		},

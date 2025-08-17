@@ -42,6 +42,7 @@ var (
 	GatewayTimeout = NewAppError(http.StatusGatewayTimeout, MessageError{"หมดเวลาการเชื่อมต่อ", "Gateway Timeout"}, nil)
 	Unauthorized   = NewAppError(http.StatusUnauthorized, MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
 	NotFound       = NewAppError(http.StatusNotFound, MessageError{"ไม่พบข้อมูล", "Not Found"}, nil)
+	CannotUpdate   = NewAppError(http.StatusConflict, MessageError{"ไม่สามารถอัปเดตข้อมูลได้", "Cannot Update"}, nil)
 )
 
 type ApiErrorResponse struct {

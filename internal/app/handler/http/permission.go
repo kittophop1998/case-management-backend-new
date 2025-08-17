@@ -30,13 +30,13 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 	permissionName := ctx.Query("name")
 	var sectionID, departmentID *uuid.UUID
 
-	if sid := ctx.Query("section_id"); sid != "" {
+	if sid := ctx.Query("sectionId"); sid != "" {
 		if parsed, err := uuid.Parse(sid); err == nil {
 			sectionID = &parsed
 		}
 	}
 
-	if did := ctx.Query("department_id"); did != "" {
+	if did := ctx.Query("departmentId"); did != "" {
 		if parsed, err := uuid.Parse(did); err == nil {
 			departmentID = &parsed
 		}
@@ -65,7 +65,7 @@ func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {
 		}
 	}
 
-	if secId := ctx.Query("SectionId"); secId != "" {
+	if secId := ctx.Query("sectionId"); secId != "" {
 		if parsed, err := uuid.Parse(secId); err == nil {
 			secUUID = parsed
 		}
@@ -73,14 +73,14 @@ func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {
 
 	var reqs []model.UpdatePermissionRequest
 	if err := ctx.ShouldBindJSON(&reqs); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	if err := h.UseCase.UpdatePermission(ctx, reqs, deptUUID, secUUID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		lib.HandleError(ctx, lib.CannotUpdate.WithDetails(err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Permission updated successfully"})
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"message": "Permissions updated successfully"})
 }

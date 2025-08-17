@@ -3,23 +3,22 @@ package model
 import "github.com/google/uuid"
 
 type Permission struct {
-	ID    uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Key   string    `gorm:"uniqueIndex;not null" json:"key"`
-	Name  string    `gorm:"uniqueIndex;not null" json:"name"`
-	Roles []Role    `gorm:"many2many:role_permissions"`
+	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Key  string    `gorm:"uniqueIndex;not null" json:"key"`
+	Name string    `gorm:"uniqueIndex;not null" json:"name"`
 }
 
 type Role struct {
-	ID          uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name        string       `gorm:"uniqueIndex;not null" json:"name"`
-	Permissions []Permission `gorm:"many2many:role_permissions" json:"permissions"`
+	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name string    `gorm:"uniqueIndex;not null" json:"name"`
 }
 
+// join table
 type RolePermission struct {
-	RoleID       uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_role_permission"`
-	PermissionID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_role_permission"`
-	SectionID    uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_role_permission"`
-	DepartmentID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_role_permission"`
+	RoleID       uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
+	PermissionID uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
+	SectionID    uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
+	DepartmentID uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
 }
 
 type Center struct {

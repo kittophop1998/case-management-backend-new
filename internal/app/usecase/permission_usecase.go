@@ -48,11 +48,6 @@ func (p *PermissionUseCase) GetAllPermissions(ctx *gin.Context, page, limit int,
 	return permissions, total, nil
 }
 
-func (p *PermissionUseCase) UpdatePermission(
-	ctx *gin.Context,
-	reqs []model.UpdatePermissionRequest,
-	departmentId uuid.UUID,
-	sectionId uuid.UUID,
-) error {
+func (p *PermissionUseCase) UpdatePermission(ctx *gin.Context, reqs []model.UpdatePermissionRequest, departmentId uuid.UUID, sectionId uuid.UUID) error {
 	return p.permissionRepo.UpdatePermission(ctx, departmentId, sectionId, reqs)
 }

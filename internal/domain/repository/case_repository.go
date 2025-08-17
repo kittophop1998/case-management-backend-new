@@ -17,6 +17,4 @@ type CaseRepository interface {
 	CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error
 	GetAllDisposition(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error)
 	// GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model.NoteTypes, error)
-	// CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error)
-	// CreateNoteType(ctx *gin.Context, note model.NoteTypes) (*model.NoteTypes, error)
 }

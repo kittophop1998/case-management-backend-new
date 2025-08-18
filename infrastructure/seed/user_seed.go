@@ -55,6 +55,8 @@ func SeedUser(
 	}
 
 	for i := 3; i < 22; i++ {
+		staffId := uint(i)
+		operatorId := uint(i)
 		users = append(users, model.User{
 			Name:         fmt.Sprintf("User-%d", i),
 			Username:     fmt.Sprintf("user%d", i),
@@ -63,10 +65,10 @@ func SeedUser(
 			SectionID:    sectionMap["System"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
-			StaffID:      &staffIdSupport,
+			StaffID:      &staffId,
 			IsActive:     &isActive,
 			Email:        fmt.Sprintf("user%d@admin.com", i),
-			OperatorID:   &operatorIdSupport,
+			OperatorID:   &operatorId,
 			DepartmentID: departmentMap["Finance"],
 		})
 	}

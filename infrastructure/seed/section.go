@@ -13,15 +13,20 @@ func SeedSection(db *gorm.DB) SectionMap {
 	sectionMap := make(SectionMap)
 
 	sections := []model.Section{
-		{Name: "System"},
-		{Name: "CHL"},
+		{Key: "SYSTEM", Name: "System"},
+		{Key: "CHB", Name: "Chargeback"},
+		{Key: "CSD", Name: "Customer service Development"},
+		{Key: "ONB", Name: "Inbound BBK"},
+		{Key: "ONC", Name: "Inbound CM"},
+		{Key: "ONK", Name: "Inbound KK"},
+		{Key: "ONH", Name: "Inbound HY"},
 	}
 
 	for _, section := range sections {
 		if err := db.FirstOrCreate(&section, model.Section{Name: section.Name}).Error; err != nil {
 			panic(err)
 		}
-		sectionMap[section.Name] = section.ID
+		sectionMap[section.Key] = section.ID
 	}
 
 	return sectionMap

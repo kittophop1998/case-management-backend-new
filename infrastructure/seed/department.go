@@ -13,18 +13,21 @@ func SeedDepartment(db *gorm.DB) DepartmentMap {
 	departmentMap := make(DepartmentMap)
 
 	departments := []model.Department{
-		{Name: "System"},
-		{Name: "Finance"},
-		{Name: "Engineering"},
-		{Name: "Sales"},
-		{Name: "Marketing"},
+		{Key: "SYSTEM", Name: "System"},
+		{Key: "CMS", Name: "Customer Service"},
+		{Key: "Fraud", Name: "Engineering"},
+		{Key: "Collection", Name: "Collection"},
+		{Key: "EDP", Name: "EDP"},
+		{Key: "AUTH", Name: "Authorize"},
+		{Key: "Custodian", Name: "Custodian"},
+		{Key: "Branch", Name: "Branch"},
 	}
 
 	for _, department := range departments {
 		if err := db.FirstOrCreate(&department, model.Department{Name: department.Name}).Error; err != nil {
 			panic(err)
 		}
-		departmentMap[department.Name] = department.ID
+		departmentMap[department.Key] = department.ID
 	}
 
 	return departmentMap

@@ -28,6 +28,7 @@ type Center struct {
 
 type Section struct {
 	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Key  string    `gorm:"uniqueIndex;not null" json:"key"`
 	Name string    `gorm:"type:varchar(100)" json:"name"`
 }
 
@@ -38,6 +39,7 @@ type Queue struct {
 
 type Department struct {
 	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Key  string    `gorm:"uniqueIndex;not null" json:"key"`
 	Name string    `gorm:"type:varchar(100)" json:"name"`
 }
 

@@ -74,7 +74,7 @@ func SeedUser(
 	}
 
 	for _, user := range users {
-		if err := db.FirstOrCreate(&model.User{}, user).Error; err != nil {
+		if err := db.FirstOrCreate(&user, model.User{Username: user.Username}).Error; err != nil {
 			panic("Failed to seed user: " + err.Error())
 		}
 	}

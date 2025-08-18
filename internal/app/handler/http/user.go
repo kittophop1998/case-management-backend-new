@@ -110,7 +110,7 @@ func (h *UserHandler) GetUserByID(ctx *gin.Context) {
 
 	user, err := h.UseCase.GetById(ctx, userId)
 	if err != nil {
-		lib.HandleError(ctx, lib.NotFound.WithDetails(err.Error()))
+		lib.HandleError(ctx, lib.NotFound.WithDetails("test"+err.Error()))
 		return
 	}
 

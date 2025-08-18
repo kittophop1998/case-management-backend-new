@@ -138,7 +138,7 @@ func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Where(&id, model.User{ID: id}).First(&user).Error; err != nil {
+		Where(&id, model.User{ID: id}).Error; err != nil {
 		return nil, err
 	}
 
@@ -204,22 +204,6 @@ func (repo *UserPg) Create(ctx *gin.Context, user *model.CreateUpdateUserRequest
 }
 
 func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpdateUserRequest) error {
-	if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID, id); err != nil {
-		return err
-	}
-
-	if err := repo.isDuplicate(ctx, "username", user.Username, id); err != nil {
-		return err
-	}
-
-	if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID, id); err != nil {
-		return err
-	}
-
-	if err := repo.isDuplicate(ctx, "email", user.Email, id); err != nil {
-		return err
-	}
-
 	updateData := map[string]interface{}{}
 
 	if user.Name != "" {
@@ -235,6 +219,9 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpda
 		updateData["center_id"] = user.CenterID
 	}
 	if user.Username != "" {
+		if err := repo.isDuplicate(ctx, "username", user.Username, id); err != nil {
+			return err
+		}
 		updateData["username"] = user.Username
 	}
 
@@ -243,14 +230,23 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpda
 	}
 
 	if user.Email != "" {
+		if err := repo.isDuplicate(ctx, "email", user.Email, id); err != nil {
+			return err
+		}
 		updateData["email"] = user.Email
 	}
 
 	if user.StaffID != nil {
+		if err := repo.isDuplicate(ctx, "staff_id", *user.StaffID, id); err != nil {
+			return err
+		}
 		updateData["staff_id"] = *user.StaffID
 	}
 
 	if user.OperatorID != nil {
+		if err := repo.isDuplicate(ctx, "operator_id", *user.OperatorID, id); err != nil {
+			return err
+		}
 		updateData["operator_id"] = *user.OperatorID
 	}
 

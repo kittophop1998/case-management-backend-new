@@ -25,25 +25,25 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	result["sections"] = sections
 
 	var centers []model.Center
-	if err := repo.db.WithContext(ctx).Model(&model.Center{}).Find(&centers).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Find(&centers).Error; err != nil {
 		return nil, err
 	}
 	result["centers"] = centers
 
 	var permissions []model.Permission
-	if err := repo.db.WithContext(ctx).Model(&model.Permission{}).Find(&permissions).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 	result["permissions"] = permissions
 
 	var roles []model.Role
-	if err := repo.db.WithContext(ctx).Model(&model.Role{}).Find(&roles).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	result["roles"] = roles
 
 	var departments []model.Department
-	if err := repo.db.WithContext(ctx).Model(&model.Department{}).Find(&departments).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Find(&departments).Error; err != nil {
 		return nil, err
 	}
 	result["departments"] = departments

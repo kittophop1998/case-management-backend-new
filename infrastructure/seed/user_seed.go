@@ -2,6 +2,7 @@ package seed
 
 import (
 	"case-management/internal/domain/model"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -51,6 +52,23 @@ func SeedUser(
 			OperatorID:   &operatorIdSupport,
 			DepartmentID: departmentMap["System"],
 		},
+	}
+
+	for i := 3; i < 22; i++ {
+		users = append(users, model.User{
+			Name:         fmt.Sprintf("User-%d", i),
+			Username:     fmt.Sprintf("user%d", i),
+			Password:     defaultPassword,
+			UserTypes:    userType,
+			SectionID:    sectionMap["System"],
+			CenterID:     centerMap["BKK"],
+			RoleID:       roleMap["Admin"],
+			StaffID:      &staffIdSupport,
+			IsActive:     &isActive,
+			Email:        fmt.Sprintf("user%d@admin.com", i),
+			OperatorID:   &operatorIdSupport,
+			DepartmentID: departmentMap["Finance"],
+		})
 	}
 
 	for _, user := range users {

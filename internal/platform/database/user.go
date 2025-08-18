@@ -138,7 +138,8 @@ func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Where(&id, model.User{ID: id}).Error; err != nil {
+		Where("id = ?", id).
+		First(&user).Error; err != nil {
 		return nil, err
 	}
 

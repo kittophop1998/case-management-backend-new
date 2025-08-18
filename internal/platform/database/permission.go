@@ -26,6 +26,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 	if err := permQuery.
 		Limit(limit).
 		Offset(offset).
+		Order("name ASC").
 		Find(&permissions).Error; err != nil {
 		return nil, err
 	}

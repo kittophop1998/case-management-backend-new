@@ -14,8 +14,18 @@ func SeedPermission(db *gorm.DB) PermissionMap {
 
 	permissions := []model.Permission{
 		{Key: "view.profile", Name: "View profile"},
-		{Key: "view.user", Name: "View User List"},
-		{Key: "add.user", Name: "add user (individual and import)"},
+		{Key: "view.user", Name: "View user list"},
+		{Key: "add.user", Name: "Add user (individual and import)"},
+		{Key: "edit.user", Name: "Edit user"},
+		{Key: "view.accesscontrol", Name: "View access control list"},
+		{Key: "edit.accesscontrol", Name: "Edit access control"},
+		{Key: "search.customer", Name: "Search for customer"},
+		{Key: "add.custnote", Name: "Add customer note"},
+		{Key: "view.custnote", Name: "View customer note (list and detail)"},
+		{Key: "add.case", Name: "Add new case"},
+		{Key: "view.case", Name: "View case (list and detail)"},
+		{Key: "edit.case", Name: "Edit case"},
+		{Key: "add.casenote", Name: "Add case note"},
 	}
 
 	for _, perm := range permissions {

@@ -43,7 +43,7 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 		Select("p.id, p.key, p.name").
 		Joins("JOIN permissions AS p ON rp.permission_id = p.id").
 		Where("rp.role_id = ? AND rp.department_id = ?", user.RoleID, user.DepartmentID).
-		Scan(&perms).Error
+		Debug().Scan(&perms).Error
 	if err != nil {
 		return nil, err
 	}

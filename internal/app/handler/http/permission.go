@@ -56,17 +56,21 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 }
 
 func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {
-	departmentId := ctx.Query("departmentId")
-
 	var deptUUID, secUUID uuid.UUID
 	if deptId := ctx.Query("departmentId"); deptId != "" {
-		if parsed, err := uuid.Parse(departmentId); err == nil {
+		if parsed, err := uuid.Parse(deptId); err != nil {
+			lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid department ID, err :"+err.Error()))
+			return
+		} else {
 			deptUUID = parsed
 		}
 	}
 
 	if secId := ctx.Query("sectionId"); secId != "" {
-		if parsed, err := uuid.Parse(secId); err == nil {
+		if parsed, err := uuid.Parse(secId); err != nil {
+			lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid section ID, err :"+err.Error()))
+			return
+		} else {
 			secUUID = parsed
 		}
 	}

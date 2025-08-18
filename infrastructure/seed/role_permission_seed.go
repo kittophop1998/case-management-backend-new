@@ -9,12 +9,19 @@ import (
 
 var rolesConfig = map[string][]string{
 	"System": {
-		"user.login",
-		"user.profile",
-		"user.assess",
-		"user.customersearch",
-		"user.verifycustomer",
-		"user.customerdashboard",
+		"view.profile",
+		"view.user",
+		"add.user",
+		"edit.user",
+		"view.accesscontrol",
+		"edit.accesscontrol",
+		"search.customer",
+		"add.custnote",
+		"view.custnote",
+		"add.case",
+		"view.case",
+		"edit.case",
+		"add.casenote",
 	},
 }
 

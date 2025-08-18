@@ -28,9 +28,7 @@ func SeedRolePermission(
 	return db.Transaction(func(tx *gorm.DB) error {
 
 		for roleName, perms := range rolesConfig {
-			fmt.Println("Seeding RolePermission...", roleName)
 			roleID, ok := roleMap[roleName]
-			fmt.Println("Seeding RolePermission...1", roleID)
 			if !ok {
 				return fmt.Errorf("role not found in roleMap: %s", roleName)
 			}

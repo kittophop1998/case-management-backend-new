@@ -27,7 +27,7 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		return
 	}
 
-	permissionName := ctx.Query("name")
+	permissionName := ctx.Query("keyword")
 	var sectionID, departmentID *uuid.UUID
 
 	if sid := ctx.Query("sectionId"); sid != "" {

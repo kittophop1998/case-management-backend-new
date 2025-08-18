@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/auth"
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ func NewAuthUseCase(repo repository.UserRepository, authRepo repository.AuthRepo
 }
 
 func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.LoginResponse, error) {
+	fmt.Printf("Attempting login for user: %s\n", req.Username)
 	user, err := a.repo.GetByUsername(ctx, req.Username)
 	if err != nil {
 		return nil, err

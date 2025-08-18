@@ -155,7 +155,7 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Center").
 		Preload("Section").
 		Where("username = ?", username).
-		First(&user).Error; err != nil {
+		Debug().First(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -260,7 +260,7 @@ func (repo *UserPg) Update(ctx *gin.Context, id uuid.UUID, user model.CreateUpda
 		return errors.New("no valid fields to update")
 	}
 
-	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Debug().Updates(updateData).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Updates(updateData).Error; err != nil {
 		return err
 	}
 

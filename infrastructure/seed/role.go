@@ -23,7 +23,7 @@ func SeedRole(db *gorm.DB) RoleMap {
 
 	for _, role := range roles {
 		if err := db.FirstOrCreate(&role, model.Role{Name: role.Name}).Error; err != nil {
-			panic(err)
+			panic("failed to seed roles: " + err.Error())
 		}
 		roleMap[role.Name] = role.ID
 	}

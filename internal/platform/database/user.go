@@ -19,6 +19,63 @@ func NewUserPg(db *gorm.DB) *UserPg {
 	return &UserPg{db: db}
 }
 
+func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserProfileResponse, error) {
+	fmt.Println("Fetching user profile...")
+	if userId == uuid.Nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	var user model.User
+	// ดึง user พร้อม preload
+	if err := repo.db.WithContext(ctx).
+		Preload("Role").
+		Preload("Department").
+		Preload("Section").
+		Preload("Center").
+		First(&user, model.User{ID: userId}).Error; err != nil {
+		return nil, err
+	}
+
+	// ดึง permissions ของ user
+	var perms []model.Permission
+	err := repo.db.WithContext(ctx).
+		Table("role_permissions AS rp").
+		Select("p.id, p.key, p.name").
+		Joins("JOIN permissions AS p ON rp.permission_id = p.id").
+		Where("rp.role_id = ? AND rp.department_id = ?", user.RoleID, user.DepartmentID).
+		Scan(&perms).Error
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &model.UserProfileResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Name:     user.Name,
+		Role: model.Role{
+			ID:   user.Role.ID,
+			Name: user.Role.Name,
+		},
+		Department: model.Department{
+			ID:   user.Department.ID,
+			Name: user.Department.Name,
+		},
+		Section: model.Section{
+			ID:   user.Section.ID,
+			Name: user.Section.Name,
+		},
+		Center: model.Center{
+			ID:   user.Center.ID,
+			Name: user.Center.Name,
+		},
+		Permissions: perms,
+	}
+
+	fmt.Println("User profile retrieved:", resp)
+
+	return resp, nil
+}
+
 func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model.UserFilter) ([]*model.User, error) {
 	var users []*model.User
 
@@ -83,8 +140,7 @@ func (repo *UserPg) GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 		Preload("Center").
 		Preload("Section").
 		Preload("Department").
-		Preload("Role.Permissions").
-		Where("id = ?", id).First(&user).Error; err != nil {
+		Where(&id, model.User{ID: id}).First(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -97,7 +153,6 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 	if err := repo.db.WithContext(ctx).
 		Preload("Role").
 		Preload("Center").
-		Preload("Role.Permissions").
 		Preload("Section").
 		Where("username = ?", username).
 		First(&user).Error; err != nil {

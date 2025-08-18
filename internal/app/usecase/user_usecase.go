@@ -17,6 +17,14 @@ func NewUserUseCase(repo repository.UserRepository) *UserUseCase {
 	return &UserUseCase{repo: repo}
 }
 
+func (u *UserUseCase) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserProfileResponse, error) {
+	profile, err := u.repo.GetProfile(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
 func (u *UserUseCase) GetAll(ctx *gin.Context, page, limit int, filter model.UserFilter) ([]*model.User, int, error) {
 	offset := (page - 1) * limit
 	users, err := u.repo.GetAll(ctx, offset, limit, filter)

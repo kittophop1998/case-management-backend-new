@@ -56,6 +56,17 @@ type UserFilter struct {
 	DepartmentID uuid.UUID `json:"departmentID,omitempty"`
 }
 
+type UserProfileResponse struct {
+	ID          uuid.UUID    `json:"id"`
+	Username    string       `json:"username"`
+	Name        string       `json:"name"`
+	Role        Role         `json:"role"`
+	Department  Department   `json:"department"`
+	Section     Section      `json:"section"`
+	Center      Center       `json:"center"`
+	Permissions []Permission `json:"permissions"`
+}
+
 // ##### Customer #####
 
 type StatusResponse struct {

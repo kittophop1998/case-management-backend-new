@@ -8,6 +8,7 @@ import (
 )
 
 type UserRepository interface {
+	GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserProfileResponse, error)
 	GetAll(ctx *gin.Context, offset int, limit int, filter model.UserFilter) ([]*model.User, error)
 	GetById(ctx *gin.Context, id uuid.UUID) (*model.User, error)
 	GetByUsername(ctx *gin.Context, username string) (*model.User, error)

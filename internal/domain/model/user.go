@@ -1,9 +1,13 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
-	Model
+	ID           uuid.UUID  `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
 	StaffID      *uint      `json:"staffId" gorm:"uniqueIndex"`
 	Username     string     `gorm:"uniqueIndex;type:varchar(50)" json:"username" example:"user"`
 	Email        string     `gorm:"type:varchar(100)" json:"email" example:"user@example.com"`
@@ -12,12 +16,16 @@ type User struct {
 	Section      Section    `gorm:"foreignKey:SectionID" json:"section"`
 	IsActive     *bool      `json:"isActive" gorm:"default:true"`
 	CenterID     uuid.UUID  `json:"centerId"`
-	Center       Center     `gorm:"foreignKey:CenterID" json:"center"`
+	Center       Center     `json:"center"`
 	RoleID       uuid.UUID  `json:"roleId"`
-	Role         Role       `gorm:"foreignKey:RoleID" json:"role"`
+	Role         Role       `json:"role"`
 	OperatorID   *uint      `json:"operatorId"`
-	Department   Department `gorm:"foreignKey:DepartmentID" json:"department"`
+	Department   Department `json:"department"`
 	DepartmentID uuid.UUID  `json:"departmentId"`
-	Password     string     `json:"password"`
-	UserTypes    string     `json:"userTypes"`
+	Password     string     `json:"-"`
+	UserTypes    string     `json:"-"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	CreatedBy    uuid.UUID  `json:"createdBy"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	UpdatedBy    uuid.UUID  `json:"updatedBy"`
 }

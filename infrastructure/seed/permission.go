@@ -28,7 +28,7 @@ func SeedPermission(db *gorm.DB) PermissionMap {
 
 	for _, perm := range permissions {
 		if err := db.FirstOrCreate(&perm, model.Permission{Key: perm.Key}).Error; err != nil {
-			panic(err)
+			panic("failed to seed permissions: " + err.Error())
 		}
 		permissionMap[perm.Key] = perm.ID
 	}

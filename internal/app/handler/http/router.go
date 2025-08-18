@@ -27,7 +27,7 @@ func SetupRoutes(
 		}
 
 		userRoutes := apiV1.Group("/users")
-		userRoutes.Use(handler.ValidateToken())
+		// userRoutes.Use(handler.ValidateToken())
 		{
 			userRoutes.POST("", H.User.CreateUser)
 			userRoutes.GET("", H.User.GetAllUsers)

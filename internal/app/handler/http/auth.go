@@ -55,32 +55,18 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Profile(ctx *gin.Context) {
-	id, exists := ctx.Get("userId")
-	if !exists {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	idStr, ok := id.(string)
-	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Error id is not string"})
-		return
-	}
-
+	idStr := ctx.GetString("userId")
 	userId, err := uuid.Parse(idStr)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Error parsing user ID"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
-	user, err := h.UserUseCase.GetById(ctx, userId)
+	user, err := h.UserUseCase.GetProfile(ctx, userId)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to fetch profile",
-			"details": err.Error(),
-		})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user)
+	lib.HandleResponse(ctx, http.StatusOK, user)
 }

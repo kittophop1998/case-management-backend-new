@@ -60,6 +60,7 @@ type UserProfileResponse struct {
 	ID          uuid.UUID    `json:"id"`
 	Username    string       `json:"username"`
 	Name        string       `json:"name"`
+	Email       string       `json:"email"`
 	Role        Role         `json:"role"`
 	Department  Department   `json:"department"`
 	Section     Section      `json:"section"`

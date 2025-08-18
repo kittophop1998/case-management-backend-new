@@ -50,6 +50,7 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 		ID:       user.ID,
 		Username: user.Username,
 		Name:     user.Name,
+		Email:    user.Email,
 		Role: model.Role{
 			ID:   user.Role.ID,
 			Name: user.Role.Name,

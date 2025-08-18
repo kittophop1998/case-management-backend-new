@@ -19,7 +19,7 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	result := make(map[string]interface{})
 
 	var sections []model.Section
-	if err := repo.db.WithContext(ctx).Model(&model.Section{}).Find(&sections).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Find(&sections).Error; err != nil {
 		return nil, err
 	}
 	result["sections"] = sections

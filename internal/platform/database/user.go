@@ -26,7 +26,6 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 	}
 
 	var user model.User
-	// ดึง user พร้อม preload
 	if err := repo.db.WithContext(ctx).
 		Preload("Role").
 		Preload("Department").
@@ -36,7 +35,6 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 		return nil, err
 	}
 
-	// ดึง permissions ของ user
 	var perms []model.Permission
 	err := repo.db.WithContext(ctx).
 		Table("role_permissions AS rp").

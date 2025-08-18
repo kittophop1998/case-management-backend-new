@@ -24,17 +24,11 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	}
 	result["sections"] = sections
 
-	// var queues []model.Queue
-	// if err := repo.db.WithContext(ctx).Model(&model.Queue{}).Find(&queues).Error; err != nil {
+	// var roles []model.Role
+	// if err := repo.db.WithContext(ctx).Preload("Permissions").Find(&roles).Error; err != nil {
 	// 	return nil, err
 	// }
-	// result["queues"] = queues
-
-	var roles []model.Role
-	if err := repo.db.WithContext(ctx).Preload("Permissions").Find(&roles).Error; err != nil {
-		return nil, err
-	}
-	result["roles"] = roles
+	// result["roles"] = roles
 
 	var centers []model.Center
 	if err := repo.db.WithContext(ctx).Model(&model.Center{}).Find(&centers).Error; err != nil {
@@ -42,11 +36,11 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	}
 	result["centers"] = centers
 
-	var permissions []model.Permission
-	if err := repo.db.WithContext(ctx).Model(&model.Permission{}).Find(&permissions).Error; err != nil {
-		return nil, err
-	}
-	result["permissions"] = permissions
+	// var permissions []model.Permission
+	// if err := repo.db.WithContext(ctx).Model(&model.Permission{}).Find(&permissions).Error; err != nil {
+	// 	return nil, err
+	// }
+	// result["permissions"] = permissions
 
 	var departments []model.Department
 	if err := repo.db.WithContext(ctx).Model(&model.Department{}).Find(&departments).Error; err != nil {

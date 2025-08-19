@@ -36,26 +36,23 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		return nil, 0, err
 	}
 
-	permMap := make(map[uuid.UUID]*model.PermissionWithRolesResponse)
+	results := make([]model.PermissionWithRolesResponse, 0, len(permissions))
+	permissionIDs := make([]uuid.UUID, 0, len(permissions))
 	for _, perm := range permissions {
-		permMap[perm.ID] = &model.PermissionWithRolesResponse{
+		results = append(results, model.PermissionWithRolesResponse{
 			Permission: perm.Key,
 			Name:       perm.Name,
 			Roles:      []string{},
-		}
-	}
-
-	type roleRow struct {
-		PermissionID uuid.UUID
-		RoleName     string
-	}
-
-	permissionIDs := make([]uuid.UUID, 0, len(permissions))
-	for _, perm := range permissions {
+		})
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
 	if len(permissionIDs) > 0 {
+		type roleRow struct {
+			PermissionID uuid.UUID
+			RoleName     string
+		}
+
 		roleQuery := p.db.WithContext(ctx).
 			Table("role_permissions AS rp").
 			Select("rp.permission_id, r.name AS role_name").
@@ -74,16 +71,14 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 			return nil, 0, err
 		}
 
-		for _, row := range roleRows {
-			if permResp, ok := permMap[row.PermissionID]; ok {
-				permResp.Roles = append(permResp.Roles, row.RoleName)
+		// เติม Roles ให้ตรงกับ Permission
+		for i := range results {
+			for _, row := range roleRows {
+				if row.PermissionID == permissionIDs[i] {
+					results[i].Roles = append(results[i].Roles, row.RoleName)
+				}
 			}
 		}
-	}
-
-	results := make([]model.PermissionWithRolesResponse, 0, len(permMap))
-	for _, v := range permMap {
-		results = append(results, *v)
 	}
 
 	return results, int(total), nil
@@ -173,33 +168,4 @@ func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID
 
 		return nil
 	})
-}
-
-func (p *PermissionPg) CountPermissions(ctx *gin.Context, permissionName string, sectionID, departmentID *uuid.UUID) (int, error) {
-	var count int64
-	query := p.db.WithContext(ctx).Model(&model.Permission{})
-
-	if permissionName != "" {
-		query = query.Where("permissions.name ILIKE ?", "%"+permissionName+"%")
-	}
-
-	subQuery := p.db.Table("permissions").
-		Select("permissions.id").
-		Joins("LEFT JOIN role_permissions rp ON rp.permission_id = permissions.id")
-
-	if sectionID != nil {
-		subQuery = subQuery.Where("rp.section_id = ?", *sectionID)
-	}
-	if departmentID != nil {
-		subQuery = subQuery.Where("rp.department_id = ?", *departmentID)
-	}
-	if permissionName != "" {
-		subQuery = subQuery.Where("permissions.name ILIKE ?", "%"+permissionName+"%")
-	}
-
-	if err := p.db.Table("(?) as sub", subQuery).Count(&count).Error; err != nil {
-		return 0, err
-	}
-
-	return int(count), nil
 }

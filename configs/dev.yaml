@@ -11,11 +11,11 @@ server:
 
 # Database Configuration (PostgreSQL)
 database:
-  host: "postgres.railway.internal"
+  host: "localhost"
   port: 5432
   user: "postgres"
-  password: "eRVDZckmPOxaDqNvqGYFACorieIhXtVi"
-  dbname: "railway"
+  password: "postgres"
+  dbname: "cms"
   sslmode: "disable"
 
 # External Services Configuration

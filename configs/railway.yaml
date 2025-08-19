@@ -1,6 +1,6 @@
 # Application Configuration
 app:
-  name: "Template Go BFF"
+  name: "Case Management Backend"
   version: "1.0.0"
 
 # Server Configuration
@@ -11,18 +11,9 @@ server:
 
 # Database Configuration (PostgreSQL)
 database:
-  host: "10.251.1.103"
+  host: "postgres.railway.internal"
   port: 5432
-  user: "bff"
-  password: "Aeon*123"
-  dbname: "case-management-backend-sit"
+  user: "postgres"
+  password: "eRVDZckmPOxaDqNvqGYFACorieIhXtVi"
+  dbname: "railway"
   sslmode: "disable"
-
-ldap:
-  host: "10.100.4.2"
-  port: 389
-
-# External Services Configuration
-services:
-  agreement_api:
-    base_url: "http://localhost:8001/api/v1"

@@ -36,6 +36,9 @@ FROM debian:stable-slim
 # Set workdir
 WORKDIR /root/
 
+# Set environment variable
+ENV ENV_NAME=sit
+
 # Copy binary from builder
 COPY --from=builder /app/cmd/server/server .
 
@@ -43,7 +46,7 @@ COPY --from=builder /app/cmd/server/server .
 COPY configs/ /root/configs/
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Command
 CMD ["./server"]

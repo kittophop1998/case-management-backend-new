@@ -170,20 +170,27 @@ func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID
 
 func (p *PermissionPg) CountPermissions(ctx *gin.Context, permissionName string, sectionID, departmentID *uuid.UUID) (int, error) {
 	var count int64
-	query := p.db.WithContext(ctx).Model(&model.Permission{}).
-		Joins("LEFT JOIN role_permissions rp ON rp.permission_id = permissions.id")
+	query := p.db.WithContext(ctx).Model(&model.Permission{})
 
 	if permissionName != "" {
 		query = query.Where("permissions.name ILIKE ?", "%"+permissionName+"%")
 	}
+
+	subQuery := p.db.Table("permissions").
+		Select("permissions.id").
+		Joins("LEFT JOIN role_permissions rp ON rp.permission_id = permissions.id")
+
 	if sectionID != nil {
-		query = query.Where("rp.section_id = ?", *sectionID)
+		subQuery = subQuery.Where("rp.section_id = ?", *sectionID)
 	}
 	if departmentID != nil {
-		query = query.Where("rp.department_id = ?", *departmentID)
+		subQuery = subQuery.Where("rp.department_id = ?", *departmentID)
+	}
+	if permissionName != "" {
+		subQuery = subQuery.Where("permissions.name ILIKE ?", "%"+permissionName+"%")
 	}
 
-	if err := query.Count(&count).Error; err != nil {
+	if err := p.db.Table("(?) as sub", subQuery).Count(&count).Error; err != nil {
 		return 0, err
 	}
 

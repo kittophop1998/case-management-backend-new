@@ -35,15 +35,6 @@ func SetupRoutes(
 			userRoutes.PUT("/:id", H.User.UpdateUserByID)
 		}
 
-		dashboardRoutes := apiV1.Group("/dashboard")
-		// userRoutes.Use(handler.ValidateToken())
-		{
-			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustInfo)
-			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustProfile)
-			dashboardRoutes.GET("/custsegment/:id", H.Dashboard.GetCustSegment)
-			dashboardRoutes.GET("/custsuggestion/:id", H.Dashboard.GetCustSuggestion)
-		}
-
 		masterDataRoutes := apiV1.Group("/master-data")
 		// masterDataRoutes.Use(handler.ValidateToken())
 		{
@@ -77,6 +68,15 @@ func SetupRoutes(
 		{
 			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
 			customerRoutes.GET("/:customerId/notes", H.Customer.GetAllCustomerNotes)
+		}
+
+		dashboardRoutes := apiV1.Group("/dashboard")
+		// userRoutes.Use(handler.ValidateToken())
+		{
+			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustInfo)
+			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustProfile)
+			dashboardRoutes.GET("/custsegment/:id", H.Dashboard.GetCustSegment)
+			dashboardRoutes.GET("/custsuggestion/:id", H.Dashboard.GetCustSuggestion)
 		}
 
 		// TODO: delete

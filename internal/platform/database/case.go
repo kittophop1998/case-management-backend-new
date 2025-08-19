@@ -32,7 +32,6 @@ func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uu
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		CaseTitle:         data.CaseTitle,
 		CustomerId:        data.CustomerId,
 		CaseTypeId:        data.CaseTypeId,
 		DispositionMainId: data.DispositionMainId,

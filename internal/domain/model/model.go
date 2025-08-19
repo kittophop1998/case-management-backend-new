@@ -19,7 +19,6 @@ type CaseFilter struct {
 }
 
 type CreateCaseRequest struct {
-	CaseTitle         string         `json:"caseTitle" binding:"required"`
 	CustomerId        string         `json:"customerId" binding:"required"`
 	CaseTypeId        uuid.UUID      `json:"caseTypeId" binding:"required"`
 	DispositionMainId uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid" binding:"required"`

@@ -127,7 +127,7 @@ func SeedUser(
 			Username:     fmt.Sprintf("user%d", i),
 			Password:     defaultPassword,
 			UserTypes:    userType,
-			SectionID:    sectionMap["SYSTEM"],
+			SectionID:    sectionMap["ONB"],
 			CenterID:     centerMap["BKK"],
 			RoleID:       roleMap["Admin"],
 			StaffID:      &staffId,

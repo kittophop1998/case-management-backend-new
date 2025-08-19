@@ -16,10 +16,15 @@ func NewPermissionPg(db *gorm.DB) *PermissionPg {
 	return &PermissionPg{db: db}
 }
 
-func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, error) {
+func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, error) {
 	permQuery := p.db.WithContext(ctx).Model(&model.Permission{})
 	if permissionName != "" {
 		permQuery = permQuery.Where("name ILIKE ?", "%"+permissionName+"%")
+	}
+
+	var total int64
+	if err := permQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
 	var permissions []model.Permission
@@ -28,7 +33,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		Offset(offset).
 		Order("name ASC").
 		Find(&permissions).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	permMap := make(map[uuid.UUID]*model.PermissionWithRolesResponse)
@@ -50,27 +55,29 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
-	roleQuery := p.db.WithContext(ctx).
-		Table("role_permissions AS rp").
-		Select("rp.permission_id, r.name AS role_name").
-		Joins("JOIN roles AS r ON r.id = rp.role_id").
-		Where("rp.permission_id IN ?", permissionIDs)
+	if len(permissionIDs) > 0 {
+		roleQuery := p.db.WithContext(ctx).
+			Table("role_permissions AS rp").
+			Select("rp.permission_id, r.name AS role_name").
+			Joins("JOIN roles AS r ON r.id = rp.role_id").
+			Where("rp.permission_id IN ?", permissionIDs)
 
-	if departmentID != nil {
-		roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
-	}
-	if sectionID != nil {
-		roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
-	}
+		if departmentID != nil {
+			roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
+		}
+		if sectionID != nil {
+			roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
+		}
 
-	var roleRows []roleRow
-	if err := roleQuery.Find(&roleRows).Error; err != nil {
-		return nil, err
-	}
+		var roleRows []roleRow
+		if err := roleQuery.Find(&roleRows).Error; err != nil {
+			return nil, 0, err
+		}
 
-	for _, row := range roleRows {
-		if permResp, ok := permMap[row.PermissionID]; ok {
-			permResp.Roles = append(permResp.Roles, row.RoleName)
+		for _, row := range roleRows {
+			if permResp, ok := permMap[row.PermissionID]; ok {
+				permResp.Roles = append(permResp.Roles, row.RoleName)
+			}
 		}
 	}
 
@@ -79,7 +86,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		results = append(results, *v)
 	}
 
-	return results, nil
+	return results, int(total), nil
 }
 
 func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID, sectionId uuid.UUID, reqs []model.UpdatePermissionRequest) error {

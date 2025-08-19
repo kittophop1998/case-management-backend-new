@@ -16,7 +16,6 @@ type RolesConfigItem struct {
 }
 
 var rolesConfig = []RolesConfigItem{
-	{RoleKey: "System", PermissionKey: "view.profile", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 	{RoleKey: "System", PermissionKey: "view.user", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 	{RoleKey: "System", PermissionKey: "add.user", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 	{RoleKey: "System", PermissionKey: "edit.user", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},

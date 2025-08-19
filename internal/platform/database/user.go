@@ -41,7 +41,7 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 		Select("p.id, p.key, p.name").
 		Joins("JOIN permissions AS p ON rp.permission_id = p.id").
 		Where("rp.role_id = ? AND rp.department_id = ?", user.RoleID, user.DepartmentID).
-		Debug().Scan(&perms).Error
+		Scan(&perms).Error
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (repo *UserPg) GetByUsername(ctx *gin.Context, username string) (*model.Use
 		Preload("Center").
 		Preload("Section").
 		Where("username = ?", username).
-		Debug().First(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return nil, err
 	}
 

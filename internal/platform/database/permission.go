@@ -2,6 +2,7 @@ package database
 
 import (
 	"case-management/internal/domain/model"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -71,7 +72,6 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 			return nil, 0, err
 		}
 
-		// เติม Roles ให้ตรงกับ Permission
 		for i := range results {
 			for _, row := range roleRows {
 				if row.PermissionID == permissionIDs[i] {
@@ -80,6 +80,16 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 			}
 		}
 	}
+
+	// sort: ถ้ามี Roles มาก่อน ถ้าเท่ากันเรียงตาม Name
+	sort.SliceStable(results, func(i, j int) bool {
+		if len(results[i].Roles) > 0 && len(results[j].Roles) == 0 {
+			return true
+		} else if len(results[i].Roles) == 0 && len(results[j].Roles) > 0 {
+			return false
+		}
+		return results[i].Name < results[j].Name
+	})
 
 	return results, int(total), nil
 }

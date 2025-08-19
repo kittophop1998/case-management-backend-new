@@ -48,5 +48,11 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	}
 	result["departments"] = departments
 
+	var caseType []model.CaseTypes
+	if err := repo.db.WithContext(ctx).Find(&caseType).Error; err != nil {
+		return nil, err
+	}
+	result["caseTypes"] = caseType
+
 	return result, nil
 }

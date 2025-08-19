@@ -47,6 +47,7 @@ type CaseNotes struct {
 
 type CaseTypes struct {
 	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Group       string    `json:"group"`
 	Name        string    `json:"name"`
 	Description string    `json:"description" gorm:"type:text"`
 }

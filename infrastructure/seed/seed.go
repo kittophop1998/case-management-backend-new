@@ -10,6 +10,7 @@ import (
 func SeedAllData(db *gorm.DB) error {
 	centerMap, queueMap, dispositionMainMap := SeedMasterData(db)
 	SeedNoteTypes(db)
+	SeedCaseType(db)
 	roleMap := SeedRole(db)
 	permissionMap := SeedPermission(db)
 	departmentMap := SeedDepartment(db)

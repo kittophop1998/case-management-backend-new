@@ -36,7 +36,6 @@ func SetupRoutes(
 		}
 
 		masterDataRoutes := apiV1.Group("/master-data")
-		// masterDataRoutes.Use(handler.ValidateToken())
 		{
 			masterDataRoutes.GET("/lookups", H.MasterData.GetAllLookups)
 		}

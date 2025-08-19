@@ -16,13 +16,11 @@ type Seedable interface {
 type CenterMap map[string]uuid.UUID
 type QueueMap map[string]uuid.UUID
 type DispositionMainMap map[string]uuid.UUID
-type CaseTypeMap map[string]uuid.UUID
 
 func SeedMasterData(db *gorm.DB) (CenterMap, QueueMap, DispositionMainMap) {
 	centerMap := make(CenterMap)
 	queueMap := make(QueueMap)
 	dispositionMainMap := make(DispositionMainMap)
-	caseTypeMap := make(CaseTypeMap)
 
 	seedEntities(db, []Seedable{
 		&model.Center{Name: "BKK"},
@@ -49,14 +47,6 @@ func SeedMasterData(db *gorm.DB) (CenterMap, QueueMap, DispositionMainMap) {
 		return db.Where("name = ?", i.GetIdentifier())
 	}, func(name string, id uuid.UUID) {
 		dispositionMainMap[name] = id
-	})
-
-	seedEntities(db, []Seedable{
-		&model.CaseTypes{Name: "Inquiry And Disposition"},
-	}, func(db *gorm.DB, i Seedable) *gorm.DB {
-		return db.Where("name = ?", i.GetIdentifier())
-	}, func(name string, id uuid.UUID) {
-		caseTypeMap[name] = id
 	})
 
 	return centerMap, queueMap, dispositionMainMap

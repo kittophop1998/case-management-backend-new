@@ -11,14 +11,9 @@ server:
 
 # Database Configuration (PostgreSQL)
 database:
-  host: "localhost"
-  port: 5432
+  host: "yamabiko.proxy.rlwy.net"
+  port: 11309
   user: "postgres"
-  password: "postgres"
-  dbname: "postgres"
+  password: "eRVDZckmPOxaDqNvqGYFACorieIhXtVi"
+  dbname: "railway"
   sslmode: "disable"
-
-# External Services Configuration
-services:
-  agreement_api:
-    base_url: "http://localhost:8001/api/v1"

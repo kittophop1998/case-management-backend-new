@@ -46,11 +46,12 @@ type ConnectorAPIConfig struct {
 
 // allowed environments for config loading
 var allowedEnvs = map[string]struct{}{
-	"dev":     {},
-	"sit":     {},
-	"uat":     {},
-	"prod":    {},
-	"railway": {},
+	"dev":            {},
+	"sit":            {},
+	"uat":            {},
+	"prod":           {},
+	"railway":        {},
+	"railway_public": {},
 }
 
 var (

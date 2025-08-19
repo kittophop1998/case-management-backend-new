@@ -49,19 +49,29 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
-	var filter model.DispositionFilter
-	if err := ctx.ShouldBindQuery(&filter); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid query params"})
-		return
-	}
-
-	mains, err := h.UseCase.GetAllDisposition(ctx, filter)
+	limit, err := getLimit(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": "Invalid limit parameter"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"mains": mains,
-	})
+	page, err := getPage(ctx)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid page parameter"})
+		return
+	}
+
+	keyword := ctx.Query("keyword")
+
+	mains, total, err := h.UseCase.GetAllDisposition(ctx, page, limit, keyword)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	if mains == nil {
+		mains = []model.DispositionMain{}
+	}
+
+	lib.HandlePaginatedResponse(ctx, page, limit, total, mains)
 }

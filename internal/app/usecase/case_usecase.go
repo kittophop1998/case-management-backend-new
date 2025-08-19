@@ -70,10 +70,7 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
 }
 
-// func (uc *CaseUseCase) CountCasesWithFilter(c *gin.Context, filter model.CaseFilter) (int, error) {
-// 	return uc.repo.CountWithFilter(c, filter)
-// }
-
-func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
-	return uc.repo.GetAllDisposition(ctx, filter)
+func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context, page, limit int, keyword string) ([]model.DispositionMain, int, error) {
+	offset := (page - 1) * limit
+	return uc.repo.GetAllDisposition(ctx, limit, offset, keyword)
 }

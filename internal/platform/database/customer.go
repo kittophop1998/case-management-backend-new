@@ -3,6 +3,7 @@ package database
 import (
 	"case-management/internal/domain/model"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -14,17 +15,25 @@ func NewCustomerPg(db *gorm.DB) *CustomerPg {
 	return &CustomerPg{db: db}
 }
 
-func (c *CustomerPg) CreateCustomerNote(note *model.CustomerNote) error {
-	if err := c.db.Create(note).Error; err != nil {
+func (c *CustomerPg) CreateCustomerNote(ctx *gin.Context, note *model.CustomerNote) error {
+	if err := c.db.WithContext(ctx).Create(note).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *CustomerPg) GetAllCustomerNotes(customerID string) ([]*model.CustomerNote, error) {
+func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, customerID string) ([]*model.CustomerNote, error) {
 	var notes []*model.CustomerNote
-	if err := c.db.Where("customer_id = ?", customerID).Find(&notes).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where("customer_id = ?", customerID).Find(&notes).Error; err != nil {
 		return nil, err
 	}
 	return notes, nil
+}
+
+func (c *CustomerPg) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) {
+	var noteTypes []*model.NoteTypes
+	if err := c.db.WithContext(ctx).Find(&noteTypes).Error; err != nil {
+		return nil, err
+	}
+	return noteTypes, nil
 }

@@ -213,3 +213,39 @@ func (r *CasePg) GetAllDisposition(ctx *gin.Context, limit, offset int, keyword 
 
 	return mains, int(total), nil
 }
+
+func (r *CasePg) GetAllDispositionNew(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
+	var mains []model.DispositionMain
+
+	query := r.db.WithContext(ctx).
+		Model(&model.DispositionMain{}).
+		Preload("Subs")
+
+	if filter.Keyword != "" {
+		like := "%" + filter.Keyword + "%"
+
+		query = query.Where(`
+			disposition_mains.name ILIKE ? OR 
+			disposition_mains.description ILIKE ? OR 
+			id IN (
+				SELECT main_id 
+				FROM disposition_subs 
+				WHERE name ILIKE ? OR description ILIKE ?
+			)`,
+			like, like, like, like)
+	}
+
+	if filter.Limit > 0 {
+		query = query.Limit(filter.Limit)
+	}
+
+	if filter.Offset > 0 {
+		query = query.Offset(filter.Offset)
+	}
+
+	if err := query.Find(&mains).Error; err != nil {
+		return nil, err
+	}
+
+	return mains, nil
+}

@@ -26,3 +26,7 @@ func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID stri
 func (uc *CustomerUseCase) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) {
 	return uc.CustomerRepo.GetNoteTypes(ctx)
 }
+
+func (uc *CustomerUseCase) CountNotes(ctx *gin.Context, customerID string) (int, error) {
+	return uc.CustomerRepo.CountNotes(ctx, customerID)
+}

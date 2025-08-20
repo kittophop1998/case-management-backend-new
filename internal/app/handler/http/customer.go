@@ -47,3 +47,13 @@ func (h *CustomerHandler) GetNoteTypes(ctx *gin.Context) {
 
 	lib.HandleResponse(ctx, http.StatusOK, noteTypes)
 }
+
+func (h *CustomerHandler) CountNotes(ctx *gin.Context) {
+	customerID := ctx.Param("customerId")
+	count, err := h.UseCase.CountNotes(ctx, customerID)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"count": count})
+}

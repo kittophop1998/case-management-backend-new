@@ -22,12 +22,23 @@ func (c *CustomerPg) CreateCustomerNote(ctx *gin.Context, note *model.CustomerNo
 	return nil
 }
 
-func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, customerID string) ([]*model.CustomerNote, error) {
+func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, customerID string, limit, offset int) ([]*model.CustomerNote, int, error) {
 	var notes []*model.CustomerNote
-	if err := c.db.WithContext(ctx).Where("customer_id = ?", customerID).Find(&notes).Error; err != nil {
-		return nil, err
+	if err := c.db.WithContext(ctx).
+		Preload("NoteType").
+		Where("customer_id = ?", customerID).
+		Limit(limit).
+		Offset(offset).
+		Find(&notes).Error; err != nil {
+		return nil, 0, err
 	}
-	return notes, nil
+
+	var total int64
+	if err := c.db.WithContext(ctx).Model(&model.CustomerNote{}).Where("customer_id = ?", customerID).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return notes, int(total), nil
 }
 
 func (c *CustomerPg) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) {

@@ -20,7 +20,7 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.UseCase.CreateCustomerNote(note); err != nil {
+	if err := h.UseCase.CreateCustomerNote(ctx, note); err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
@@ -29,11 +29,31 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {
 	customerID := ctx.Param("customerId")
-	notes, err := h.UseCase.GetAllCustomerNotes(customerID)
+	notes, err := h.UseCase.GetAllCustomerNotes(ctx, customerID)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
 	lib.HandleResponse(ctx, http.StatusOK, notes)
+}
+
+func (h *CustomerHandler) GetNoteTypes(ctx *gin.Context) {
+	noteTypes, err := h.UseCase.GetNoteTypes(ctx)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, noteTypes)
+}
+
+func (h *CustomerHandler) CountNotes(ctx *gin.Context) {
+	customerID := ctx.Param("customerId")
+	count, err := h.UseCase.CountNotes(ctx, customerID)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"count": count})
 }

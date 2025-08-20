@@ -67,6 +67,8 @@ func SetupRoutes(
 		{
 			customerRoutes.POST("/note", H.Customer.CreateCustomerNote)
 			customerRoutes.GET("/:customerId/notes", H.Customer.GetAllCustomerNotes)
+			customerRoutes.GET("/note-types", H.Customer.GetNoteTypes)
+			customerRoutes.GET("/:customerId/notes/count", H.Customer.CountNotes)
 		}
 
 		dashboardRoutes := apiV1.Group("/dashboard")

@@ -14,7 +14,9 @@ type CustomerHandler struct {
 }
 
 func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
-	note := &model.CustomerNote{}
+	username := ctx.GetString("username")
+
+	note := &model.CustomerNote{CreatedBy: username}
 	if err := ctx.ShouldBindJSON(note); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
@@ -28,14 +30,26 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 }
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {
+	limit, err := getLimit(ctx)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	page, err := getPage(ctx)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
 	customerID := ctx.Param("customerId")
-	notes, err := h.UseCase.GetAllCustomerNotes(ctx, customerID)
+	notes, total, err := h.UseCase.GetAllCustomerNotes(ctx, customerID, page, limit)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusOK, notes)
+	lib.HandlePaginatedResponse(ctx, page, limit, total, notes)
 }
 
 func (h *CustomerHandler) GetNoteTypes(ctx *gin.Context) {

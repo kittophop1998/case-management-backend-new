@@ -11,6 +11,7 @@ type CustomerNote struct {
 	NoteTypesID uuid.UUID `json:"noteTypeId" binding:"required"`
 	NoteType    NoteTypes `gorm:"foreignKey:NoteTypesID" json:"noteType"`
 	Note        string    `json:"note" binding:"required"`
+	CreatedBy   string    `json:"createdBy"`
 }
 
 // ##### Master Data for Customer #####

@@ -70,8 +70,6 @@ func (repo *UserPg) GetProfile(ctx *gin.Context, userId uuid.UUID) (*model.UserP
 		Permissions: perms,
 	}
 
-	fmt.Println("User profile retrieved:", resp)
-
 	return resp, nil
 }
 

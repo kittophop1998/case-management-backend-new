@@ -9,15 +9,16 @@ import (
 
 func SeedAllData(db *gorm.DB) error {
 	centerMap, queueMap, dispositionMainMap := SeedMasterData(db)
-	SeedNoteTypes(db)
-	SeedCaseType(db)
 	roleMap := SeedRole(db)
 	permissionMap := SeedPermission(db)
 	departmentMap := SeedDepartment(db)
 	sectionMap := SeedSection(db)
+	SeedNoteTypes(db)
+	SeedCaseType(db)
 	SeedRolePermission(db, roleMap, permissionMap, departmentMap, sectionMap)
 	SeedUser(db, roleMap, sectionMap, centerMap, departmentMap, queueMap)
 	SeedDispositionSub(db, dispositionMainMap)
+	SeedCaseStatus(db)
 
 	return nil
 }

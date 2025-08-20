@@ -53,10 +53,9 @@ type CaseTypes struct {
 }
 
 type CaseStatus struct {
-	ID             uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description" gorm:"type:text"`
-	IsClosedStatus bool      `json:"is_closed_status"`
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
 }
 
 type CasePriorities struct {

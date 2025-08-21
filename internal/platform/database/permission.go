@@ -17,17 +17,26 @@ func NewPermissionPg(db *gorm.DB) *PermissionPg {
 	return &PermissionPg{db: db}
 }
 
-func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, int, error) {
+func (p *PermissionPg) GetAllPermissions(
+	ctx *gin.Context,
+	limit, offset int,
+	permissionName string,
+	sectionID, departmentID *uuid.UUID,
+) ([]model.PermissionWithRolesResponse, int, int, error) {
+
+	// --- Base query for permissions ---
 	permQuery := p.db.WithContext(ctx).Model(&model.Permission{})
 	if permissionName != "" {
 		permQuery = permQuery.Where("name ILIKE ?", "%"+permissionName+"%")
 	}
 
+	// --- Count total permissions ---
 	var total int64
 	if err := permQuery.Count(&total).Error; err != nil {
 		return nil, 0, 0, err
 	}
 
+	// --- Fetch paginated permissions ---
 	var permissions []model.Permission
 	if err := permQuery.
 		Limit(limit).
@@ -37,56 +46,66 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		return nil, 0, 0, err
 	}
 
-	results := make([]model.PermissionWithRolesResponse, 0, len(permissions))
-	permissionIDs := make([]uuid.UUID, 0, len(permissions))
-	for _, perm := range permissions {
-		results = append(results, model.PermissionWithRolesResponse{
+	// --- Prepare response skeleton ---
+	results := make([]model.PermissionWithRolesResponse, len(permissions))
+	permissionIDs := make([]uuid.UUID, len(permissions))
+	for i, perm := range permissions {
+		results[i] = model.PermissionWithRolesResponse{
 			Permission: perm.Key,
 			Name:       perm.Name,
 			Roles:      []string{},
-		})
-		permissionIDs = append(permissionIDs, perm.ID)
+		}
+		permissionIDs[i] = perm.ID
+	}
+
+	// --- If no permissions, return early ---
+	if len(permissionIDs) == 0 {
+		return results, int(total), 0, nil
+	}
+
+	// --- Query role-permissions ---
+	type roleRow struct {
+		PermissionID uuid.UUID
+		RoleName     string
+	}
+
+	roleQuery := p.db.WithContext(ctx).
+		Table("role_permissions AS rp").
+		Select("rp.permission_id, r.name AS role_name").
+		Joins("JOIN roles AS r ON r.id = rp.role_id").
+		Where("rp.permission_id IN ?", permissionIDs)
+
+	if departmentID != nil {
+		roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
+	}
+	if sectionID != nil {
+		roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
 	}
 
 	var permissionRoleCount int64
-	if len(permissionIDs) > 0 {
-		type roleRow struct {
-			PermissionID uuid.UUID
-			RoleName     string
-		}
+	if err := roleQuery.Count(&permissionRoleCount).Error; err != nil {
+		return nil, 0, 0, err
+	}
 
-		roleQuery := p.db.WithContext(ctx).
-			Table("role_permissions AS rp").
-			Select("rp.permission_id, r.name AS role_name").
-			Joins("JOIN roles AS r ON r.id = rp.role_id").
-			Where("rp.permission_id IN ?", permissionIDs)
+	var roleRows []roleRow
+	if err := roleQuery.Find(&roleRows).Error; err != nil {
+		return nil, 0, 0, err
+	}
 
-		if departmentID != nil {
-			roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
-		}
-		if sectionID != nil {
-			roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
-		}
+	// --- Group roles by permissionID ---
+	roleMap := make(map[uuid.UUID][]string)
+	for _, row := range roleRows {
+		roleMap[row.PermissionID] = append(roleMap[row.PermissionID], row.RoleName)
+	}
 
-		if err := roleQuery.Count(&permissionRoleCount).Error; err != nil {
-			return nil, 0, 0, err
-		}
-
-		var roleRows []roleRow
-		if err := roleQuery.Find(&roleRows).Error; err != nil {
-			return nil, 0, 0, err
-		}
-
-		for i := range results {
-			for _, row := range roleRows {
-				if row.PermissionID == permissionIDs[i] {
-					results[i].Roles = append(results[i].Roles, row.RoleName)
-				}
-			}
+	// --- Attach roles to results ---
+	for i, id := range permissionIDs {
+		if roles, ok := roleMap[id]; ok {
+			results[i].Roles = roles
 		}
 	}
 
-	// sort: ถ้ามี Roles มาก่อน ถ้าเท่ากันเรียงตาม Name
+	// --- Sort results ---
 	sort.SliceStable(results, func(i, j int) bool {
 		if len(results[i].Roles) > 0 && len(results[j].Roles) == 0 {
 			return true

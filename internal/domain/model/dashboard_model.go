@@ -45,8 +45,8 @@ type GetCustSegmentResponse struct {
 }
 
 type GetCustSuggestionResponse struct {
-	SuggestCards      []string                             `json:"suggest_cards"`
-	SuggestPromotions []GetCustSuggestionPromotionResponse `json:"suggest_promotions"`
+	SuggestCards      []string                             `json:"suggestCards"`
+	SuggestPromotions []GetCustSuggestionPromotionResponse `json:"suggestPromotions"`
 }
 
 type GetCustSuggestionPromotionResponse struct {

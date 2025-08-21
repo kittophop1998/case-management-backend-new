@@ -16,7 +16,7 @@ func NewPermissionUseCase(permissionRepo repository.PermissionRepository) *Permi
 	return &PermissionUseCase{permissionRepo: permissionRepo}
 }
 
-func (p *PermissionUseCase) GetAllPermissions(ctx *gin.Context, page, limit int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, error) {
+func (p *PermissionUseCase) GetAllPermissions(ctx *gin.Context, page, limit int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, int, error) {
 	offset := (page - 1) * limit
 	return p.permissionRepo.GetAllPermissions(ctx, limit, offset, permissionName, sectionID, departmentID)
 }

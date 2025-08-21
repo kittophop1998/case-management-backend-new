@@ -8,8 +8,9 @@ import (
 
 // BaseResponse คือโครงสร้างพื้นฐานสำหรับทุก response
 type BaseResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message,omitempty"`
+	Success   bool   `json:"success"`
+	Message   string `json:"message,omitempty"`
+	PermCount *int   `json:"permCount,omitempty"` // ใช้ pointer เพื่อให้ optional จริงๆ
 }
 
 // Response ใช้ส่งข้อมูลทั่วไป
@@ -28,6 +29,10 @@ type PaginatedResponse[T any] struct {
 	TotalPages int `json:"totalPages"`
 }
 
+type OptionField struct {
+	PermRoleCount *int
+}
+
 // HandleResponse ส่ง response ทั่วไป
 func HandleResponse[T any](ctx *gin.Context, statusCode int, data T) {
 	ctx.JSON(statusCode, Response[T]{
@@ -39,15 +44,21 @@ func HandleResponse[T any](ctx *gin.Context, statusCode int, data T) {
 }
 
 // HandlePaginatedResponse ส่ง response แบบมี pagination
-func HandlePaginatedResponse[T any](ctx *gin.Context, page, limit, total int, data []T) {
+func HandlePaginatedResponse[T any](ctx *gin.Context, page, limit, total int, data []T, opts ...OptionField) {
 	totalPages := 0
 	if limit > 0 {
 		totalPages = (total + limit - 1) / limit
 	}
 
+	var opt OptionField
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
 	ctx.JSON(http.StatusOK, PaginatedResponse[T]{
 		BaseResponse: BaseResponse{
-			Success: true,
+			Success:   true,
+			PermCount: opt.PermRoleCount,
 		},
 		Data:       data,
 		Page:       page,

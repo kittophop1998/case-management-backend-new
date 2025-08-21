@@ -76,7 +76,7 @@ func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {
 		BlockMedia:                    "No blocked",
 		ConsentForCollectUse:          "Incomplete",
 	}
-	ctx.JSON(http.StatusOK, customerMock)
+	lib.HandleResponse(ctx, http.StatusOK, customerMock)
 }
 
 func (h *DashboardHandler) GetCustSegment(ctx *gin.Context) {
@@ -97,7 +97,7 @@ func (h *DashboardHandler) GetCustSegment(ctx *gin.Context) {
 		CustomerSegment: "Existing Customer - Active",
 		UpdateData:      "01 Jan 0001",
 	}
-	ctx.JSON(http.StatusOK, customerMock)
+	lib.HandleResponse(ctx, http.StatusOK, customerMock)
 }
 
 func (h *DashboardHandler) GetCustSuggestion(ctx *gin.Context) {
@@ -123,5 +123,5 @@ func (h *DashboardHandler) GetCustSuggestion(ctx *gin.Context) {
 		},
 	}
 
-	ctx.JSON(http.StatusOK, customerMock)
+	lib.HandleResponse(ctx, http.StatusOK, customerMock)
 }

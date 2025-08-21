@@ -86,6 +86,12 @@ type PermissionWithRolesResponse struct {
 	Name       string   `json:"name"`
 	Roles      []string `json:"roles"`
 }
+
+type AccessControls struct {
+	Permissions []PermissionWithRolesResponse `json:"permissions"`
+	PermCount   int                           `json:"permCount"`
+}
+
 type FormFilter struct {
 	Limit  int                    `json:"limit"`
 	Page   int                    `json:"page"`

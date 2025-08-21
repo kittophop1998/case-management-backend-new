@@ -17,13 +17,13 @@ type PermissionHandler struct {
 func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 	limit, err := getLimit(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid limit parameter"))
 		return
 	}
 
 	page, err := getPage(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page parameter"})
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid page parameter"))
 		return
 	}
 
@@ -42,9 +42,9 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		}
 	}
 
-	permissions, total, err := h.UseCase.GetAllPermissions(ctx, page, limit, permissionName, sectionID, departmentID)
+	permissions, total, permRoleCount, err := h.UseCase.GetAllPermissions(ctx, page, limit, permissionName, sectionID, departmentID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		permissions = []model.PermissionWithRolesResponse{}
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, permissions)
+	lib.HandlePaginatedResponse(ctx, page, limit, total, permissions, lib.OptionField{PermRoleCount: &permRoleCount})
 }
 
 func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {

@@ -28,6 +28,9 @@ var rolesConfig = []RolesConfigItem{
 	{RoleKey: "System", PermissionKey: "view.case", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 	{RoleKey: "System", PermissionKey: "edit.case", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 	{RoleKey: "System", PermissionKey: "add.casenote", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
+	{RoleKey: "System", PermissionKey: "view.inquirylog", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
+	{RoleKey: "System", PermissionKey: "view.report", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
+	{RoleKey: "System", PermissionKey: "view.setting", DepartmentKey: "SYSTEM", SectionKey: "SYSTEM"},
 }
 
 func SeedRolePermission(

@@ -8,9 +8,9 @@ import (
 
 func SeedNoteTypes(db *gorm.DB) {
 	noteTypes := []model.NoteTypes{
-		{Name: "General", Description: "General notes"},
-		{Name: "Follow-up", Description: "Follow-up notes"},
-		{Name: "Urgent", Description: "Urgent notes"},
+		{Name: "การติดตาม(Follow-Up)", Description: "การติดตาม(Follow-Up)"},
+		{Name: "หมายเหตุพิเศษ", Description: "หมายเหตุพิเศษ"},
+		{Name: "การร้องเรียน / ข้อเสนอแนะ", Description: "การร้องเรียน / ข้อเสนอแนะ"},
 	}
 
 	for _, noteType := range noteTypes {

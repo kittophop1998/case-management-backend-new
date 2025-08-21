@@ -17,7 +17,7 @@ func NewPermissionPg(db *gorm.DB) *PermissionPg {
 	return &PermissionPg{db: db}
 }
 
-func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, error) {
+func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, int, error) {
 	permQuery := p.db.WithContext(ctx).Model(&model.Permission{})
 	if permissionName != "" {
 		permQuery = permQuery.Where("name ILIKE ?", "%"+permissionName+"%")
@@ -25,7 +25,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 
 	var total int64
 	if err := permQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	var permissions []model.Permission
@@ -34,7 +34,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		Offset(offset).
 		Order("name ASC").
 		Find(&permissions).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	results := make([]model.PermissionWithRolesResponse, 0, len(permissions))
@@ -48,6 +48,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
+	var permissionRoleCount int64
 	if len(permissionIDs) > 0 {
 		type roleRow struct {
 			PermissionID uuid.UUID
@@ -67,9 +68,13 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 			roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
 		}
 
+		if err := roleQuery.Count(&permissionRoleCount).Error; err != nil {
+			return nil, 0, 0, err
+		}
+
 		var roleRows []roleRow
 		if err := roleQuery.Find(&roleRows).Error; err != nil {
-			return nil, 0, err
+			return nil, 0, 0, err
 		}
 
 		for i := range results {
@@ -91,7 +96,7 @@ func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, pe
 		return results[i].Name < results[j].Name
 	})
 
-	return results, int(total), nil
+	return results, int(total), int(permissionRoleCount), nil
 }
 
 func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID, sectionId uuid.UUID, reqs []model.UpdatePermissionRequest) error {

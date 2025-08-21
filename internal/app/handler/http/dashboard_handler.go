@@ -14,23 +14,40 @@ type DashboardHandler struct {
 }
 
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
-	// id := ctx.Param("id")
+	id := ctx.Param("id")
 	// customer, err := h.UseCase.CustInfo(ctx, id)
 	// if err != nil {
 	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 	// 	return
 	// }
 
-	customerMock := &model.GetCustInfoResponse{
-		NationalID:      "1102001313257",
-		CustomerNameEng: "ARUNEE TESTCDP",
-		CustomerNameTH:  "อรุณี TESTCDP",
-		MobileNO:        "00913589211",
-		MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
-		MailTo:          "Home",
+	if id == "1102001313257" {
+		customerMock := &model.GetCustInfoResponse{
+			NationalID:      "1102001313257",
+			CustomerNameEng: "ARUNEE TESTCDP",
+			CustomerNameTH:  "อรุณี TESTCDP",
+			MobileNO:        "00913589211",
+			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
+			MailTo:          "Home",
+		}
+		lib.HandleResponse(ctx, http.StatusOK, customerMock)
+		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusOK, customerMock)
+	if id == "1102001313258" {
+		customerMock := &model.GetCustInfoResponse{
+			NationalID:      "1102001313258",
+			CustomerNameEng: "ARUNEE TESTCDP 2",
+			CustomerNameTH:  "อรุณี TESTCDP 2",
+			MobileNO:        "00913589212",
+			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
+			MailTo:          "Home",
+		}
+		lib.HandleResponse(ctx, http.StatusOK, customerMock)
+		return
+	}
+
+	lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {

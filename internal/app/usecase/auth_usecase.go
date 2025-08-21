@@ -42,20 +42,22 @@ func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.Lo
 	}
 
 	accessToken, err := a.GenerateToken(24*time.Hour, &auth.Metadata{
-		UserId:    user.ID,
-		Name:      user.Name,
-		CenterId:  user.Center.ID,
-		SectionId: user.SectionID,
+		UserId:     user.ID,
+		Name:       user.Name,
+		CenterId:   user.Center.ID,
+		CenterName: user.Center.Name,
+		SectionId:  user.SectionID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	refreshToken, err := a.GenerateToken(3*24*time.Hour, &auth.Metadata{
-		UserId:    user.ID,
-		Name:      user.Name,
-		CenterId:  user.Center.ID,
-		SectionId: user.SectionID,
+		UserId:     user.ID,
+		Name:       user.Name,
+		CenterId:   user.Center.ID,
+		CenterName: user.Center.Name,
+		SectionId:  user.SectionID,
 	})
 	if err != nil {
 		return nil, err
@@ -143,20 +145,22 @@ func (a *AuthUseCase) Logout(ctx *gin.Context) error {
 // Admin login for testing purposes
 func (a *AuthUseCase) loginLocal(ctx *gin.Context, user *model.User) (*model.LoginResponse, error) {
 	accesstoken, err := a.GenerateToken(24*time.Hour, &auth.Metadata{
-		UserId:    user.ID,
-		Name:      user.Name,
-		CenterId:  user.Center.ID,
-		SectionId: user.SectionID,
+		UserId:     user.ID,
+		Name:       user.Name,
+		CenterId:   user.Center.ID,
+		CenterName: user.Center.Name,
+		SectionId:  user.SectionID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	refreshToken, err := a.GenerateToken(3*24*time.Hour, &auth.Metadata{
-		UserId:    user.ID,
-		Name:      user.Name,
-		CenterId:  user.Center.ID,
-		SectionId: user.SectionID,
+		UserId:     user.ID,
+		Name:       user.Name,
+		CenterId:   user.Center.ID,
+		CenterName: user.Center.Name,
+		SectionId:  user.SectionID,
 	})
 	if err != nil {
 		return nil, err

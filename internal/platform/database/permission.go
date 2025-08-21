@@ -82,11 +82,6 @@ func (p *PermissionPg) GetAllPermissions(
 		roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
 	}
 
-	var permissionRoleCount int64
-	if err := roleQuery.Count(&permissionRoleCount).Error; err != nil {
-		return nil, 0, 0, err
-	}
-
 	var roleRows []roleRow
 	if err := roleQuery.Find(&roleRows).Error; err != nil {
 		return nil, 0, 0, err
@@ -94,8 +89,10 @@ func (p *PermissionPg) GetAllPermissions(
 
 	// --- Group roles by permissionID ---
 	roleMap := make(map[uuid.UUID][]string)
+	permWithRoles := make(map[uuid.UUID]struct{}) // เก็บ permissionID ที่มี role อย่างน้อย 1
 	for _, row := range roleRows {
 		roleMap[row.PermissionID] = append(roleMap[row.PermissionID], row.RoleName)
+		permWithRoles[row.PermissionID] = struct{}{}
 	}
 
 	// --- Attach roles to results ---
@@ -115,7 +112,10 @@ func (p *PermissionPg) GetAllPermissions(
 		return results[i].Name < results[j].Name
 	})
 
-	return results, int(total), int(permissionRoleCount), nil
+	// --- Count permissions ที่มี role อย่างน้อย 1 ---
+	permissionRoleCount := len(permWithRoles)
+
+	return results, int(total), permissionRoleCount, nil
 }
 
 func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID, sectionId uuid.UUID, reqs []model.UpdatePermissionRequest) error {

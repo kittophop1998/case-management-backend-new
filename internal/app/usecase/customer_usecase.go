@@ -19,9 +19,26 @@ func (uc *CustomerUseCase) CreateCustomerNote(ctx *gin.Context, note *model.Cust
 	return uc.CustomerRepo.CreateCustomerNote(ctx, note)
 }
 
-func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID string, page, limit int) ([]*model.CustomerNote, int, error) {
+func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID string, page, limit int) ([]model.CustomerNoteResponse, int, error) {
 	offset := (page - 1) * limit
-	return uc.CustomerRepo.GetAllCustomerNotes(ctx, customerID, limit, offset)
+
+	notes, total, err := uc.CustomerRepo.GetAllCustomerNotes(ctx, customerID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	results := make([]model.CustomerNoteResponse, len(notes))
+	for i, note := range notes {
+		results[i] = model.CustomerNoteResponse{
+			ID:          note.ID.String(),
+			NoteType:    note.NoteType.Name,
+			NoteDetail:  note.Note,
+			CreatedBy:   note.CreatedBy,
+			CreatedDate: note.CreatedAt.Local().Format("02 Jan 2006 15:04:05"),
+		}
+	}
+
+	return results, total, nil
 }
 
 func (uc *CustomerUseCase) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) {

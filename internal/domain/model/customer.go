@@ -20,3 +20,12 @@ type NoteTypes struct {
 	Name        string `json:"name"`
 	Description string `json:"description" gorm:"type:text"`
 }
+
+// ##### Customer Response #####
+type CustomerNoteResponse struct {
+	ID          string `json:"id"`
+	NoteType    string `json:"noteType"`
+	NoteDetail  string `json:"noteDetail"`
+	CreatedBy   string `json:"createdBy"`
+	CreatedDate string `json:"createdDate"`
+}

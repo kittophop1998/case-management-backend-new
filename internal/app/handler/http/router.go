@@ -27,7 +27,7 @@ func SetupRoutes(
 		}
 
 		userRoutes := apiV1.Group("/users")
-		// userRoutes.Use(handler.ValidateToken())
+		userRoutes.Use(handler.ValidateToken())
 		{
 			userRoutes.POST("", H.User.CreateUser)
 			userRoutes.GET("", H.User.GetAllUsers)
@@ -41,7 +41,7 @@ func SetupRoutes(
 		}
 
 		permissionRoutes := apiV1.Group("/permissions")
-		// permissionRoutes.Use(handler.ValidateToken())
+		permissionRoutes.Use(handler.ValidateToken())
 		{
 			permissionRoutes.GET("", H.Permission.GetAllPermissions)
 			permissionRoutes.PATCH("/update", H.Permission.UpdatePermission)
@@ -72,7 +72,7 @@ func SetupRoutes(
 		}
 
 		dashboardRoutes := apiV1.Group("/dashboard")
-		// userRoutes.Use(handler.ValidateToken())
+		userRoutes.Use(handler.ValidateToken())
 		{
 			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustInfo)
 			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustProfile)

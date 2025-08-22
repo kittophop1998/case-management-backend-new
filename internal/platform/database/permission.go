@@ -18,20 +18,16 @@ func NewPermissionPg(db *gorm.DB) *PermissionPg {
 }
 
 func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, int, error) {
-
-	// --- query base สำหรับ permissions ทั้งหมดตาม filter ---
 	permQuery := p.db.WithContext(ctx).Model(&model.Permission{})
 	if permissionName != "" {
 		permQuery = permQuery.Where("name ILIKE ?", "%"+permissionName+"%")
 	}
 
-	// --- นับ total permissions ทั้งหมด ---
 	var total int64
 	if err := permQuery.Count(&total).Error; err != nil {
 		return nil, 0, 0, err
 	}
 
-	// --- ดึง permission ทั้งหมด ---
 	var allPermissions []model.Permission
 	if err := permQuery.Order("name ASC").Find(&allPermissions).Error; err != nil {
 		return nil, 0, 0, err

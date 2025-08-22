@@ -17,105 +17,104 @@ func NewPermissionPg(db *gorm.DB) *PermissionPg {
 	return &PermissionPg{db: db}
 }
 
-func (p *PermissionPg) GetAllPermissions(
-	ctx *gin.Context,
-	limit, offset int,
-	permissionName string,
-	sectionID, departmentID *uuid.UUID,
-) ([]model.PermissionWithRolesResponse, int, int, error) {
+func (p *PermissionPg) GetAllPermissions(ctx *gin.Context, limit, offset int, permissionName string, sectionID, departmentID *uuid.UUID) ([]model.PermissionWithRolesResponse, int, int, error) {
 
-	// --- Base query for permissions ---
+	// --- query base สำหรับ permissions ทั้งหมดตาม filter ---
 	permQuery := p.db.WithContext(ctx).Model(&model.Permission{})
 	if permissionName != "" {
 		permQuery = permQuery.Where("name ILIKE ?", "%"+permissionName+"%")
 	}
 
-	// --- Count total permissions ---
+	// --- นับ total permissions ทั้งหมด ---
 	var total int64
 	if err := permQuery.Count(&total).Error; err != nil {
 		return nil, 0, 0, err
 	}
 
-	// --- Fetch paginated permissions ---
-	var permissions []model.Permission
-	if err := permQuery.
-		Limit(limit).
-		Offset(offset).
-		Order("name ASC").
-		Find(&permissions).Error; err != nil {
+	// --- ดึง permission ทั้งหมด ---
+	var allPermissions []model.Permission
+	if err := permQuery.Order("name ASC").Find(&allPermissions).Error; err != nil {
 		return nil, 0, 0, err
 	}
 
-	// --- Prepare response skeleton ---
-	results := make([]model.PermissionWithRolesResponse, len(permissions))
-	permissionIDs := make([]uuid.UUID, len(permissions))
-	for i, perm := range permissions {
-		results[i] = model.PermissionWithRolesResponse{
-			Permission: perm.Key,
-			Name:       perm.Name,
-			Roles:      []string{},
-		}
+	// --- ดึง role สำหรับทุก permission ---
+	permissionIDs := make([]uuid.UUID, len(allPermissions))
+	for i, perm := range allPermissions {
 		permissionIDs[i] = perm.ID
 	}
 
-	// --- If no permissions, return early ---
-	if len(permissionIDs) == 0 {
-		return results, int(total), 0, nil
-	}
-
-	// --- Query role-permissions ---
-	type roleRow struct {
-		PermissionID uuid.UUID
-		RoleName     string
-	}
-
-	roleQuery := p.db.WithContext(ctx).
-		Table("role_permissions AS rp").
-		Select("rp.permission_id, r.name AS role_name").
-		Joins("JOIN roles AS r ON r.id = rp.role_id").
-		Where("rp.permission_id IN ?", permissionIDs)
-
-	if departmentID != nil {
-		roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
-	}
-	if sectionID != nil {
-		roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
-	}
-
-	var roleRows []roleRow
-	if err := roleQuery.Find(&roleRows).Error; err != nil {
-		return nil, 0, 0, err
-	}
-
-	// --- Group roles by permissionID ---
 	roleMap := make(map[uuid.UUID][]string)
-	permWithRoles := make(map[uuid.UUID]struct{}) // เก็บ permissionID ที่มี role อย่างน้อย 1
-	for _, row := range roleRows {
-		roleMap[row.PermissionID] = append(roleMap[row.PermissionID], row.RoleName)
-		permWithRoles[row.PermissionID] = struct{}{}
-	}
+	if len(permissionIDs) > 0 {
+		type roleRow struct {
+			PermissionID uuid.UUID
+			RoleName     string
+		}
 
-	// --- Attach roles to results ---
-	for i, id := range permissionIDs {
-		if roles, ok := roleMap[id]; ok {
-			results[i].Roles = roles
+		roleQuery := p.db.WithContext(ctx).
+			Table("role_permissions AS rp").
+			Select("rp.permission_id, r.name AS role_name").
+			Joins("JOIN roles AS r ON r.id = rp.role_id").
+			Where("rp.permission_id IN ?", permissionIDs)
+
+		if departmentID != nil {
+			roleQuery = roleQuery.Where("rp.department_id = ?", *departmentID)
+		}
+		if sectionID != nil {
+			roleQuery = roleQuery.Where("rp.section_id = ?", *sectionID)
+		}
+
+		var roleRows []roleRow
+		if err := roleQuery.Find(&roleRows).Error; err != nil {
+			return nil, 0, 0, err
+		}
+
+		for _, row := range roleRows {
+			roleMap[row.PermissionID] = append(roleMap[row.PermissionID], row.RoleName)
 		}
 	}
 
-	// --- Sort results ---
+	// --- สร้าง results ---
+	results := make([]model.PermissionWithRolesResponse, len(allPermissions))
+	permWithRoles := make(map[uuid.UUID]struct{})
+	for i, perm := range allPermissions {
+		roles := roleMap[perm.ID]
+		if roles == nil {
+			roles = []string{} // ถ้าไม่มี role ให้เป็น slice ว่าง
+		}
+
+		results[i] = model.PermissionWithRolesResponse{
+			Permission: perm.Key,
+			Name:       perm.Name,
+			Roles:      roles,
+		}
+
+		if len(roles) > 0 {
+			permWithRoles[perm.ID] = struct{}{}
+		}
+	}
+
+	permissionRoleCount := len(permWithRoles)
+
+	// --- sort ตามจำนวน role จากมากไปน้อย แล้วตามชื่อ ---
 	sort.SliceStable(results, func(i, j int) bool {
-		if len(results[i].Roles) > 0 && len(results[j].Roles) == 0 {
-			return true
-		} else if len(results[i].Roles) == 0 && len(results[j].Roles) > 0 {
-			return false
+		if len(results[i].Roles) != len(results[j].Roles) {
+			return len(results[i].Roles) > len(results[j].Roles)
 		}
 		return results[i].Name < results[j].Name
 	})
 
-	// --- Count permissions ที่มี role อย่างน้อย 1 ---
-	permissionRoleCount := len(permWithRoles)
+	// --- slice สำหรับ pagination ---
+	start := offset
+	end := offset + limit
+	if start > len(results) {
+		start = len(results)
+	}
+	if end > len(results) {
+		end = len(results)
+	}
+	paginated := results[start:end]
 
-	return results, int(total), permissionRoleCount, nil
+	return paginated, len(allPermissions), permissionRoleCount, nil
 }
 
 func (p *PermissionPg) UpdatePermission(ctx *gin.Context, departmentId uuid.UUID, sectionId uuid.UUID, reqs []model.UpdatePermissionRequest) error {

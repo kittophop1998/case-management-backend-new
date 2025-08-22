@@ -36,7 +36,7 @@ func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID stri
 			NoteType:    note.NoteType.Name,
 			NoteDetail:  note.Note,
 			CreatedBy:   note.CreatedBy,
-			CreatedDate: note.CreatedAt.In(loc).Format("02 Jan 2006 15:04:05"),
+			CreatedDate: note.CreatedAt.In(loc).Format("02 Jan 2006 15:04"),
 		}
 	}
 

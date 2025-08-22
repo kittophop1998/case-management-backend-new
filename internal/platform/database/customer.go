@@ -29,6 +29,7 @@ func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, customerID string, li
 		Where("customer_id = ?", customerID).
 		Limit(limit).
 		Offset(offset).
+		Order("created_at DESC").
 		Find(&notes).Error; err != nil {
 		return nil, 0, err
 	}

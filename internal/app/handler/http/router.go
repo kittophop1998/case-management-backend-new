@@ -72,7 +72,7 @@ func SetupRoutes(
 		}
 
 		dashboardRoutes := apiV1.Group("/dashboard")
-		userRoutes.Use(handler.ValidateToken())
+		dashboardRoutes.Use(handler.ValidateToken())
 		{
 			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustInfo)
 			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustProfile)

@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,7 @@ func (uc *CustomerUseCase) CreateCustomerNote(ctx *gin.Context, note *model.Cust
 }
 
 func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID string, page, limit int) ([]model.CustomerNoteResponse, int, error) {
+	loc, _ := time.LoadLocation("Asia/Bangkok")
 	offset := (page - 1) * limit
 
 	notes, total, err := uc.CustomerRepo.GetAllCustomerNotes(ctx, customerID, limit, offset)
@@ -34,7 +36,7 @@ func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID stri
 			NoteType:    note.NoteType.Name,
 			NoteDetail:  note.Note,
 			CreatedBy:   note.CreatedBy,
-			CreatedDate: note.CreatedAt.Local().Format("02 Jan 2006 15:04:05"),
+			CreatedDate: note.CreatedAt.In(loc).Format("02 Jan 2006 15:04:05"),
 		}
 	}
 

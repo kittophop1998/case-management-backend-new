@@ -21,7 +21,7 @@ func (uc *CustomerUseCase) CreateCustomerNote(ctx *gin.Context, note *model.Cust
 }
 
 func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID string, page, limit int) ([]model.CustomerNoteResponse, int, error) {
-	loc, _ := time.LoadLocation("Asia/Bangkok")
+	loc := time.FixedZone("Asia/Bangkok", 7*60*60) // +7 ชั่วโมง
 	offset := (page - 1) * limit
 
 	notes, total, err := uc.CustomerRepo.GetAllCustomerNotes(ctx, customerID, limit, offset)

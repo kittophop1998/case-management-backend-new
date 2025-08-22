@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,19 +15,31 @@ type CustomerHandler struct {
 }
 
 func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
+	// --- Prepare createdBy ---
 	username := ctx.GetString("username")
+	centerName := ctx.GetString("centerName")
+	createdBy := fmt.Sprintf("%s - %s", username, centerName)
 
-	note := &model.CustomerNote{CreatedBy: username}
-	if err := ctx.ShouldBindJSON(note); err != nil {
+	// --- Bind JSON payload ---
+	var note model.CustomerNote
+	if err := ctx.ShouldBindJSON(&note); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
-	if err := h.UseCase.CreateCustomerNote(ctx, note); err != nil {
+	// --- Set createdBy ---
+	note.CreatedBy = createdBy
+
+	// --- Call UseCase to create note ---
+	if err := h.UseCase.CreateCustomerNote(ctx, &note); err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
-	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"message": "Customer note created successfully"})
+
+	// --- Success response ---
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{
+		"message": "Customer note created successfully",
+	})
 }
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {

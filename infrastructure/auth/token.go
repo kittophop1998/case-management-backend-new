@@ -6,10 +6,11 @@ import (
 )
 
 type Metadata struct {
-	Name      string    `json:"name"`
-	UserId    uuid.UUID `json:"userId"`
-	CenterId  uuid.UUID `json:"centerId"`
-	SectionId uuid.UUID `json:"sectionId"`
+	Name       string    `json:"name"`
+	UserId     uuid.UUID `json:"userId"`
+	CenterId   uuid.UUID `json:"centerId"`
+	CenterName string    `json:"centerName"`
+	SectionId  uuid.UUID `json:"sectionId"`
 }
 
 type JwtClaims struct {

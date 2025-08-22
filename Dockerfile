@@ -3,6 +3,8 @@
 # ---------------------------------------------------------
 FROM golang:1.23.8-alpine AS builder
 
+RUN apk add --no-cache tzdata
+
 # Set workdir
 WORKDIR /app
 

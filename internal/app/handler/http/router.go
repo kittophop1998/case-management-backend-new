@@ -81,10 +81,11 @@ func SetupRoutes(
 		}
 
 		queueRoutes := apiV1.Group("/queues")
-		dashboardRoutes.Use(handler.ValidateToken())
+		queueRoutes.Use(handler.ValidateToken())
 		{
 			queueRoutes.GET("", H.Queue.GetAllQueues)
 			queueRoutes.GET("/:id", H.Queue.GetQueueByID)
+			queueRoutes.POST("", H.Queue.CreateQueue)
 		}
 
 		// TODO: delete

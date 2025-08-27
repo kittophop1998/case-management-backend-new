@@ -8,7 +8,7 @@ import (
 
 type Queues struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
+	Name        string    `gorm:"type:varchar(100);not null;primaryKey" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
 	CreatedBy   uuid.UUID `gorm:"type:uuid" json:"createdBy"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;" json:"createdAt"`
@@ -43,4 +43,11 @@ type Get struct {
 	UserID    uuid.UUID `json:"userId"`
 	CreatedAt time.Time `json:"createdAt"`
 	CreatedBy string    `json:"createdBy"`
+}
+
+// ##### Request For Queue #####
+type CreateQueueRequest struct {
+	QueueName        string   `json:"queueName" binding:"required"`
+	QueueDescription string   `json:"queueDescription" binding:"required"`
+	QueueUsers       []string `json:"queueUsers" binding:"required"`
 }

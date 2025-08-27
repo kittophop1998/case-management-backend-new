@@ -10,4 +10,7 @@ import (
 type QueueRepository interface {
 	GetQueues(ctx *gin.Context, offset int, limit int, queueName string) ([]*model.Queues, int, error)
 	GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error)
+	CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error)
+	CreateQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error
+	IsExistingQueue(ctx *gin.Context, queueName string) bool
 }

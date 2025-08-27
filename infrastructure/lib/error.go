@@ -43,6 +43,7 @@ var (
 	Unauthorized   = NewAppError(http.StatusUnauthorized, MessageError{"ไม่อนุญาต", "Unauthorized"}, nil)
 	NotFound       = NewAppError(http.StatusNotFound, MessageError{"ไม่พบข้อมูล", "Not Found"}, nil)
 	CannotUpdate   = NewAppError(http.StatusConflict, MessageError{"ไม่สามารถอัปเดตข้อมูลได้", "Cannot Update"}, nil)
+	CannotCreate   = NewAppError(http.StatusConflict, MessageError{"ไม่สามารถสร้างข้อมูลได้", "Cannot Create"}, nil)
 )
 
 type ApiErrorResponse struct {

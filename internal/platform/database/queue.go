@@ -2,7 +2,6 @@ package database
 
 import (
 	"case-management/internal/domain/model"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,38 +24,31 @@ func (repo *QueuePg) GetQueues(
 ) ([]*model.Queues, int, error) {
 	var queues []*model.Queues
 
-	baseQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
-
-	// Filter by name
+	// Count query
+	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
 	if queueName != "" {
-		baseQuery = baseQuery.Where("name ILIKE ?", "%"+queueName+"%")
+		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
 	}
 
-	// Count total rows
-	var count int64
-	if err := baseQuery.Count(&count).Error; err != nil {
+	var total int64
+	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// ตรวจสอบ offset ไม่เกิน count
-	if int64(offset) >= count {
-		offset = 0
+	dataQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
+	if queueName != "" {
+		dataQuery = dataQuery.Where("name ILIKE ?", "%"+queueName+"%")
 	}
 
-	// Query data
-	query := baseQuery.Session(&gorm.Session{}) // clone query
-	if err := query.Limit(limit).Offset(offset).Debug().Find(&queues).Error; err != nil {
+	if err := dataQuery.Limit(limit).Offset(offset).Find(&queues).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// บังคับ default empty slice
 	if queues == nil {
 		queues = []*model.Queues{}
 	}
 
-	fmt.Println("Queues found:", len(queues), "Total count:", count)
-
-	return queues, int(count), nil
+	return queues, int(total), nil
 }
 
 func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error) {
@@ -65,4 +57,30 @@ func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues
 		return nil, err
 	}
 	return queue, nil
+}
+
+func (repo *QueuePg) CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error) {
+	if err := repo.db.WithContext(ctx).Create(queue).Error; err != nil {
+		return uuid.Nil, err
+	}
+	return queue.ID, nil
+}
+
+func (repo *QueuePg) CreateQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error {
+	if err := repo.db.WithContext(ctx).Save(queueUsers).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *QueuePg) IsExistingQueue(ctx *gin.Context, queueName string) bool {
+	var count int64
+	if err := repo.db.WithContext(ctx).
+		Model(&model.Queues{}).
+		Where("name = ?", queueName).
+		Count(&count).Error; err != nil {
+		return false
+	}
+	return count > 0
+
 }

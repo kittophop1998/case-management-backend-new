@@ -8,19 +8,24 @@ import (
 	"github.com/google/uuid"
 )
 
-type QueueUsercase struct {
+type QueueUsecase struct {
 	repo repository.QueueRepository
 }
 
-func NewQueueUsercase(repo repository.QueueRepository) *QueueUsercase {
-	return &QueueUsercase{repo: repo}
+func NewQueueUsecase(repo repository.QueueRepository) *QueueUsecase {
+	return &QueueUsecase{repo: repo}
 }
 
-func (u QueueUsercase) GetQueues(ctx *gin.Context) ([]*model.GetQueuesResponse, error) {
+func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName string) ([]*model.GetQueuesResponse, int, error) {
 	var queues []*model.GetQueuesResponse
-	queuesRepo, err := u.repo.GetQueues(ctx)
+	queuesRepo, total, err := u.repo.GetQueues(ctx, page, limit, queueName)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	if len(queuesRepo) == 0 {
+		queues = []*model.GetQueuesResponse{}
+		return queues, 0, nil
 	}
 
 	for _, queue := range queuesRepo {
@@ -33,10 +38,10 @@ func (u QueueUsercase) GetQueues(ctx *gin.Context) ([]*model.GetQueuesResponse, 
 		})
 	}
 
-	return queues, nil
+	return queues, total, nil
 }
 
-func (u QueueUsercase) GetQueueByID(ctx *gin.Context, id string) (*model.GetQueuesResponse, error) {
+func (u QueueUsecase) GetQueueByID(ctx *gin.Context, id string) (*model.GetQueuesResponse, error) {
 	queueId, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err

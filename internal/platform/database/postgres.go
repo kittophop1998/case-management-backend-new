@@ -68,6 +68,7 @@ func Migrate(db *gorm.DB) error {
 		&model.Department{},
 		&model.AccessLogs{},
 		&model.Queues{},
+		&model.QueueUsers{},
 		&model.DispositionMain{},
 		&model.DispositionSub{},
 		&model.Cases{},

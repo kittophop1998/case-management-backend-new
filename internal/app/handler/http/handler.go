@@ -16,6 +16,7 @@ type Handlers struct {
 	Case       *CaseHandler
 	Customer   *CustomerHandler
 	Dashboard  *DashboardHandler
+	Queue      *QueueHandler
 }
 
 type HandlerDeps struct {
@@ -27,6 +28,7 @@ type HandlerDeps struct {
 	CaseUC       *usecase.CaseUseCase
 	CustomerUC   *usecase.CustomerUseCase
 	DashboardUC  *usecase.DashboardUseCase
+	QueueUC      *usecase.QueueUsecase
 }
 
 var H *Handlers
@@ -41,6 +43,7 @@ func InitHandlers(deps HandlerDeps) {
 		Case:       &CaseHandler{UseCase: *deps.CaseUC},
 		Customer:   &CustomerHandler{UseCase: *deps.CustomerUC},
 		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC},
+		Queue:      &QueueHandler{UserCase: *deps.QueueUC},
 	}
 }
 

@@ -8,6 +8,6 @@ import (
 )
 
 type QueueRepository interface {
-	GetQueues(ctx *gin.Context) ([]*model.Queues, error)
+	GetQueues(ctx *gin.Context, offset int, limit int, queueName string) ([]*model.Queues, int, error)
 	GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error)
 }

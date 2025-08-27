@@ -22,8 +22,6 @@ type User struct {
 	DepartmentID uuid.UUID  `json:"departmentId"`
 	Department   Department `json:"department"`
 	OperatorID   *uint      `json:"operatorId"`
-	QueuesID     uuid.UUID  `json:"queueId"`
-	Queues       Queues     `json:"queue"`
 	Password     string     `json:"-"`
 	UserTypes    string     `json:"-"`
 	CreatedAt    time.Time  `json:"createdAt"`

@@ -18,6 +18,17 @@ type Queues struct {
 	DeletedBy   uuid.UUID `gorm:"type:uuid" json:"deletedBy"`
 }
 
+type QueueUsers struct {
+	QueueID   uuid.UUID `gorm:"type:uuid;primaryKey" json:"queueId"`
+	UserID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"userId"`
+	CreatedBy uuid.UUID `gorm:"type:uuid" json:"createdBy"`
+	CreatedAt time.Time `gorm:"type:timestamptz;" json:"createdAt"`
+	UpdatedBy uuid.UUID `gorm:"type:uuid" json:"updatedBy"`
+	UpdatedAt time.Time `gorm:"type:timestamptz;" json:"updatedAt"`
+	DeletedAt time.Time `gorm:"type:timestamptz" json:"deletedAt"`
+	DeletedBy uuid.UUID `gorm:"type:uuid" json:"deletedBy"`
+}
+
 // ##### Response For Queue #####
 type GetQueuesResponse struct {
 	QueueID          uuid.UUID `json:"queueId"`

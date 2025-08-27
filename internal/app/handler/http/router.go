@@ -80,6 +80,13 @@ func SetupRoutes(
 			dashboardRoutes.GET("/custsuggestion/:id", H.Dashboard.GetCustSuggestion)
 		}
 
+		queueRoutes := apiV1.Group("/queues")
+		dashboardRoutes.Use(handler.ValidateToken())
+		{
+			queueRoutes.GET("", H.Queue.GetAllQueues)
+			queueRoutes.GET("/:id", H.Queue.GetQueueByID)
+		}
+
 		// TODO: delete
 		apiV1.GET("/mock/*any", func(c *gin.Context) {
 			if c.Query("isError") != "" && c.Query("isError") != "false" {

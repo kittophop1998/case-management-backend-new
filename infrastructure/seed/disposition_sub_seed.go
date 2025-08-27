@@ -12,14 +12,17 @@ type DispositionSubMap map[string]uuid.UUID
 func SeedDispositionSub(db *gorm.DB, dispositionMain map[string]uuid.UUID) DispositionSubMap {
 	dispositionSubMap := make(DispositionSubMap)
 
-	seedEntities(db, []Seedable{
-		&model.DispositionSub{Name: "Aeon", MainID: dispositionMain["Open Credit Card"]},
-		&model.DispositionSub{Name: "Aeon Thai Smile", MainID: dispositionMain["Open Credit Card"]},
-	}, func(db *gorm.DB, i Seedable) *gorm.DB {
-		return db.Where("name = ?", i.GetIdentifier())
-	}, func(name string, id uuid.UUID) {
-		dispositionSubMap[name] = id
-	})
+	dispositionSub := []model.DispositionSub{
+		{Name: "Aeon", MainID: dispositionMain["Open Credit Card"]},
+		{Name: "Aeon Thai Smile", MainID: dispositionMain["Open Credit Card"]},
+	}
+
+	for _, dispoSub := range dispositionSub {
+		if err := db.FirstOrCreate(&dispoSub, model.DispositionSub{Name: dispoSub.Name}).Error; err != nil {
+			panic("Failed to seed disposition sub: " + err.Error())
+		}
+		dispositionSubMap[dispoSub.Name] = dispoSub.ID
+	}
 
 	return dispositionSubMap
 }

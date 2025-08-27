@@ -46,15 +46,22 @@ func main() {
 		appLogger.Fatalf("FATAL: Application initialization failed: %v", err)
 	}
 
-	srv := &http.Server{
+	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
 		Handler: router,
 	}
 
 	go func() {
-		appLogger.Infof("Server starting on port %d", cfg.Server.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			appLogger.Fatalf("Listen and serve error: %s", err)
+		}
+		appLogger.Infof("Server starting on port %d", cfg.Server.Port)
+	}()
+
+	// Recover from panics
+	defer func() {
+		if r := recover(); r != nil {
+			appLogger.Errorf("Recovered from panic: %v", r)
 		}
 	}()
 
@@ -66,7 +73,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(ctx); err != nil {
 		appLogger.Fatal("Server forced to shutdown:", err)
 	}
 

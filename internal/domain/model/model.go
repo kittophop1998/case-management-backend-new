@@ -53,6 +53,8 @@ type UserFilter struct {
 	SectionID    uuid.UUID `json:"sectionID,omitempty"`
 	CenterID     uuid.UUID `json:"centerID,omitempty"`
 	DepartmentID uuid.UUID `json:"departmentID,omitempty"`
+	QueueID      uuid.UUID `json:"queueID,omitempty"`
+	IsNotInQueue *bool     `json:"isNotInQueue,omitempty"`
 }
 
 type UserProfileResponse struct {

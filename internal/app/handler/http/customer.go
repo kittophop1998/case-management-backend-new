@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
 	"fmt"
 	"net/http"
 
@@ -43,26 +44,16 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 }
 
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {
-	limit, err := getLimit(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
-
-	page, err := getPage(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
+	p := utils.GetPagination(ctx)
 
 	customerID := ctx.Param("customerId")
-	notes, total, err := h.UseCase.GetAllCustomerNotes(ctx, customerID, page, limit)
+	notes, total, err := h.UseCase.GetAllCustomerNotes(ctx, customerID, p.Page, p.Limit)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, notes)
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, notes)
 }
 
 func (h *CustomerHandler) GetNoteTypes(ctx *gin.Context) {

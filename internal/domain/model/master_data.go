@@ -32,11 +32,6 @@ type Section struct {
 	Name string    `gorm:"type:varchar(100)" json:"name"`
 }
 
-type Queue struct {
-	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name string    `gorm:"type:varchar(100)" json:"name"`
-}
-
 type Department struct {
 	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Key  string    `gorm:"uniqueIndex;not null" json:"key"`
@@ -68,30 +63,6 @@ type DispositionFilter struct {
 	Offset  int    `form:"offset" json:"offset"`
 }
 
-func (r Role) GetIdentifier() string { return r.Name }
-func (r *Role) GetID() uuid.UUID     { return r.ID }
-
-func (p Permission) GetIdentifier() string { return p.Key }
-func (p *Permission) GetID() uuid.UUID     { return p.ID }
-
-func (s Section) GetIdentifier() string { return s.Name }
-func (s *Section) GetID() uuid.UUID     { return s.ID }
-
-func (c Center) GetIdentifier() string { return c.Name }
-func (c *Center) GetID() uuid.UUID     { return c.ID }
-
-func (d Department) GetIdentifier() string { return d.Name }
-func (d *Department) GetID() uuid.UUID     { return d.ID }
-
-func (q Queue) GetIdentifier() string { return q.Name }
-func (q *Queue) GetID() uuid.UUID     { return q.ID }
-
-func (d DispositionMain) GetIdentifier() string { return d.Name }
-func (d *DispositionMain) GetID() uuid.UUID     { return d.ID }
-
-func (d DispositionSub) GetIdentifier() string { return d.Name }
-func (d *DispositionSub) GetID() uuid.UUID     { return d.ID }
-
 func (RolePermission) TableName() string {
 	return "role_permissions"
 }
@@ -114,10 +85,6 @@ func (Section) TableName() string {
 
 func (Department) TableName() string {
 	return "departments"
-}
-
-func (Queue) TableName() string {
-	return "queues"
 }
 
 func (DispositionMain) TableName() string {

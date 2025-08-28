@@ -14,7 +14,6 @@ func SeedUser(
 	sectionMap map[string]uuid.UUID,
 	centerMap map[string]uuid.UUID,
 	departmentMap map[string]uuid.UUID,
-	queueMap map[string]uuid.UUID,
 ) {
 	isActive := true
 	defaultPassword := "aeon"

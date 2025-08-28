@@ -4,7 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
-	"fmt"
+	"case-management/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,36 +15,19 @@ type UserHandler struct {
 	UseCase usecase.UserUseCase
 }
 
-func (h *UserHandler) CreateUser(ctx *gin.Context) {
-	user := &model.CreateUpdateUserRequest{}
-	if err := ctx.ShouldBindJSON(user); err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
-
-	uid, err := h.UseCase.Create(ctx, user)
-	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to create user: "+err.Error()))
-		return
-	}
-
-	lib.HandleResponse(ctx, http.StatusCreated, uid)
-}
-
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
-	limit, err := getLimit(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
+	// limit, err := getLimit(ctx)
+	// if err != nil {
+	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// 	return
+	// }
 
-	page, err := getPage(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
-
-	fmt.Printf("Fetching users with pagination: page=%d, limit=%d\n", page, limit)
+	// page, err := getPage(ctx)
+	// if err != nil {
+	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// 	return
+	// }
+	p := utils.GetPagination(ctx)
 
 	sort := ctx.DefaultQuery("sort", "is_active desc")
 	keyword := ctx.Query("keyword")
@@ -59,7 +42,15 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		isActive = &val
 	}
 
-	var roleID, sectionIdID, centerID, departmentID uuid.UUID
+	queueIdStr := ctx.Query("queueId")
+	isNotInQueueStr := ctx.Query("isNotInQueue")
+	var isNotInQueue *bool = nil
+	if isNotInQueueStr != "" {
+		val := isNotInQueueStr == "true"
+		isNotInQueue = &val
+	}
+
+	var roleID, sectionIdID, centerID, departmentID, queueID uuid.UUID
 	if roleIdStr != "" {
 		if id, err := uuid.Parse(roleIdStr); err == nil {
 			roleID = id
@@ -80,6 +71,11 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 			departmentID = id
 		}
 	}
+	if queueIdStr != "" {
+		if id, err := uuid.Parse(queueIdStr); err == nil {
+			queueID = id
+		}
+	}
 
 	filter := model.UserFilter{
 		Keyword:      keyword,
@@ -89,15 +85,33 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		SectionID:    sectionIdID,
 		CenterID:     centerID,
 		DepartmentID: departmentID,
+		QueueID:      queueID,
+		IsNotInQueue: isNotInQueue,
 	}
 
-	users, total, err := h.UseCase.GetAll(ctx, page, limit, filter)
+	users, total, err := h.UseCase.GetAll(ctx, p.Page, p.Limit, filter)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to fetch users: "+err.Error()))
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, users)
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, users)
+}
+
+func (h *UserHandler) CreateUser(ctx *gin.Context) {
+	user := &model.CreateUpdateUserRequest{}
+	if err := ctx.ShouldBindJSON(user); err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	uid, err := h.UseCase.Create(ctx, user)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to create user: "+err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusCreated, uid)
 }
 
 func (h *UserHandler) GetUserByID(ctx *gin.Context) {

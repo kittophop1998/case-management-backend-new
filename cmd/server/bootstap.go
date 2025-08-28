@@ -63,6 +63,10 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	dashboardAPIClient := api.NewDashboardAPIClient(cfg.Services.ConnectorAPI.BaseURL)
 	dashboardUsecase := usecase.NewDashboardUseCase(dashboardAPIClient)
 
+	// Queue repository
+	queueRepo := database.NewQueuePg(db)
+	queueUsecase := usecase.NewQueueUsecase(queueRepo)
+
 	// ##### Application Layer: Handlers #####
 
 	// Application Layer: HTTP handlers
@@ -75,6 +79,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		CaseUC:       caseUsecase,
 		CustomerUC:   customerUsecase,
 		DashboardUC:  dashboardUsecase,
+		QueueUC:      queueUsecase,
 	})
 
 	// Setup Gin engine and middlewares

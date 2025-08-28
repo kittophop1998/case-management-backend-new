@@ -118,6 +118,16 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		query = query.Where("department.id = ?", filter.DepartmentID)
 	}
 
+	if filter.QueueID != uuid.Nil {
+		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Where("qu.queue_id <> ?", filter.QueueID)
+		} else {
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Where("qu.queue_id = ?", filter.QueueID)
+		}
+	}
+
 	if filter.Sort != "" {
 		query = query.Order(filter.Sort)
 	}
@@ -306,6 +316,17 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 
 	if filter.CenterID != uuid.Nil {
 		query = query.Where("centers.id = ?", filter.CenterID)
+	}
+
+	// Use In Queue Management
+	if filter.QueueID != uuid.Nil {
+		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Where("qu.queue_id <> ?", filter.QueueID)
+		} else {
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Where("qu.queue_id = ?", filter.QueueID)
+		}
 	}
 
 	if err := query.Count(&count).Error; err != nil {

@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,17 +16,18 @@ type UserHandler struct {
 }
 
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
-	limit, err := getLimit(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
+	// limit, err := getLimit(ctx)
+	// if err != nil {
+	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// 	return
+	// }
 
-	page, err := getPage(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
+	// page, err := getPage(ctx)
+	// if err != nil {
+	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// 	return
+	// }
+	p := utils.GetPagination(ctx)
 
 	sort := ctx.DefaultQuery("sort", "is_active desc")
 	keyword := ctx.Query("keyword")
@@ -87,13 +89,13 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		IsNotInQueue: isNotInQueue,
 	}
 
-	users, total, err := h.UseCase.GetAll(ctx, page, limit, filter)
+	users, total, err := h.UseCase.GetAll(ctx, p.Page, p.Limit, filter)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails("Failed to fetch users: "+err.Error()))
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, users)
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, users)
 }
 
 func (h *UserHandler) CreateUser(ctx *gin.Context) {

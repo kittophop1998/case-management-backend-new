@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -49,21 +50,11 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
-	limit, err := getLimit(ctx)
-	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid limit parameter"})
-		return
-	}
-
-	page, err := getPage(ctx)
-	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid page parameter"})
-		return
-	}
+	p := utils.GetPagination(ctx)
 
 	keyword := ctx.Query("keyword")
 
-	mains, total, err := h.UseCase.GetAllDisposition(ctx, page, limit, keyword)
+	mains, total, err := h.UseCase.GetAllDisposition(ctx, p.Page, p.Limit, keyword)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -73,5 +64,5 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 		mains = []model.DispositionMain{}
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, mains)
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, mains)
 }

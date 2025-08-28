@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,17 +16,7 @@ type PermissionHandler struct {
 }
 
 func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
-	limit, err := getLimit(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid limit parameter"))
-		return
-	}
-
-	page, err := getPage(ctx)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid page parameter"))
-		return
-	}
+	p := utils.GetPagination(ctx)
 
 	permissionName := ctx.Query("keyword")
 	var sectionID, departmentID *uuid.UUID
@@ -42,7 +33,7 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		}
 	}
 
-	permissions, total, permRoleCount, err := h.UseCase.GetAllPermissions(ctx, page, limit, permissionName, sectionID, departmentID)
+	permissions, total, permRoleCount, err := h.UseCase.GetAllPermissions(ctx, p.Page, p.Limit, permissionName, sectionID, departmentID)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -52,7 +43,7 @@ func (h *PermissionHandler) GetAllPermissions(ctx *gin.Context) {
 		permissions = []model.PermissionWithRolesResponse{}
 	}
 
-	lib.HandlePaginatedResponse(ctx, page, limit, total, permissions, lib.OptionField{PermRoleCount: &permRoleCount})
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, permissions, lib.OptionField{PermRoleCount: &permRoleCount})
 }
 
 func (h *PermissionHandler) UpdatePermission(ctx *gin.Context) {

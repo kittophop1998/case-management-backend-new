@@ -60,17 +60,44 @@ func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues
 }
 
 func (repo *QueuePg) CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error) {
-	if err := repo.db.WithContext(ctx).Create(queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).FirstOrCreate(queue).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return queue.ID, nil
 }
 
 func (repo *QueuePg) CreateQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error {
-	if err := repo.db.WithContext(ctx).Save(queueUsers).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Create(queueUsers).Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func (repo *QueuePg) UpdateQueue(ctx *gin.Context, queue *model.Queues) error {
+	if err := repo.db.WithContext(ctx).
+		Where("id = ?", queue.ID).
+		Updates(queue).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *QueuePg) UpdateQueueUser(ctx *gin.Context, queueID uuid.UUID, usersAdd []*model.QueueUsers, usersDel []string) error {
+	return repo.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(usersDel) > 0 {
+			if err := tx.Where("queue_id = ? AND user_id IN ?", queueID, usersDel).
+				Delete(&model.QueueUsers{}).Error; err != nil {
+				return err
+			}
+		}
+
+		if len(usersAdd) > 0 {
+			if err := tx.Create(usersAdd).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (repo *QueuePg) IsExistingQueue(ctx *gin.Context, queueName string) bool {

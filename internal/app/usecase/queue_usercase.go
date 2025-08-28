@@ -117,3 +117,53 @@ func (u QueueUsecase) CreateQueue(ctx *gin.Context, createdBy string, input *mod
 
 	return queueID, nil
 }
+
+func (u QueueUsecase) UpdateQueue(ctx *gin.Context, updatedBy string, input *model.UpdateQueueRequest) error {
+	var queueID uuid.UUID
+	if id, err := uuid.Parse(input.QueueID); err != nil {
+		queueID = id
+	}
+
+	queue, err := u.repo.GetQueueByID(ctx, queueID)
+	if err != nil {
+		return fmt.Errorf("failed to get queue by ID: %w", err)
+	}
+
+	if queue == nil {
+		return fmt.Errorf("queue with ID %q does not exist", input.QueueID)
+	}
+
+	queueToSave := &model.Queues{
+		ID:          queueID,
+		Name:        input.QueueName,
+		Description: input.QueueDescription,
+		UpdatedAt:   time.Now(),
+		UpdatedBy:   queue.UpdatedBy,
+	}
+
+	if err := u.repo.UpdateQueue(ctx, queueToSave); err != nil {
+		return fmt.Errorf("failed to update queue: %w", err)
+	}
+
+	var queueUsersToSave []*model.QueueUsers
+	for _, user := range input.UsersAdd {
+		var userID uuid.UUID
+		if id, err := uuid.Parse(user); err == nil {
+			userID = id
+		}
+
+		queueUsersToSave = append(queueUsersToSave, &model.QueueUsers{
+			QueueID:   queueID,
+			UserID:    userID,
+			CreatedAt: time.Now(),
+			CreatedBy: queue.UpdatedBy,
+			UpdatedBy: queue.UpdatedBy,
+		})
+	}
+
+	if err := u.repo.UpdateQueueUser(ctx, queueID, queueUsersToSave, input.UsersDel); err != nil {
+		return fmt.Errorf("failed to update queue users: %w", err)
+	}
+
+	return nil
+}

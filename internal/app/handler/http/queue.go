@@ -56,3 +56,20 @@ func (h *QueueHandler) CreateQueue(ctx *gin.Context) {
 
 	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"queueId": queueId})
 }
+
+func (h *QueueHandler) UpdateQueue(ctx *gin.Context) {
+	userId := ctx.GetString("userId")
+
+	var queueUpdate model.UpdateQueueRequest
+	if err := ctx.ShouldBindJSON(&queueUpdate); err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	if err := h.UserCase.UpdateQueue(ctx, userId, &queueUpdate); err != nil {
+		lib.HandleError(ctx, lib.CannotUpdate.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"message": "Update queue success"})
+}

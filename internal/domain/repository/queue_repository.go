@@ -12,5 +12,7 @@ type QueueRepository interface {
 	GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error)
 	CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error)
 	CreateQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error
+	UpdateQueue(ctx *gin.Context, input *model.Queues) error
+	UpdateQueueUser(ctx *gin.Context, queueID uuid.UUID, input []*model.QueueUsers, usersDel []string) error
 	IsExistingQueue(ctx *gin.Context, queueName string) bool
 }

@@ -38,16 +38,17 @@ type GetQueuesResponse struct {
 	CreatedBy        string    `json:"createdBy"`
 }
 
-type Get struct {
-	QueueID   uuid.UUID `json:"queueId"`
-	UserID    uuid.UUID `json:"userId"`
-	CreatedAt time.Time `json:"createdAt"`
-	CreatedBy string    `json:"createdBy"`
-}
-
 // ##### Request For Queue #####
 type CreateQueueRequest struct {
 	QueueName        string   `json:"queueName" binding:"required"`
 	QueueDescription string   `json:"queueDescription" binding:"required"`
 	QueueUsers       []string `json:"queueUsers" binding:"required"`
+}
+
+type UpdateQueueRequest struct {
+	QueueID          string   `json:"queueId" binding:"required,uuid"`
+	QueueName        string   `json:"queueName" binding:"required"`
+	QueueDescription string   `json:"queueDescription" binding:"required"`
+	UsersAdd         []string `json:"usersAdd" binding:"required"`
+	UsersDel         []string `json:"usersDel" binding:"required"`
 }

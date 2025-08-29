@@ -31,12 +31,18 @@ func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
-	cases, err := h.UseCase.GetAllCases(ctx)
+	p := utils.GetPagination(ctx)
+
+	// TODO: Implement filter category
+	// category := ctx.Query("category")
+
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve cases"})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
-	ctx.JSON(200, cases)
+
+	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, cases)
 }
 
 func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
@@ -46,17 +52,15 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "Failed to retrieve case"})
 		return
 	}
-	ctx.JSON(200, caseData)
+	lib.HandleResponse(ctx, http.StatusOK, caseData)
 }
 
 func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 	p := utils.GetPagination(ctx)
 
-	keyword := ctx.Query("keyword")
-
-	mains, total, err := h.UseCase.GetAllDisposition(ctx, p.Page, p.Limit, keyword)
+	mains, total, err := h.UseCase.GetAllDisposition(ctx, p.Page, p.Limit)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 

@@ -11,11 +11,15 @@ import (
 )
 
 type QueueUsecase struct {
-	repo repository.QueueRepository
+	auditLogger repository.AuditLogRepository
+	repo        repository.QueueRepository
 }
 
-func NewQueueUsecase(repo repository.QueueRepository) *QueueUsecase {
-	return &QueueUsecase{repo: repo}
+func NewQueueUsecase(
+	auditLogger repository.AuditLogRepository,
+	repo repository.QueueRepository,
+) *QueueUsecase {
+	return &QueueUsecase{auditLogger: auditLogger, repo: repo}
 }
 
 func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName string) ([]*model.GetQueuesResponse, int, error) {
@@ -33,7 +37,7 @@ func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName str
 
 	for _, queue := range queuesRepo {
 		queues = append(queues, &model.GetQueuesResponse{
-			QueueID:          queue.ID,
+			QueueID:          queue.ID.String(),
 			QueueName:        queue.Name,
 			QueueDescription: queue.Description,
 			CreatedAt:        queue.CreatedAt,
@@ -56,7 +60,7 @@ func (u QueueUsecase) GetQueueByID(ctx *gin.Context, id string) (*model.GetQueue
 	}
 
 	queue := &model.GetQueuesResponse{
-		QueueID:          queueRepo.ID,
+		QueueID:          queueRepo.ID.String(),
 		QueueName:        queueRepo.Name,
 		QueueDescription: queueRepo.Description,
 		CreatedAt:        queueRepo.CreatedAt,
@@ -114,6 +118,13 @@ func (u QueueUsecase) CreateQueue(ctx *gin.Context, createdBy string, input *mod
 			return uuid.Nil, err
 		}
 	}
+
+	u.auditLogger.LogAction(ctx, model.AuditLogs{
+		Action:    "create_queue",
+		Module:    "queue",
+		UserID:    createdByID,
+		CreatedAt: time.Now(),
+	})
 
 	return queueID, nil
 }

@@ -4,28 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
-
-// ##### Case Management #####
-type CaseFilter struct {
-	Keyword     string     `form:"keyword" json:"keyword"`
-	StatusID    *uint      `form:"statusId" json:"statusId"`
-	PriorityID  *uint      `form:"priorityId" json:"priorityId"`
-	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
-	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
-	Sort        string     `form:"sort" json:"sort"`
-}
-
-type CreateCaseRequest struct {
-	CustomerId        string         `json:"customerId" binding:"required"`
-	CaseTypeId        uuid.UUID      `json:"caseTypeId" binding:"required"`
-	DispositionMainId uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid" binding:"required"`
-	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb" binding:"required"`
-	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
-	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
-}
 
 // ##### User Management #####
 type CreateUpdateUserRequest struct {

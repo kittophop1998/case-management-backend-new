@@ -23,3 +23,7 @@ func (l *LogUseCase) GetAllApiLogs(ctx *gin.Context) ([]*model.ApiLogs, error) {
 	logs, err := l.repo.GetAllApiLogs(ctx)
 	return logs, err
 }
+
+func (repo *LogUseCase) SaveLoginEvent(ctx *gin.Context, accessLog *model.AccessLogs) error {
+	return repo.repo.SaveLoginEvent(ctx, accessLog)
+}

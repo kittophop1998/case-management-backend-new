@@ -28,3 +28,10 @@ func (l *LogPg) GetAllApiLogs(ctx *gin.Context) ([]*model.ApiLogs, error) {
 
 	return logs, nil
 }
+
+func (repo *LogPg) SaveLoginEvent(ctx *gin.Context, accessLog *model.AccessLogs) error {
+	if err := repo.db.WithContext(ctx).Create(accessLog).Error; err != nil {
+		return err
+	}
+	return nil
+}

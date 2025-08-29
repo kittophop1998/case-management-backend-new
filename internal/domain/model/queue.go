@@ -31,7 +31,7 @@ type QueueUsers struct {
 
 // ##### Response For Queue #####
 type GetQueuesResponse struct {
-	QueueID          uuid.UUID `json:"queueId"`
+	QueueID          string    `json:"queueId"`
 	QueueName        string    `json:"queueName"`
 	QueueDescription string    `json:"queueDescription"`
 	CreatedAt        time.Time `json:"createdAt"`

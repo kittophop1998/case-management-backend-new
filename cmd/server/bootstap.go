@@ -8,6 +8,10 @@ import (
 	"case-management/internal/app/usecase"
 	"case-management/internal/platform/api"
 	"case-management/internal/platform/database"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"fmt"
@@ -30,26 +34,28 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		return nil, fmt.Errorf("database setup failed: %w", err)
 	}
 
+	auditLogger := database.NewAsyncAuditLogger(db, 100)
+	gracefulExit(auditLogger)
+
 	// ##### Application Layer: Use Cases #####
+	// Log repository
+	logRepo := database.NewLogPg(db)
+	logUsecase := usecase.NewLogUseCase(logRepo)
+
 	// User repository
 	userDBRepo := database.NewUserPg(db)
 	userUsecase := usecase.NewUserUseCase(userDBRepo)
+
+	// Auth repository
+	authUsecase := usecase.NewAuthUseCase(logUsecase, userDBRepo)
 
 	// Master data repository
 	masterDataRepo := database.NewMasterDataPg(db)
 	masterDataUsecase := usecase.NewMasterDataUseCase(masterDataRepo)
 
-	// Auth repository
-	authRepo := database.NewAuthPg(db)
-	authUsecase := usecase.NewAuthUseCase(userDBRepo, authRepo)
-
 	// Permission repository
 	permissionRepo := database.NewPermissionPg(db)
 	permissionUsecase := usecase.NewPermissionUseCase(permissionRepo)
-
-	// Log repository
-	logRepo := database.NewLogPg(db)
-	logUsecase := usecase.NewLogUseCase(logRepo)
 
 	// Case repository
 	caseRepo := database.NewCasePg(db)
@@ -65,7 +71,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 
 	// Queue repository
 	queueRepo := database.NewQueuePg(db)
-	queueUsecase := usecase.NewQueueUsecase(queueRepo)
+	queueUsecase := usecase.NewQueueUsecase(auditLogger, queueRepo)
 
 	// ##### Application Layer: Handlers #####
 
@@ -134,4 +140,17 @@ func setupDatabase(cfg *config.Config, logger *zap.SugaredLogger) (*gorm.DB, err
 	logger.Info("Database migrations completed")
 
 	return db, nil
+}
+
+func gracefulExit(logger *database.AsyncAuditLogger) {
+	go func() {
+		// จับ signal (Ctrl+C หรือ SIGTERM)
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+
+		<-c
+		log.Println("[INFO] Shutting down audit logger...")
+		logger.Shutdown()
+		os.Exit(0)
+	}()
 }

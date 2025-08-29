@@ -16,8 +16,38 @@ func NewCaseUseCase(repo repository.CaseRepository) *CaseUseCase {
 	return &CaseUseCase{repo: repo}
 }
 
-func (uc *CaseUseCase) GetAllCases(c *gin.Context) ([]*model.Cases, error) {
-	return uc.repo.GetAllCase(c, 10, 0, model.CaseFilter{})
+func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.CaseResponse, int, error) {
+	offset := (page - 1) * limit
+
+	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var caseResponses []*model.CaseResponse
+	for _, c := range caseRepo {
+
+		caseResponses = append(caseResponses, &model.CaseResponse{
+			CustomerID:   c.CustomerID,
+			CustomerName: c.CustomerName,
+			Status:       c.StatusID.String(),
+			CaseType:     c.CaseTypeID.String(),
+			CurrentQueue: c.QueueID.String(),
+			CurrentUser:  c.AssignedToUserID.String(),
+			SLADate:      c.EndDate.String(),
+			CreateDate:   c.CreatedAt.String(),
+			CaseID:       c.ID.String(),
+			AeonID:       c.AeonID,
+			CaseGroup:    "General",
+			CreatedBy:    c.CreatedBy.String(),
+			CreatedDate:  c.CreatedAt.String(),
+			CasePriority: c.PriorityID.String(),
+			ClosedDate:   c.ClosedDate.String(),
+			ReceivedFrom: "Fraud",
+		})
+	}
+	return caseResponses, total, nil
+
 }
 
 func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, error) {
@@ -50,6 +80,19 @@ func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.CreateCaseRequ
 	return caseId, nil
 }
 
+func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newDescription string) error {
+	caseUUID, err := uuid.Parse(caseID)
+	if err != nil {
+		return err
+	}
+	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
+}
+
+func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context, page, limit int) ([]model.DispositionMain, int, error) {
+	offset := (page - 1) * limit
+	return uc.repo.GetAllDisposition(ctx, limit, offset)
+}
+
 // func (uc *CaseUseCase) CreateNoteType(c *gin.Context, note model.NoteTypes) (*model.NoteTypes, error) {
 // 	return uc.repo.CreateNoteType(c, note)
 // }
@@ -61,16 +104,3 @@ func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.CreateCaseRequ
 // 	}
 // 	return uc.repo.GetNoteTypeByID(c, noteTypeUUID)
 // }
-
-func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newDescription string) error {
-	caseUUID, err := uuid.Parse(caseID)
-	if err != nil {
-		return err
-	}
-	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
-}
-
-func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context, page, limit int, keyword string) ([]model.DispositionMain, int, error) {
-	offset := (page - 1) * limit
-	return uc.repo.GetAllDisposition(ctx, limit, offset, keyword)
-}

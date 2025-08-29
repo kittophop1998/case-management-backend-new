@@ -32,9 +32,9 @@ func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uu
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		CustomerId:        data.CustomerId,
-		CaseTypeId:        data.CaseTypeId,
-		DispositionMainId: data.DispositionMainId,
+		CustomerID:        data.CustomerID,
+		CaseTypeID:        data.CaseTypeID,
+		DispositionMainID: data.DispositionMainID,
 		Description:       data.CaseDescription,
 		CreatedBy:         userID,
 		UpdatedBy:         userID,
@@ -77,19 +77,16 @@ func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON
 	return nil
 }
 
-func (c *CasePg) GetAllCase(ctx *gin.Context, limit, offset int, filter model.CaseFilter) ([]*model.Cases, error) {
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
-	query := c.db.Model(&model.Cases{}).Offset(offset).Limit(limit)
 
-	if filter.StatusID != nil {
-		query = query.Where("status_id = ?", filter.StatusID)
+	query := c.db.WithContext(ctx).Model(&model.Cases{})
+
+	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
+		return nil, 0, err
 	}
 
-	if err := query.Find(&cases).Error; err != nil {
-		return nil, err
-	}
-
-	return cases, nil
+	return cases, 10, nil
 }
 
 func (c *CasePg) CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error) {
@@ -189,13 +186,8 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 	return &noteType, nil
 }
 
-func (r *CasePg) GetAllDisposition(ctx *gin.Context, limit, offset int, keyword string) ([]model.DispositionMain, int, error) {
+func (r *CasePg) GetAllDisposition(ctx *gin.Context, limit, offset int) ([]model.DispositionMain, int, error) {
 	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
-
-	if keyword != "" {
-		like := "%" + keyword + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", like, like)
-	}
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {

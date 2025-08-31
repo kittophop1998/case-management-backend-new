@@ -30,9 +30,9 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.
 		caseResponses = append(caseResponses, &model.CaseResponse{
 			CustomerID:   c.CustomerID,
 			CustomerName: c.CustomerName,
-			Status:       c.StatusID.String(),
-			CaseType:     c.CaseTypeID.String(),
-			CurrentQueue: c.QueueID.String(),
+			Status:       c.Status.Name,
+			CaseType:     c.CaseType.Name,
+			CurrentQueue: c.Queues.Name,
 			CurrentUser:  c.AssignedToUserID.String(),
 			SLADate:      c.EndDate.String(),
 			CreateDate:   c.CreatedAt.String(),
@@ -41,7 +41,7 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.
 			CaseGroup:    "General",
 			CreatedBy:    c.CreatedBy.String(),
 			CreatedDate:  c.CreatedAt.String(),
-			CasePriority: c.PriorityID.String(),
+			CasePriority: c.Priority.Name,
 			ClosedDate:   c.ClosedDate.String(),
 			ReceivedFrom: "Fraud",
 		})

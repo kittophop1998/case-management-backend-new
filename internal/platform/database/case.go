@@ -80,7 +80,8 @@ func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON
 func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
 
-	query := c.db.WithContext(ctx).Model(&model.Cases{})
+	query := c.db.WithContext(ctx).Model(&model.Cases{}).
+		Preload("Status")
 
 	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
 		return nil, 0, err

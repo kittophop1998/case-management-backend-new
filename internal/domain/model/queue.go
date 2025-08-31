@@ -8,7 +8,7 @@ import (
 
 type Queues struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name        string    `gorm:"type:varchar(100);not null;primaryKey" json:"name"`
+	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
 	CreatedBy   uuid.UUID `gorm:"type:uuid" json:"createdBy"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;" json:"createdAt"`

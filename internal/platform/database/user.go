@@ -122,6 +122,7 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
 			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
 			query = query.Where("qu.queue_id <> ?", filter.QueueID)
+			query = query.Or("qu.queue_id IS NULL")
 		} else {
 			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
 			query = query.Where("qu.queue_id = ?", filter.QueueID)
@@ -132,7 +133,7 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		query = query.Order(filter.Sort)
 	}
 
-	if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+	if err := query.Limit(limit).Offset(offset).Debug().Find(&users).Error; err != nil {
 		return nil, err
 	}
 
@@ -323,6 +324,7 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
 			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
 			query = query.Where("qu.queue_id <> ?", filter.QueueID)
+			query = query.Or("qu.queue_id IS NULL")
 		} else {
 			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
 			query = query.Where("qu.queue_id = ?", filter.QueueID)

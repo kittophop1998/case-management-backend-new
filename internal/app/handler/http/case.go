@@ -64,9 +64,7 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
-	p := utils.GetPagination(ctx)
-
-	mains, total, err := h.UseCase.GetAllDisposition(ctx, p.Page, p.Limit)
+	mains, err := h.UseCase.GetAllDisposition(ctx)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -76,5 +74,5 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 		mains = []model.DispositionMain{}
 	}
 
-	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, mains)
+	lib.HandleResponse(ctx, http.StatusOK, mains)
 }

@@ -105,9 +105,8 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
 }
 
-func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context, page, limit int) ([]model.DispositionMain, int, error) {
-	offset := (page - 1) * limit
-	return uc.repo.GetAllDisposition(ctx, limit, offset)
+func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context) ([]model.DispositionMain, error) {
+	return uc.repo.GetAllDisposition(ctx)
 }
 
 // func (uc *CaseUseCase) CreateNoteType(c *gin.Context, note model.NoteTypes) (*model.NoteTypes, error) {

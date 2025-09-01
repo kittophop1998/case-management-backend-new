@@ -20,7 +20,7 @@ func NewCasePg(db *gorm.DB) *CasePg {
 }
 
 func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
-	if err := c.db.FirstOrCreate(caseToSave).Error; err != nil {
+	if err := c.db.WithContext(ctx).Create(caseToSave).Error; err != nil {
 		return uuid.Nil, err
 	}
 
@@ -167,56 +167,16 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 	return &noteType, nil
 }
 
-func (r *CasePg) GetAllDisposition(ctx *gin.Context, limit, offset int) ([]model.DispositionMain, int, error) {
+func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionMain, error) {
 	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	var mains []model.DispositionMain
-	if err := query.
-		Limit(limit).
-		Offset(offset).
-		Order("name ASC").
-		Find(&mains).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return mains, int(total), nil
-}
-
-func (r *CasePg) GetAllDispositionNew(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
-	var mains []model.DispositionMain
-
-	query := r.db.WithContext(ctx).
-		Model(&model.DispositionMain{}).
-		Preload("Subs")
-
-	if filter.Keyword != "" {
-		like := "%" + filter.Keyword + "%"
-
-		query = query.Where(`
-			disposition_mains.name ILIKE ? OR 
-			disposition_mains.description ILIKE ? OR 
-			id IN (
-				SELECT main_id 
-				FROM disposition_subs 
-				WHERE name ILIKE ? OR description ILIKE ?
-			)`,
-			like, like, like, like)
-	}
-
-	if filter.Limit > 0 {
-		query = query.Limit(filter.Limit)
-	}
-
-	if filter.Offset > 0 {
-		query = query.Offset(filter.Offset)
-	}
-
-	if err := query.Find(&mains).Error; err != nil {
+	if err := query.Order("name_en ASC").Find(&mains).Error; err != nil {
 		return nil, err
 	}
 

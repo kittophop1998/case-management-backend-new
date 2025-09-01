@@ -15,7 +15,7 @@ type CaseRepository interface {
 	AddInitialDescription(ctx *gin.Context, caseID uuid.UUID, newDescription string) error
 	CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error
 	CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error
-	GetAllDisposition(ctx *gin.Context, limit, offset int) ([]model.DispositionMain, int, error)
+	GetAllDisposition(ctx *gin.Context) ([]model.DispositionMain, error)
 	LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error)
 	// GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model.NoteTypes, error)
 }

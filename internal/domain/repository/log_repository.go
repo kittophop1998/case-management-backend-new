@@ -9,4 +9,5 @@ import (
 type LogRepository interface {
 	SaveApiLog(log *model.ApiLogs) error
 	GetAllApiLogs(ctx *gin.Context) ([]*model.ApiLogs, error)
+	SaveLoginEvent(ctx *gin.Context, accessLog *model.AccessLogs) error
 }

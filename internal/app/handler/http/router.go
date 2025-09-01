@@ -84,8 +84,11 @@ func SetupRoutes(
 		queueRoutes.Use(handler.ValidateToken())
 		{
 			queueRoutes.GET("", H.Queue.GetAllQueues)
-			queueRoutes.GET("/:id", H.Queue.GetQueueByID)
 			queueRoutes.POST("", H.Queue.CreateQueue)
+			queueRoutes.PUT("/:id", H.Queue.UpdateQueueByID)
+			queueRoutes.GET("/:id", H.Queue.GetQueueByID)
+			queueRoutes.DELETE("/users/:id", H.Queue.DeleteUsersInQueue)
+			queueRoutes.POST("/users/:id", H.Queue.AddUserInQueue)
 		}
 
 		// TODO: delete

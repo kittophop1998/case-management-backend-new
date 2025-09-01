@@ -18,7 +18,6 @@ type AuthHandler struct {
 func (h *AuthHandler) Login(ctx *gin.Context) {
 	var req model.LoginRequest
 
-	// Validate body
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
@@ -29,7 +28,6 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	// Main login use case
 	resp, err := h.UseCase.Login(ctx, req)
 	success := err == nil
 	if !success {
@@ -37,25 +35,21 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	// Log access (even on failure)
-	_ = h.UseCase.SaveAccessLog(ctx, req.Username, success)
-	ctx.JSON(http.StatusOK, resp)
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }
 
 func (h *AuthHandler) Logout(ctx *gin.Context) {
 	if err := h.UseCase.Logout(ctx); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   "Logout failed",
-			"details": err.Error(),
-		})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+	lib.HandleResponse(ctx, http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
 func (h *AuthHandler) Profile(ctx *gin.Context) {
 	idStr := ctx.GetString("userId")
+
 	userId, err := uuid.Parse(idStr)
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthRepository interface {
-	SaveAccessLog(ctx *gin.Context, accessLog *model.AccessLogs) error
+type AuditLogRepository interface {
+	LogAction(ctx *gin.Context, entry model.AuditLogs)
+	Shutdown()
 }

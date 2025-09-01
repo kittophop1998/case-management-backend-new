@@ -45,7 +45,8 @@ type AddInitialDescriptionRequest struct {
 
 type DispositionMain struct {
 	ID          uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name        string           `gorm:"type:varchar(100)" json:"name"`
+	NameTH      string           `gorm:"type:varchar(100)" json:"nameTh"`
+	NameEN      string           `gorm:"type:varchar(100)" json:"nameEn"`
 	Description string           `gorm:"type:text" json:"description"`
 	Subs        []DispositionSub `json:"subs" gorm:"foreignKey:MainID;references:ID"`
 }
@@ -53,7 +54,8 @@ type DispositionMain struct {
 type DispositionSub struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	MainID      uuid.UUID `gorm:"type:uuid;not null" json:"main_id"`
-	Name        string    `gorm:"type:varchar(100)" json:"name"`
+	NameTH      string    `gorm:"type:varchar(100)" json:"nameTh"`
+	NameEN      string    `gorm:"type:varchar(100)" json:"nameEn"`
 	Description string    `gorm:"type:text" json:"description"`
 }
 

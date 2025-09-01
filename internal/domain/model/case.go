@@ -4,24 +4,32 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
-// Case Entity
 type Cases struct {
 	Model
-	CaseTitle         string    `json:"caseTitle"`
-	CaseTypeId        uuid.UUID `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	CustomerId        string    `json:"customerId"`
-	AssignedToUserId  uuid.UUID `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	StatusId          uuid.UUID `json:"statusId"`
-	PriorityId        uuid.UUID `json:"priorityId"`
-	DispositionMainId uuid.UUID `json:"dispositionMainId" gorm:"type:uuid"`
-	StartDate         time.Time `json:"startDate" gorm:"type:date"`
-	EndDate           time.Time `json:"endDate" gorm:"type:date"`
-	Description       string    `json:"description"`
-	CreatedBy         uuid.UUID `json:"createdBy" gorm:"type:uuid"`
-	UpdatedBy         uuid.UUID `json:"updatedBy" gorm:"type:uuid"`
-	DeletedBy         uuid.UUID `json:"deletedBy" gorm:"type:uuid"`
+	CaseTitle         string         `json:"caseTitle"`
+	CaseTypeID        uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	CaseType          CaseTypes      `gorm:"foreignKey:CaseTypeID;references:ID"`
+	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
+	Queues            Queues         `gorm:"foreignKey:QueueID;references:ID"`
+	PriorityID        uuid.UUID      `json:"priorityId"`
+	Priority          CasePriorities `gorm:"foreignKey:PriorityID;references:ID"`
+	CustomerID        string         `json:"customerId"`
+	AeonID            string         `json:"aeonId"`
+	CustomerName      string         `json:"customerName"`
+	AssignedToUserID  uuid.UUID      `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	StatusID          uuid.UUID      `json:"statusId"`
+	Status            CaseStatus     `gorm:"foreignKey:StatusID;references:ID"`
+	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
+	StartDate         time.Time      `json:"startDate" gorm:"type:date"`
+	ClosedDate        time.Time      `json:"closedDate" gorm:"type:date"`
+	EndDate           time.Time      `json:"endDate" gorm:"type:date"`
+	Description       string         `json:"description"`
+	CreatedBy         uuid.UUID      `json:"createdBy" gorm:"type:uuid"`
+	UpdatedBy         uuid.UUID      `json:"updatedBy" gorm:"type:uuid"`
+	DeletedBy         uuid.UUID      `json:"deletedBy" gorm:"type:uuid"`
 }
 
 type CaseDispositionMain struct {
@@ -73,6 +81,46 @@ type VerifyQuestionHistory struct {
 	VeryfyByUserId   uuid.UUID `json:"verify_by_user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
 	VerificationDate time.Time `json:"verification_date"`
 	CaseId           uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
+}
+
+// ##### Case Management For Response #####
+
+type CaseResponse struct {
+	CaseID       string `json:"caseId"`
+	CustomerID   string `json:"customerId"`
+	AeonID       string `json:"aeonId"`
+	CustomerName string `json:"customerName"`
+	CaseType     string `json:"caseType"`
+	CurrentQueue string `json:"currentQueue"`
+	CurrentUser  string `json:"currentUser"`
+	CreateDate   string `json:"createDate"`
+	CaseGroup    string `json:"caseGroup"`
+	CasePriority string `json:"casePriority"`
+	ClosedDate   string `json:"closedDate"`
+	ReceivedFrom string `json:"receivedFrom"`
+	SLADate      string `json:"slaDate"`
+	Status       string `json:"status"`
+	CreatedBy    string `json:"createdBy"`
+	CreatedDate  string `json:"createdDate"`
+}
+
+// ##### Case Management Request #####
+type CreateCaseRequest struct {
+	CustomerID        string         `json:"customerId" binding:"required"`
+	CaseTypeID        uuid.UUID      `json:"caseTypeId" binding:"required"`
+	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid" binding:"required"`
+	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb" binding:"required"`
+	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
+	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
+}
+
+type CaseFilter struct {
+	Keyword     string     `form:"keyword" json:"keyword"`
+	StatusID    *uint      `form:"statusId" json:"statusId"`
+	PriorityID  *uint      `form:"priorityId" json:"priorityId"`
+	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
+	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
+	Sort        string     `form:"sort" json:"sort"`
 }
 
 func (Cases) TableName() string {

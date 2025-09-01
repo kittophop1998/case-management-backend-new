@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/auth"
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"case-management/utils"
 	"fmt"
 	"time"
 
@@ -14,14 +15,14 @@ import (
 )
 
 type AuthUseCase struct {
-	repo     repository.UserRepository
-	authRepo repository.AuthRepository
+	logUsecase *LogUseCase
+	repo       repository.UserRepository
 }
 
-func NewAuthUseCase(repo repository.UserRepository, authRepo repository.AuthRepository) *AuthUseCase {
+func NewAuthUseCase(logUsecase *LogUseCase, repo repository.UserRepository) *AuthUseCase {
 	return &AuthUseCase{
-		repo:     repo,
-		authRepo: authRepo,
+		logUsecase: logUsecase,
+		repo:       repo,
 	}
 }
 
@@ -63,13 +64,26 @@ func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.Lo
 		return nil, err
 	}
 
+	logs := &model.AccessLogs{
+		UserID:        user.ID,
+		Action:        "login",
+		Details:       nil,
+		CreatedAt:     time.Now(),
+		Username:      user.Username,
+		LogonDatetime: time.Now(),
+		LoginSuccess:  utils.Bool(true),
+	}
+
+	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {
+		return nil, err
+	}
+
 	return &model.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-// authenticateWithLDAP authenticates via external LDAP
 func (a *AuthUseCase) authenticateWithLDAP(username, password string) error {
 	conn, err := ldap.Dial("tcp", "ldap.example.com:389")
 	if err != nil {
@@ -83,7 +97,6 @@ func (a *AuthUseCase) authenticateWithLDAP(username, password string) error {
 	return nil
 }
 
-// Token functions (delegate to repository)
 func (a *AuthUseCase) GenerateToken(ttl time.Duration, metadata *auth.Metadata) (string, error) {
 	claims := &auth.JwtClaims{
 		Metadata: *metadata,
@@ -102,47 +115,35 @@ func (a *AuthUseCase) GenerateToken(ttl time.Duration, metadata *auth.Metadata) 
 	return signedToken, nil
 }
 
-func (a *AuthUseCase) SaveAccessLog(ctx *gin.Context, username string, success bool) error {
-
+func (a *AuthUseCase) Logout(ctx *gin.Context) error {
 	userIdStr := ctx.GetString("userId")
-	userId, err := uuid.Parse(userIdStr)
-	if err != nil {
+	username := ctx.GetString("username")
+
+	var userID uuid.UUID
+	if id, err := uuid.Parse(userIdStr); err == nil {
+		userID = id
+	} else {
 		return err
 	}
 
-	return a.authRepo.SaveAccessLog(ctx, &model.AccessLogs{
-		UserID:        userId,
-		Action:        "login",
-		IPAddress:     ctx.ClientIP(),
-		UserAgent:     ctx.GetHeader("User-Agent"),
+	logs := &model.AccessLogs{
+		UserID:        userID,
+		Action:        "logout",
 		Details:       nil,
 		CreatedAt:     time.Now(),
 		Username:      username,
 		LogonDatetime: time.Now(),
-		LogonResult:   "success",
-	})
-}
+		LoginSuccess:  utils.Bool(true),
+	}
 
-func (a *AuthUseCase) Logout(ctx *gin.Context) error {
-	userIdStr := ctx.GetString("userId")
-	userId, err := uuid.Parse(userIdStr)
-	if err != nil {
+	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {
 		return err
 	}
 
-	return a.authRepo.SaveAccessLog(ctx, &model.AccessLogs{
-		UserID:        userId,
-		Action:        "logout",
-		IPAddress:     ctx.ClientIP(),
-		UserAgent:     ctx.GetHeader("User-Agent"),
-		Details:       nil,
-		CreatedAt:     time.Now(),
-		LogonDatetime: time.Now(),
-		LogonResult:   "success",
-	})
+	return nil
 }
 
-// Admin login for testing purposes
+// Login for local user
 func (a *AuthUseCase) loginLocal(ctx *gin.Context, user *model.User) (*model.LoginResponse, error) {
 	accesstoken, err := a.GenerateToken(24*time.Hour, &auth.Metadata{
 		UserId:     user.ID,

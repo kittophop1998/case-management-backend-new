@@ -30,9 +30,9 @@ func ValidateToken() gin.HandlerFunc {
 		}
 
 		ctx.Set("userId", claims.UserId.String())
+		ctx.Set("username", claims.Name)
 		ctx.Set("centerId", claims.CenterId.String())
 		ctx.Set("centerName", claims.CenterName)
-		ctx.Set("username", claims.Name)
 		ctx.Next()
 	}
 }

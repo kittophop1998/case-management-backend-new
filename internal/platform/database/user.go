@@ -77,6 +77,8 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 	var users []*model.User
 
 	query := repo.db.WithContext(ctx).Model(&model.User{}).
+		Select("users.*").
+		Distinct("users.id").
 		Preload("Role").
 		Preload("Center").
 		Preload("Section").
@@ -133,7 +135,7 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		query = query.Order(filter.Sort)
 	}
 
-	if err := query.Limit(limit).Offset(offset).Debug().Find(&users).Error; err != nil {
+	if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		return nil, err
 	}
 

@@ -23,13 +23,14 @@ func NewQueueUsecase(
 }
 
 func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName string) ([]*model.GetQueuesResponse, int, error) {
-	var queues []*model.GetQueuesResponse
 	offset := (page - 1) * limit
+
 	queuesRepo, total, err := u.repo.GetQueues(ctx, offset, limit, queueName)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	var queues []*model.GetQueuesResponse
 	if len(queuesRepo) == 0 {
 		queues = []*model.GetQueuesResponse{}
 		return queues, 0, nil
@@ -41,7 +42,7 @@ func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName str
 			QueueName:        queue.Name,
 			QueueDescription: queue.Description,
 			CreatedAt:        queue.CreatedAt,
-			CreatedBy:        queue.CreatedBy.String(),
+			CreatedBy:        queue.Creator,
 		})
 	}
 

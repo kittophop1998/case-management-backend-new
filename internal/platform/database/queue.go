@@ -22,9 +22,7 @@ func (repo *QueuePg) GetQueues(
 	limit int,
 	queueName string,
 ) ([]*model.Queues, int, error) {
-	var queues []*model.Queues
-
-	// Count query
+	// ##### Count Queue List #####
 	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
 	if queueName != "" {
 		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
@@ -35,12 +33,18 @@ func (repo *QueuePg) GetQueues(
 		return nil, 0, err
 	}
 
-	dataQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
+	// ##### Data Query #####
+	var queues []*model.Queues
+	dataQuery := repo.db.WithContext(ctx).
+		Model(&model.Queues{}).
+		Select("queues.id, queues.name, queues.description, queues.created_at, u.name AS creator").
+		Joins("LEFT JOIN users AS u ON u.id = queues.created_by")
+
 	if queueName != "" {
 		dataQuery = dataQuery.Where("name ILIKE ?", "%"+queueName+"%")
 	}
 
-	if err := dataQuery.Limit(limit).Offset(offset).Find(&queues).Error; err != nil {
+	if err := dataQuery.Limit(limit).Offset(offset).Debug().Find(&queues).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -53,7 +57,7 @@ func (repo *QueuePg) GetQueues(
 
 func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error) {
 	var queue *model.Queues
-	if err := repo.db.WithContext(ctx).Where("id=?", id).Debug().First(&queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Where("id=?", id).First(&queue).Error; err != nil {
 		return nil, err
 	}
 	return queue, nil

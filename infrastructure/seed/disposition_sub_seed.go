@@ -13,15 +13,18 @@ func SeedDispositionSub(db *gorm.DB, dispositionMain map[string]uuid.UUID) Dispo
 	dispositionSubMap := make(DispositionSubMap)
 
 	dispositionSub := []model.DispositionSub{
-		{Name: "Aeon", MainID: dispositionMain["Open Credit Card"]},
-		{Name: "Aeon Thai Smile", MainID: dispositionMain["Open Credit Card"]},
+		{NameEN: "Check available credit limit.", NameTH: "เช็ควงเงินใช้ได้ในบัตร", MainID: dispositionMain["Check Limit"]},
+		{NameEN: "Check cash advance limit.", NameTH: "เช็ควงเงินในการกดเงินสด", MainID: dispositionMain["Check Limit"]},
+		{NameEN: "Check purchase limit.", NameTH: "เช็ควงเงินในการรูดชื้อสินค้า", MainID: dispositionMain["Check Limit"]},
+		{NameEN: "Check available limit after payment.", NameTH: "เช็ควงเงินเมื่อชำระเข้าแล้ววงเงินบัตรใช้ได้เท่าไหร่", MainID: dispositionMain["Check Limit"]},
+		{NameEN: "What is the maximum credit limit?", NameTH: "วงเงินสูงสุดของบัตรวงเงินเท่าไหร่ / วงเงินอนุมัติเท่าไหร่", MainID: dispositionMain["Check Limit"]},
 	}
 
 	for _, dispoSub := range dispositionSub {
-		if err := db.FirstOrCreate(&dispoSub, model.DispositionSub{Name: dispoSub.Name}).Error; err != nil {
+		if err := db.FirstOrCreate(&dispoSub, model.DispositionSub{NameEN: dispoSub.NameEN}).Error; err != nil {
 			panic("Failed to seed disposition sub: " + err.Error())
 		}
-		dispositionSubMap[dispoSub.Name] = dispoSub.ID
+		dispositionSubMap[dispoSub.NameEN] = dispoSub.ID
 	}
 
 	return dispositionSubMap

@@ -53,7 +53,7 @@ func (repo *QueuePg) GetQueues(
 
 func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error) {
 	var queue *model.Queues
-	if err := repo.db.WithContext(ctx).Where(&queue, model.Queues{ID: id}).First(&queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Where("id=?", id).Debug().First(&queue).Error; err != nil {
 		return nil, err
 	}
 	return queue, nil
@@ -66,8 +66,15 @@ func (repo *QueuePg) CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UU
 	return queue.ID, nil
 }
 
-func (repo *QueuePg) CreateQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error {
+func (repo *QueuePg) AddQueueUser(ctx *gin.Context, queueUsers []*model.QueueUsers) error {
 	if err := repo.db.WithContext(ctx).Create(queueUsers).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *QueuePg) DeleteQueueUser(ctx *gin.Context, queueID uuid.UUID, users []uuid.UUID) error {
+	if err := repo.db.WithContext(ctx).Where("queue_id = ? AND user_id IN ?", queueID, users).Debug().Delete(&model.QueueUsers{}).Error; err != nil {
 		return err
 	}
 	return nil

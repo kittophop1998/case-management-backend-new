@@ -40,15 +40,10 @@ type GetQueuesResponse struct {
 
 // ##### Request For Queue #####
 type CreateQueueRequest struct {
-	QueueName        string   `json:"queueName" binding:"required"`
-	QueueDescription string   `json:"queueDescription" binding:"required"`
-	QueueUsers       []string `json:"queueUsers" binding:"required"`
+	QueueName        string `json:"queueName" binding:"required"`
+	QueueDescription string `json:"queueDescription"`
 }
 
-type UpdateQueueRequest struct {
-	QueueID          string   `json:"queueId" binding:"required,uuid"`
-	QueueName        string   `json:"queueName" binding:"required"`
-	QueueDescription string   `json:"queueDescription" binding:"required"`
-	UsersAdd         []string `json:"usersAdd" binding:"required"`
-	UsersDel         []string `json:"usersDel" binding:"required"`
+type UserManageInQueue struct {
+	Users []string `json:"users" binding:"required"`
 }

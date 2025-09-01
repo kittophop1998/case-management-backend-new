@@ -59,6 +59,11 @@ type DispositionSub struct {
 	Description string    `gorm:"type:text" json:"description"`
 }
 
+type Products struct {
+	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name string    `gorm:"type:varchar(100);not null" json:"name"`
+}
+
 type DispositionFilter struct {
 	Keyword string `form:"keyword" json:"keyword"`
 	Limit   int    `form:"limit" json:"limit"`

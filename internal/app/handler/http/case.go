@@ -8,22 +8,30 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CaseHandler struct {
 	UseCase usecase.CaseUseCase
 }
 
-func (h *CaseHandler) CreateCase(ctx *gin.Context) {
-	caseData := &model.CreateCaseRequest{}
-	if err := ctx.ShouldBindJSON(caseData); err != nil {
+func (h *CaseHandler) CreateCaseInquiry(ctx *gin.Context) {
+	userId := ctx.GetString("userId")
+	createdByID, err := uuid.Parse(userId)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	caseReq := &model.CreateCaseInquiryRequest{}
+	if err := ctx.ShouldBindJSON(caseReq); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
-	caseID, err := h.UseCase.CreateCase(ctx, caseData)
+	caseID, err := h.UseCase.CreateCaseInquiry(ctx, createdByID, caseReq)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to create case"})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 

@@ -8,28 +8,33 @@ import (
 )
 
 type Cases struct {
-	Model
-	CaseTitle         string         `json:"caseTitle"`
-	CaseTypeID        uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	CaseType          CaseTypes      `gorm:"foreignKey:CaseTypeID;references:ID"`
-	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
-	Queues            Queues         `gorm:"foreignKey:QueueID;references:ID"`
-	PriorityID        uuid.UUID      `json:"priorityId"`
-	Priority          CasePriorities `gorm:"foreignKey:PriorityID;references:ID"`
-	CustomerID        string         `json:"customerId"`
-	AeonID            string         `json:"aeonId"`
-	CustomerName      string         `json:"customerName"`
-	AssignedToUserID  uuid.UUID      `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	StatusID          uuid.UUID      `json:"statusId"`
-	Status            CaseStatus     `gorm:"foreignKey:StatusID;references:ID"`
-	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
-	StartDate         time.Time      `json:"startDate" gorm:"type:date"`
-	ClosedDate        time.Time      `json:"closedDate" gorm:"type:date"`
-	EndDate           time.Time      `json:"endDate" gorm:"type:date"`
-	Description       string         `json:"description"`
-	CreatedBy         uuid.UUID      `json:"createdBy" gorm:"type:uuid"`
-	UpdatedBy         uuid.UUID      `json:"updatedBy" gorm:"type:uuid"`
-	DeletedBy         uuid.UUID      `json:"deletedBy" gorm:"type:uuid"`
+	ID                uuid.UUID  `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	CaseTitle         string     `json:"caseTitle"`
+	CaseTypeID        uuid.UUID  `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	CaseType          CaseTypes  `gorm:"foreignKey:CaseTypeID;references:ID"`
+	QueueID           *uuid.UUID `json:"queueId" gorm:"type:uuid"`
+	Queue             Queues     `json:"queue"`
+	Priority          string     `json:"priority"`
+	CustomerID        string     `json:"customerId"`
+	AeonID            string     `json:"aeonId"`
+	CustomerName      string     `json:"customerName"`
+	AssignedToUserID  uuid.UUID  `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
+	StatusID          uuid.UUID  `json:"statusId"`
+	Status            CaseStatus `gorm:"foreignKey:StatusID;references:ID"`
+	DispositionMainID uuid.UUID  `json:"dispositionMainId" gorm:"type:uuid"`
+	DispositionSubID  uuid.UUID  `json:"dispositionSubId" gorm:"type:uuid"`
+	StartDate         time.Time  `json:"startDate" gorm:"type:date"`
+	ClosedDate        time.Time  `json:"closedDate" gorm:"type:date"`
+	EndDate           time.Time  `json:"endDate" gorm:"type:date"`
+	ProductID         uuid.UUID  `json:"productId" gorm:"type:uuid"`
+	Product           Products   `gorm:"foreignKey:ProductID;references:ID"`
+	Description       string     `json:"description"`
+	CreatedBy         uuid.UUID  `json:"createdBy" gorm:"type:uuid"`
+	CreatedAt         time.Time  `json:"createdAt" gorm:"type:timestamp"`
+	UpdatedBy         uuid.UUID  `json:"updatedBy" gorm:"type:uuid"`
+	UpdatedAt         time.Time  `json:"updatedAt" gorm:"type:timestamp"`
+	DeletedBy         uuid.UUID  `json:"deletedBy" gorm:"type:uuid"`
+	DeletedAt         time.Time  `json:"deletedAt" gorm:"type:timestamp"`
 }
 
 type CaseDispositionMain struct {
@@ -66,12 +71,6 @@ type CaseStatus struct {
 	Description string    `json:"description" gorm:"type:text"`
 }
 
-type CasePriorities struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Name        string    `json:"name"`
-	OrderNumber uint      `json:"order_number"`
-}
-
 type VerifyQuestionHistory struct {
 	ID               uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
 	CustomerId       string    `json:"customer_id"`
@@ -105,11 +104,16 @@ type CaseResponse struct {
 }
 
 // ##### Case Management Request #####
-type CreateCaseRequest struct {
-	CustomerID        string         `json:"customerId" binding:"required"`
-	CaseTypeID        uuid.UUID      `json:"caseTypeId" binding:"required"`
-	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid" binding:"required"`
-	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb" binding:"required"`
+type CreateCaseInquiryRequest struct {
+	CustomerID        string         `json:"customerId"`
+	CustomerName      string         `json:"customerName"`
+	CaseTypeID        uuid.UUID      `json:"caseTypeId"`
+	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
+	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb"`
+	DispositionSubID  uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
+	DispositionSubs   datatypes.JSON `json:"dispositionSubs" gorm:"type:jsonb"`
+	ProductID         uuid.UUID      `json:"productId" gorm:"type:uuid"`
+	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
 	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
 	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
 }
@@ -137,10 +141,6 @@ func (CaseTypes) TableName() string {
 
 func (CaseStatus) TableName() string {
 	return "cases_status"
-}
-
-func (CasePriorities) TableName() string {
-	return "cases_priorities"
 }
 
 func (CaseNotes) TableName() string {

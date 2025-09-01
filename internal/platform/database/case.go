@@ -4,7 +4,6 @@ import (
 	"case-management/internal/domain/model"
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,31 +19,12 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uuid.UUID, error) {
-	userIDStr := ctx.GetString("userId")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
+func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
+	if err := c.db.FirstOrCreate(caseToSave).Error; err != nil {
 		return uuid.Nil, err
 	}
 
-	newToSave := &model.Cases{
-		Model: model.Model{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-		CustomerID:        data.CustomerID,
-		CaseTypeID:        data.CaseTypeID,
-		DispositionMainID: data.DispositionMainID,
-		Description:       data.CaseDescription,
-		CreatedBy:         userID,
-		UpdatedBy:         userID,
-	}
-
-	if err := c.db.Create(newToSave).Error; err != nil {
-		return uuid.Nil, err
-	}
-
-	return newToSave.ID, nil
+	return caseToSave.ID, nil
 }
 
 func (c *CasePg) CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error {
@@ -241,4 +221,18 @@ func (r *CasePg) GetAllDispositionNew(ctx *gin.Context, filter model.Disposition
 	}
 
 	return mains, nil
+}
+
+func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) {
+	statusMap := make(map[string]uuid.UUID)
+	var statuses []model.CaseStatus
+	if err := r.db.WithContext(ctx).Find(&statuses).Error; err != nil {
+		return nil, err
+	}
+
+	for _, status := range statuses {
+		statusMap[status.Name] = status.ID
+	}
+
+	return statusMap, nil
 }

@@ -60,7 +60,7 @@ func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues
 }
 
 func (repo *QueuePg) CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error) {
-	if err := repo.db.WithContext(ctx).FirstOrCreate(queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Debug().Create(queue).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return queue.ID, nil

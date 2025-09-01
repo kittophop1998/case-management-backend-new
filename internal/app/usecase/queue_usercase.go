@@ -68,6 +68,8 @@ func (u QueueUsecase) GetQueueByID(ctx *gin.Context, queueID uuid.UUID) (*model.
 func (u QueueUsecase) CreateQueue(ctx *gin.Context, createdByID uuid.UUID, input *model.CreateQueueRequest) (uuid.UUID, error) {
 	// ##### Check if queue already exists #####
 	isExisting := u.repo.IsExistingQueue(ctx, input.QueueName)
+
+	fmt.Println("Checking if queue exists:", isExisting)
 	if isExisting {
 		return uuid.Nil, fmt.Errorf("queue with name %q already exists", input.QueueName)
 	}

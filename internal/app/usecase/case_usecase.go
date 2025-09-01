@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -32,7 +33,7 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.
 			CustomerName: c.CustomerName,
 			Status:       c.Status.Name,
 			CaseType:     c.CaseType.Name,
-			CurrentQueue: c.Queues.Name,
+			CurrentQueue: c.Queue.Name,
 			CurrentUser:  c.AssignedToUserID.String(),
 			SLADate:      c.EndDate.String(),
 			CreateDate:   c.CreatedAt.String(),
@@ -41,7 +42,7 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.
 			CaseGroup:    "General",
 			CreatedBy:    c.CreatedBy.String(),
 			CreatedDate:  c.CreatedAt.String(),
-			CasePriority: c.Priority.Name,
+			CasePriority: c.Priority,
 			ClosedDate:   c.ClosedDate.String(),
 			ReceivedFrom: "Fraud",
 		})
@@ -58,9 +59,25 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, err
 	return uc.repo.GetCaseByID(c, caseID)
 }
 
-func (uc *CaseUseCase) CreateCase(c *gin.Context, caseData *model.CreateCaseRequest) (uuid.UUID, error) {
-	// Create Case
-	caseId, err := uc.repo.CreateCase(c, caseData)
+func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseInquiryRequest) (uuid.UUID, error) {
+	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
+
+	caseToSave := &model.Cases{
+		CaseTypeID:        caseReq.CaseTypeID,
+		CustomerName:      caseReq.CustomerName,
+		CustomerID:        caseReq.CustomerID,
+		DispositionMainID: caseReq.DispositionMainID,
+		DispositionSubID:  caseReq.DispositionSubID,
+		ProductID:         caseReq.ProductID,
+		Priority:          "Normal",
+		StatusID:          statusMap["created"],
+		StartDate:         time.Now(),
+		EndDate:           time.Now().Add(72 * time.Hour), // SLA 3 days
+		CreatedBy:         createdByID,
+		UpdatedBy:         createdByID,
+	}
+
+	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)
 	if err != nil {
 		return uuid.Nil, err
 	}

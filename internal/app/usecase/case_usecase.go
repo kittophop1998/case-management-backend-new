@@ -105,7 +105,7 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
 }
 
-func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context) ([]model.DispositionMain, error) {
+func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error) {
 	return uc.repo.GetAllDisposition(ctx)
 }
 

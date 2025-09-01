@@ -22,17 +22,6 @@ func (repo *QueuePg) GetQueues(
 	limit int,
 	queueName string,
 ) ([]*model.Queues, int, error) {
-	// ##### Count Queue List #####
-	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
-	if queueName != "" {
-		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
-	}
-
-	var total int64
-	if err := countQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
 	// ##### Data Query #####
 	var queues []*model.Queues
 	dataQuery := repo.db.WithContext(ctx).
@@ -50,6 +39,17 @@ func (repo *QueuePg) GetQueues(
 
 	if queues == nil {
 		queues = []*model.Queues{}
+	}
+
+	// ##### Count Queue List #####
+	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
+	if queueName != "" {
+		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
+	}
+
+	var total int64
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
 	return queues, int(total), nil

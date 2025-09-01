@@ -71,7 +71,7 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 	}
 
 	if mains == nil {
-		mains = []model.DispositionMain{}
+		mains = []model.DispositionItem{}
 	}
 
 	lib.HandleResponse(ctx, http.StatusOK, mains)

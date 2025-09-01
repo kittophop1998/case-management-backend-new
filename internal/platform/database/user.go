@@ -77,8 +77,6 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 	var users []*model.User
 
 	query := repo.db.WithContext(ctx).Model(&model.User{}).
-		Select("users.*").
-		Distinct("users.id").
 		Preload("Role").
 		Preload("Center").
 		Preload("Section").
@@ -122,11 +120,11 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 
 	if filter.QueueID != uuid.Nil {
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
-			query = query.Where("qu.queue_id <> ?", filter.QueueID)
-			query = query.Or("qu.queue_id IS NULL")
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
+			query = query.Where("qu.queue_id IS NULL")
+			query = query.Group("users.id")
 		} else {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
 			query = query.Where("qu.queue_id = ?", filter.QueueID)
 		}
 	}
@@ -321,14 +319,13 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 		query = query.Where("centers.id = ?", filter.CenterID)
 	}
 
-	// Use In Queue Management
 	if filter.QueueID != uuid.Nil {
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
-			query = query.Where("qu.queue_id <> ?", filter.QueueID)
-			query = query.Or("qu.queue_id IS NULL")
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
+			query = query.Where("qu.queue_id IS NULL")
+			query = query.Group("users.id")
 		} else {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id")
+			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
 			query = query.Where("qu.queue_id = ?", filter.QueueID)
 		}
 	}

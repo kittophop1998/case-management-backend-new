@@ -167,20 +167,40 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 	return &noteType, nil
 }
 
-func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionMain, error) {
-	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
-
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
+func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error) {
+	// ดึง DispositionMain ทั้งหมด พร้อม Subs
+	var dispositionMains []model.DispositionMain
+	if err := r.db.WithContext(ctx).
+		Preload("Subs").
+		Find(&dispositionMains).Error; err != nil {
 		return nil, err
 	}
 
-	var mains []model.DispositionMain
-	if err := query.Order("name_en ASC").Find(&mains).Error; err != nil {
-		return nil, err
+	// Map ไปเป็น []DispositionItem (response)
+	var dispositions []model.DispositionItem
+	for _, main := range dispositionMains {
+		item := model.DispositionItem{
+			DispositionMain: model.DispositionMainRes{
+				ID: main.ID.String(),
+				TH: main.NameTH,
+				EN: main.NameEN,
+			},
+		}
+
+		for _, sub := range main.Subs {
+			item.DispositionSubs = append(item.DispositionSubs, model.DispositionSubRes{
+				ID: sub.ID.String(),
+				Name: model.SubNameRes{
+					TH: sub.NameTH,
+					EN: sub.NameEN,
+				},
+			})
+		}
+
+		dispositions = append(dispositions, item)
 	}
 
-	return mains, nil
+	return dispositions, nil
 }
 
 func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) {

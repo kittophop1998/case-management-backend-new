@@ -48,3 +48,8 @@ type CreateQueueRequest struct {
 type UserManageInQueue struct {
 	Users []string `json:"users" binding:"required"`
 }
+
+type UpdateQueueRequest struct {
+	QueueName        string `json:"queueName"`
+	QueueDescription string `json:"queueDescription"`
+}

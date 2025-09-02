@@ -125,7 +125,7 @@ func (u QueueUsecase) AddUserInQueue(ctx *gin.Context, createdByID uuid.UUID, qu
 	return nil
 }
 
-func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, queueID uuid.UUID, input *model.Queues) error {
+func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, queueID uuid.UUID, input *model.UpdateQueueRequest) error {
 	queue, err := u.repo.GetQueueByID(ctx, queueID)
 	if err != nil {
 		return fmt.Errorf("failed to get queue by ID: %w", err)
@@ -137,8 +137,8 @@ func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, q
 
 	queueToSave := &model.Queues{
 		ID:          queueID,
-		Name:        input.Name,
-		Description: input.Description,
+		Name:        input.QueueName,
+		Description: input.QueueDescription,
 		UpdatedAt:   time.Now(),
 		UpdatedBy:   queue.UpdatedBy,
 	}

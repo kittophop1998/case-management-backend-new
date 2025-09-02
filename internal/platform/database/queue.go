@@ -26,7 +26,7 @@ func (repo *QueuePg) GetQueues(
 	var queues []*model.Queues
 	dataQuery := repo.db.WithContext(ctx).
 		Model(&model.Queues{}).
-		Select("queues.id, queues.name, queues.description, queues.created_at, u.name AS creator").
+		Select("queues.id, queues.name, queues.description, queues.created_at, u.name AS creator, u.center AS center").
 		Joins("LEFT JOIN users AS u ON u.id = queues.created_by")
 
 	if queueName != "" {

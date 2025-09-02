@@ -42,7 +42,7 @@ func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName str
 			QueueName:        queue.Name,
 			QueueDescription: queue.Description,
 			CreatedAt:        queue.CreatedAt,
-			CreatedBy:        queue.Creator,
+			CreatedBy:        queue.CreatedUser.Name,
 		})
 	}
 

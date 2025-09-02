@@ -11,7 +11,7 @@ type Queues struct {
 	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
 	CreatedBy   uuid.UUID `gorm:"type:uuid" json:"createdBy"`
-	Creator     string    `json:"creator"`
+	CreatedUser User      `gorm:"foreignKey:ID;references:CreatedBy" json:"createdUser"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;" json:"createdAt"`
 	UpdatedBy   uuid.UUID `gorm:"type:uuid" json:"updatedBy"`
 	UpdatedAt   time.Time `gorm:"type:timestamptz;" json:"updatedAt"`

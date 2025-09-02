@@ -16,24 +16,18 @@ func NewQueuePg(db *gorm.DB) *QueuePg {
 	return &QueuePg{db: db}
 }
 
-func (repo *QueuePg) GetQueues(
-	ctx *gin.Context,
-	offset int,
-	limit int,
-	queueName string,
-) ([]*model.Queues, int, error) {
+func (repo *QueuePg) GetQueues(ctx *gin.Context, offset int, limit int, queueName string) ([]*model.Queues, int, error) {
 	// ##### Data Query #####
 	var queues []*model.Queues
 	dataQuery := repo.db.WithContext(ctx).
 		Model(&model.Queues{}).
-		Select("queues.id, queues.name, queues.description, queues.created_at, u.name AS creator, u.center AS center").
-		Joins("LEFT JOIN users AS u ON u.id = queues.created_by")
+		Preload("CreatedUser")
 
 	if queueName != "" {
 		dataQuery = dataQuery.Where("name ILIKE ?", "%"+queueName+"%")
 	}
 
-	if err := dataQuery.Limit(limit).Offset(offset).Debug().Find(&queues).Error; err != nil {
+	if err := dataQuery.Limit(limit).Offset(offset).Find(&queues).Error; err != nil {
 		return nil, 0, err
 	}
 

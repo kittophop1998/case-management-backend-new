@@ -21,7 +21,8 @@ func (repo *QueuePg) GetQueues(ctx *gin.Context, offset int, limit int, queueNam
 	var queues []*model.Queues
 	dataQuery := repo.db.WithContext(ctx).
 		Model(&model.Queues{}).
-		Preload("CreatedUser")
+		Preload("CreatedUser").
+		Preload("CreatedUser.Center")
 
 	if queueName != "" {
 		dataQuery = dataQuery.Where("name ILIKE ?", "%"+queueName+"%")

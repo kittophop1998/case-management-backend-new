@@ -19,6 +19,21 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
+	var cases []*model.Cases
+
+	query := c.db.WithContext(ctx).Model(&model.Cases{}).
+		Preload("Status").
+		Preload("CaseType").
+		Preload("AssignedToUser.Center")
+
+	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return cases, 10, nil
+}
+
 func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
 	if err := c.db.WithContext(ctx).Create(caseToSave).Error; err != nil {
 		return uuid.Nil, err
@@ -55,19 +70,6 @@ func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON
 	}
 
 	return nil
-}
-
-func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
-	var cases []*model.Cases
-
-	query := c.db.WithContext(ctx).Model(&model.Cases{}).
-		Preload("Status")
-
-	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return cases, 10, nil
 }
 
 func (c *CasePg) CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error) {

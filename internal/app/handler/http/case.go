@@ -41,10 +41,10 @@ func (h *CaseHandler) CreateCaseInquiry(ctx *gin.Context) {
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
 	p := utils.GetPagination(ctx)
 
-	// TODO: Implement filter category
-	// category := ctx.Query("category")
+	//TODO: Implement filter category
+	category := ctx.Query("category")
 
-	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit)
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, category)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -57,7 +57,7 @@ func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
 	caseID := ctx.Param("id")
 	caseData, err := h.UseCase.GetCaseByID(ctx, caseID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve case"})
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 	lib.HandleResponse(ctx, http.StatusOK, caseData)

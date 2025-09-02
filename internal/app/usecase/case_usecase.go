@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,9 +18,8 @@ func NewCaseUseCase(repo repository.CaseRepository) *CaseUseCase {
 	return &CaseUseCase{repo: repo}
 }
 
-func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.CaseResponse, int, error) {
+func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category string) ([]*model.CaseResponse, int, error) {
 	offset := (page - 1) * limit
-
 	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit)
 	if err != nil {
 		return nil, 0, err
@@ -34,7 +34,7 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int) ([]*model.
 			Status:       c.Status.Name,
 			CaseType:     c.CaseType.Name,
 			CurrentQueue: c.Queue.Name,
-			CurrentUser:  c.AssignedToUserID.String(),
+			CurrentUser:  fmt.Sprintf("%s - %s", c.AssignedToUser.Name, c.AssignedToUser.Center.Name),
 			SLADate:      c.EndDate.String(),
 			CreateDate:   c.CreatedAt.String(),
 			CaseID:       c.ID.String(),
@@ -68,6 +68,7 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 		CustomerID:        caseReq.CustomerID,
 		DispositionMainID: caseReq.DispositionMainID,
 		DispositionSubID:  caseReq.DispositionSubID,
+		AssignedToUserID:  createdByID,
 		ProductID:         caseReq.ProductID,
 		Priority:          "Normal",
 		StatusID:          statusMap["created"],

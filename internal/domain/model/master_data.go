@@ -48,10 +48,17 @@ type Products struct {
 	Name string    `gorm:"type:varchar(100);not null" json:"name"`
 }
 
-type DispositionFilter struct {
-	Keyword string `form:"keyword" json:"keyword"`
-	Limit   int    `form:"limit" json:"limit"`
-	Offset  int    `form:"offset" json:"offset"`
+type CaseTypes struct {
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Group       string    `json:"group"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
+}
+
+type CaseStatus struct {
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
 }
 
 type DispositionMain struct {
@@ -122,4 +129,12 @@ func (DispositionMain) TableName() string {
 
 func (DispositionSub) TableName() string {
 	return "disposition_subs"
+}
+
+func (CaseTypes) TableName() string {
+	return "cases_types"
+}
+
+func (CaseStatus) TableName() string {
+	return "cases_status"
 }

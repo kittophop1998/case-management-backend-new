@@ -76,3 +76,33 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 
 	lib.HandleResponse(ctx, http.StatusOK, mains)
 }
+
+func (h *CaseHandler) AddCaseNote(ctx *gin.Context) {
+	userId := ctx.GetString("userId")
+	createdByID, err := uuid.Parse(userId)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	caseId := ctx.Param("id")
+	caseID, err := uuid.Parse(caseId)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	noteReq := &model.CaseNoteRequest{}
+	if err := ctx.ShouldBindJSON(noteReq); err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	noteID, err := h.UseCase.AddCaseNote(ctx, createdByID, caseID, noteReq)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"noteId": noteID})
+}

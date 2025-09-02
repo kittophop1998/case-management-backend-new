@@ -216,3 +216,10 @@ func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) 
 
 	return statusMap, nil
 }
+
+func (c *CasePg) AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error) {
+	if err := c.db.WithContext(ctx).Create(note).Error; err != nil {
+		return uuid.Nil, err
+	}
+	return note.ID, nil
+}

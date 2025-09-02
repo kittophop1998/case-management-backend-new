@@ -50,12 +50,11 @@ type CaseDispositionSub struct {
 }
 
 type CaseNotes struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	CaseId      uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	UserId      uuid.UUID `json:"user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	NoteTypesId uuid.UUID `json:"note_types_id"`
-	Content     string    `json:"content" gorm:"type:text"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID        uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	CaseId    uuid.UUID `json:"case_id" gorm:"type:uuid"`
+	UserId    uuid.UUID `json:"user_id" gorm:"type:uuid"`
+	Content   string    `json:"content" gorm:"type:text"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type CaseTypes struct {
@@ -125,6 +124,10 @@ type CaseFilter struct {
 	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
 	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
 	Sort        string     `form:"sort" json:"sort"`
+}
+
+type CaseNoteRequest struct {
+	Content string `json:"content"`
 }
 
 func (Cases) TableName() string {

@@ -2,6 +2,8 @@ package utils
 
 import (
 	"case-management/internal/domain/model"
+	"crypto/rand"
+	"math/big"
 	"reflect"
 	"strings"
 )
@@ -41,4 +43,18 @@ func IsEmpty(v any) bool {
 	default:
 		return false
 	}
+}
+
+func RandStringRunes(n int) (string, error) {
+	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		maxBigInt := big.NewInt(int64(len(letterRunes)))
+		num, err := rand.Int(rand.Reader, maxBigInt)
+		if err != nil {
+			return "", err
+		}
+		b[i] = letterRunes[num.Int64()]
+	}
+	return string(b), nil
 }

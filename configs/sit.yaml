@@ -37,3 +37,9 @@ headers:
   api_language: "EN"
   api_channel: "Case-Management"
   api_device_os: "Web"
+
+# Isilon Storage
+isilon:
+  base_url: "https://isilon-host:8080"
+  username: "admin"
+  password: "your-password"

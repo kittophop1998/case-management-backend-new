@@ -4,7 +4,6 @@ import (
 	"case-management/internal/domain/model"
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,31 +19,27 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) CreateCase(ctx *gin.Context, data *model.CreateCaseRequest) (uuid.UUID, error) {
-	userIDStr := ctx.GetString("userId")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
+	var cases []*model.Cases
+
+	query := c.db.WithContext(ctx).Model(&model.Cases{}).
+		Preload("Status").
+		Preload("CaseType").
+		Preload("AssignedToUser.Center")
+
+	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return cases, 10, nil
+}
+
+func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
+	if err := c.db.WithContext(ctx).Create(caseToSave).Error; err != nil {
 		return uuid.Nil, err
 	}
 
-	newToSave := &model.Cases{
-		Model: model.Model{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-		CustomerID:        data.CustomerID,
-		CaseTypeID:        data.CaseTypeID,
-		DispositionMainID: data.DispositionMainID,
-		Description:       data.CaseDescription,
-		CreatedBy:         userID,
-		UpdatedBy:         userID,
-	}
-
-	if err := c.db.Create(newToSave).Error; err != nil {
-		return uuid.Nil, err
-	}
-
-	return newToSave.ID, nil
+	return caseToSave.ID, nil
 }
 
 func (c *CasePg) CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error {
@@ -75,19 +70,6 @@ func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON
 	}
 
 	return nil
-}
-
-func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
-	var cases []*model.Cases
-
-	query := c.db.WithContext(ctx).Model(&model.Cases{}).
-		Preload("Status")
-
-	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return cases, 10, nil
 }
 
 func (c *CasePg) CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error) {
@@ -187,58 +169,59 @@ func (c *CasePg) GetNoteTypeByID(ctx *gin.Context, noteTypeID uuid.UUID) (*model
 	return &noteType, nil
 }
 
-func (r *CasePg) GetAllDisposition(ctx *gin.Context, limit, offset int) ([]model.DispositionMain, int, error) {
-	query := r.db.WithContext(ctx).Model(&model.DispositionMain{})
-
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	var mains []model.DispositionMain
-	if err := query.
-		Limit(limit).
-		Offset(offset).
-		Order("name ASC").
-		Find(&mains).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return mains, int(total), nil
-}
-
-func (r *CasePg) GetAllDispositionNew(ctx *gin.Context, filter model.DispositionFilter) ([]model.DispositionMain, error) {
-	var mains []model.DispositionMain
-
-	query := r.db.WithContext(ctx).
-		Model(&model.DispositionMain{}).
-		Preload("Subs")
-
-	if filter.Keyword != "" {
-		like := "%" + filter.Keyword + "%"
-
-		query = query.Where(`
-			disposition_mains.name ILIKE ? OR 
-			disposition_mains.description ILIKE ? OR 
-			id IN (
-				SELECT main_id 
-				FROM disposition_subs 
-				WHERE name ILIKE ? OR description ILIKE ?
-			)`,
-			like, like, like, like)
-	}
-
-	if filter.Limit > 0 {
-		query = query.Limit(filter.Limit)
-	}
-
-	if filter.Offset > 0 {
-		query = query.Offset(filter.Offset)
-	}
-
-	if err := query.Find(&mains).Error; err != nil {
+func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error) {
+	// ดึง DispositionMain ทั้งหมด พร้อม Subs
+	var dispositionMains []model.DispositionMain
+	if err := r.db.WithContext(ctx).
+		Preload("Subs").
+		Find(&dispositionMains).Error; err != nil {
 		return nil, err
 	}
 
-	return mains, nil
+	// Map ไปเป็น []DispositionItem (response)
+	var dispositions []model.DispositionItem
+	for _, main := range dispositionMains {
+		item := model.DispositionItem{
+			DispositionMain: model.DispositionMainRes{
+				ID: main.ID.String(),
+				TH: main.NameTH,
+				EN: main.NameEN,
+			},
+		}
+
+		for _, sub := range main.Subs {
+			item.DispositionSubs = append(item.DispositionSubs, model.DispositionSubRes{
+				ID: sub.ID.String(),
+				Name: model.SubNameRes{
+					TH: sub.NameTH,
+					EN: sub.NameEN,
+				},
+			})
+		}
+
+		dispositions = append(dispositions, item)
+	}
+
+	return dispositions, nil
+}
+
+func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) {
+	statusMap := make(map[string]uuid.UUID)
+	var statuses []model.CaseStatus
+	if err := r.db.WithContext(ctx).Find(&statuses).Error; err != nil {
+		return nil, err
+	}
+
+	for _, status := range statuses {
+		statusMap[status.Name] = status.ID
+	}
+
+	return statusMap, nil
+}
+
+func (c *CasePg) AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error) {
+	if err := c.db.WithContext(ctx).Create(note).Error; err != nil {
+		return uuid.Nil, err
+	}
+	return note.ID, nil
 }

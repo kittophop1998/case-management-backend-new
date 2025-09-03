@@ -8,28 +8,34 @@ import (
 )
 
 type Cases struct {
-	Model
-	CaseTitle         string         `json:"caseTitle"`
-	CaseTypeID        uuid.UUID      `json:"caseTypeId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	CaseType          CaseTypes      `gorm:"foreignKey:CaseTypeID;references:ID"`
-	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
-	Queues            Queues         `gorm:"foreignKey:QueueID;references:ID"`
-	PriorityID        uuid.UUID      `json:"priorityId"`
-	Priority          CasePriorities `gorm:"foreignKey:PriorityID;references:ID"`
-	CustomerID        string         `json:"customerId"`
-	AeonID            string         `json:"aeonId"`
-	CustomerName      string         `json:"customerName"`
-	AssignedToUserID  uuid.UUID      `json:"assignedToUserId" gorm:"type:uuid;default:uuid_generate_v4()"`
-	StatusID          uuid.UUID      `json:"statusId"`
-	Status            CaseStatus     `gorm:"foreignKey:StatusID;references:ID"`
-	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
-	StartDate         time.Time      `json:"startDate" gorm:"type:date"`
-	ClosedDate        time.Time      `json:"closedDate" gorm:"type:date"`
-	EndDate           time.Time      `json:"endDate" gorm:"type:date"`
-	Description       string         `json:"description"`
-	CreatedBy         uuid.UUID      `json:"createdBy" gorm:"type:uuid"`
-	UpdatedBy         uuid.UUID      `json:"updatedBy" gorm:"type:uuid"`
-	DeletedBy         uuid.UUID      `json:"deletedBy" gorm:"type:uuid"`
+	ID                uuid.UUID  `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	CaseTitle         string     `json:"caseTitle"`
+	CaseTypeID        uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4()" json:"caseTypeId"`
+	CaseType          CaseTypes  `gorm:"foreignKey:CaseTypeID;references:ID"`
+	QueueID           *uuid.UUID `json:"queueId" gorm:"type:uuid"`
+	Queue             Queues     `json:"queue"`
+	Priority          string     `json:"priority"`
+	CustomerID        string     `json:"customerId"`
+	AeonID            string     `json:"aeonId"`
+	CustomerName      string     `json:"customerName"`
+	AssignedToUserID  uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
+	AssignedToUser    User       `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
+	StatusID          uuid.UUID  `json:"statusId"`
+	Status            CaseStatus `gorm:"foreignKey:StatusID;references:ID"`
+	DispositionMainID uuid.UUID  `gorm:"type:uuid" json:"dispositionMainId"`
+	DispositionSubID  uuid.UUID  `gorm:"type:uuid" json:"dispositionSubId"`
+	StartDate         time.Time  `gorm:"type:date" json:"startDate"`
+	ClosedDate        time.Time  `gorm:"type:date" json:"closedDate"`
+	EndDate           time.Time  `gorm:"type:date" json:"endDate"`
+	ProductID         uuid.UUID  `gorm:"type:uuid" json:"productId"`
+	Product           Products   `gorm:"foreignKey:ProductID;references:ID" json:"product"`
+	Description       string     `json:"description"`
+	CreatedBy         uuid.UUID  `gorm:"type:uuid" json:"createdBy"`
+	CreatedAt         time.Time  `gorm:"type:timestamp" json:"createdAt"`
+	UpdatedBy         uuid.UUID  `gorm:"type:uuid" json:"updatedBy"`
+	UpdatedAt         time.Time  `gorm:"type:timestamp" json:"updatedAt"`
+	DeletedBy         uuid.UUID  `gorm:"type:uuid" json:"deletedBy"`
+	DeletedAt         time.Time  `gorm:"type:timestamp" json:"deletedAt"`
 }
 
 type CaseDispositionMain struct {
@@ -45,31 +51,11 @@ type CaseDispositionSub struct {
 }
 
 type CaseNotes struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	CaseId      uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	UserId      uuid.UUID `json:"user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
-	NoteTypesId uuid.UUID `json:"note_types_id"`
-	Content     string    `json:"content" gorm:"type:text"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-type CaseTypes struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Group       string    `json:"group"`
-	Name        string    `json:"name"`
-	Description string    `json:"description" gorm:"type:text"`
-}
-
-type CaseStatus struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description" gorm:"type:text"`
-}
-
-type CasePriorities struct {
-	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Name        string    `json:"name"`
-	OrderNumber uint      `json:"order_number"`
+	ID        uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	CaseId    uuid.UUID `json:"case_id" gorm:"type:uuid"`
+	UserId    uuid.UUID `json:"user_id" gorm:"type:uuid"`
+	Content   string    `json:"content" gorm:"type:text"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type VerifyQuestionHistory struct {
@@ -84,7 +70,6 @@ type VerifyQuestionHistory struct {
 }
 
 // ##### Case Management For Response #####
-
 type CaseResponse struct {
 	CaseID       string `json:"caseId"`
 	CustomerID   string `json:"customerId"`
@@ -105,11 +90,16 @@ type CaseResponse struct {
 }
 
 // ##### Case Management Request #####
-type CreateCaseRequest struct {
-	CustomerID        string         `json:"customerId" binding:"required"`
-	CaseTypeID        uuid.UUID      `json:"caseTypeId" binding:"required"`
-	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid" binding:"required"`
-	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb" binding:"required"`
+type CreateCaseInquiryRequest struct {
+	CustomerID        string         `json:"customerId"`
+	CustomerName      string         `json:"customerName"`
+	CaseTypeID        uuid.UUID      `json:"caseTypeId"`
+	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
+	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb"`
+	DispositionSubID  uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
+	DispositionSubs   datatypes.JSON `json:"dispositionSubs" gorm:"type:jsonb"`
+	ProductID         uuid.UUID      `json:"productId" gorm:"type:uuid"`
+	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
 	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
 	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
 }
@@ -123,24 +113,29 @@ type CaseFilter struct {
 	Sort        string     `form:"sort" json:"sort"`
 }
 
+type CreateUpdateUserRequest struct {
+	StaffID      *uint     `gorm:"uniqueIndex" json:"staffId" validate:"required" example:"12337"`
+	Name         string    `json:"name" validate:"required" example:"Janet Adebayo"`
+	Username     string    `gorm:"type:varchar(50)" json:"username" example:"user"`
+	Email        string    `json:"email" validate:"required" example:"Janet@exam.com"`
+	SectionID    uuid.UUID `json:"sectionId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
+	OperatorID   *uint     `json:"operatorId" validate:"required" example:"1233"`
+	CenterID     uuid.UUID `json:"centerId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
+	RoleID       uuid.UUID `json:"roleId" validate:"required" example:"538cd6c5-4cb3-4463-b7d5-ac6645815476"`
+	DepartmentID uuid.UUID `json:"departmentId" validate:"required" example:"b94eee08-8324-4d4f-b166-d82775553a7e"`
+	IsActive     *bool     `json:"isActive" validate:"required" example:"true"`
+}
+
+type CaseNoteRequest struct {
+	Content string `json:"content"`
+}
+
 func (Cases) TableName() string {
 	return "cases"
 }
 
 func (NoteTypes) TableName() string {
 	return "note_types"
-}
-
-func (CaseTypes) TableName() string {
-	return "cases_types"
-}
-
-func (CaseStatus) TableName() string {
-	return "cases_status"
-}
-
-func (CasePriorities) TableName() string {
-	return "cases_priorities"
 }
 
 func (CaseNotes) TableName() string {

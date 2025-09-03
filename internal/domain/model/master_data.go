@@ -43,6 +43,24 @@ type AddInitialDescriptionRequest struct {
 	Description string `json:"description" binding:"required"`
 }
 
+type Products struct {
+	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name string    `gorm:"type:varchar(100);not null" json:"name"`
+}
+
+type CaseTypes struct {
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Group       string    `json:"group"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
+}
+
+type CaseStatus struct {
+	ID          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
+}
+
 type DispositionMain struct {
 	ID          uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	NameTH      string           `gorm:"type:varchar(100)" json:"nameTh"`
@@ -59,10 +77,26 @@ type DispositionSub struct {
 	Description string    `gorm:"type:text" json:"description"`
 }
 
-type DispositionFilter struct {
-	Keyword string `form:"keyword" json:"keyword"`
-	Limit   int    `form:"limit" json:"limit"`
-	Offset  int    `form:"offset" json:"offset"`
+// Disposition Response
+type DispositionItem struct {
+	DispositionMain DispositionMainRes  `json:"dispositionMain"`
+	DispositionSubs []DispositionSubRes `json:"dispositionSubs"`
+}
+
+type DispositionMainRes struct {
+	ID string `json:"id"`
+	TH string `json:"th"`
+	EN string `json:"en"`
+}
+
+type DispositionSubRes struct {
+	ID   string     `json:"id"`
+	Name SubNameRes `json:"name"`
+}
+
+type SubNameRes struct {
+	TH string `json:"th"`
+	EN string `json:"en"`
 }
 
 func (RolePermission) TableName() string {
@@ -95,4 +129,12 @@ func (DispositionMain) TableName() string {
 
 func (DispositionSub) TableName() string {
 	return "disposition_subs"
+}
+
+func (CaseTypes) TableName() string {
+	return "cases_types"
+}
+
+func (CaseStatus) TableName() string {
+	return "cases_status"
 }

@@ -22,17 +22,22 @@ func IsEmpty(v any) bool {
 
 	val := reflect.ValueOf(v)
 
+	// Dereference pointers & interfaces
+	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
+		if val.IsNil() {
+			return true
+		}
+		val = val.Elem()
+	}
+
 	switch val.Kind() {
 	case reflect.String:
 		return strings.TrimSpace(val.String()) == ""
 	case reflect.Slice, reflect.Array, reflect.Map:
 		return val.Len() == 0
-	case reflect.Ptr, reflect.Interface:
-		return val.IsNil()
 	case reflect.Struct:
 		// เช็ค struct ว่าง (all zero values)
-		zero := reflect.Zero(val.Type())
-		return reflect.DeepEqual(v, zero.Interface())
+		return reflect.DeepEqual(val.Interface(), reflect.Zero(val.Type()).Interface())
 	default:
 		return false
 	}

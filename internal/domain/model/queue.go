@@ -7,15 +7,16 @@ import (
 )
 
 type Queues struct {
-	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
-	Description string    `gorm:"type:text" json:"description"`
-	CreatedBy   uuid.UUID `gorm:"type:uuid" json:"createdBy"`
-	CreatedAt   time.Time `gorm:"type:timestamptz;" json:"createdAt"`
-	UpdatedBy   uuid.UUID `gorm:"type:uuid" json:"updatedBy"`
-	UpdatedAt   time.Time `gorm:"type:timestamptz;" json:"updatedAt"`
-	DeletedAt   time.Time `gorm:"type:timestamptz" json:"deletedAt"`
-	DeletedBy   uuid.UUID `gorm:"type:uuid" json:"deletedBy"`
+	ID          uuid.UUID `gorm:"column:id;type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name        string    `gorm:"column:name;type:varchar(100);not null" json:"name"`
+	Description string    `gorm:"column:description;type:text" json:"description"`
+	CreatedBy   uuid.UUID `gorm:"column:created_by;type:uuid" json:"createdBy"`
+	CreatedUser User      `gorm:"foreignKey:CreatedBy;references:ID" json:"createdUser"`
+	CreatedAt   time.Time `gorm:"column:created_at;type:timestamptz;" json:"createdAt"`
+	UpdatedBy   uuid.UUID `gorm:"column:updated_by;type:uuid" json:"updatedBy"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;type:timestamptz;" json:"updatedAt"`
+	DeletedAt   time.Time `gorm:"column:deleted_at;type:timestamptz" json:"deletedAt"`
+	DeletedBy   uuid.UUID `gorm:"column:deleted_by;type:uuid" json:"deletedBy"`
 }
 
 type QueueUsers struct {
@@ -46,4 +47,9 @@ type CreateQueueRequest struct {
 
 type UserManageInQueue struct {
 	Users []string `json:"users" binding:"required"`
+}
+
+type UpdateQueueRequest struct {
+	QueueName        string `json:"queueName"`
+	QueueDescription string `json:"queueDescription"`
 }

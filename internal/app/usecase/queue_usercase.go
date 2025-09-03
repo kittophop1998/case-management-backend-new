@@ -23,13 +23,14 @@ func NewQueueUsecase(
 }
 
 func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName string) ([]*model.GetQueuesResponse, int, error) {
-	var queues []*model.GetQueuesResponse
 	offset := (page - 1) * limit
+
 	queuesRepo, total, err := u.repo.GetQueues(ctx, offset, limit, queueName)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	var queues []*model.GetQueuesResponse
 	if len(queuesRepo) == 0 {
 		queues = []*model.GetQueuesResponse{}
 		return queues, 0, nil
@@ -41,7 +42,7 @@ func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName str
 			QueueName:        queue.Name,
 			QueueDescription: queue.Description,
 			CreatedAt:        queue.CreatedAt,
-			CreatedBy:        queue.CreatedBy.String(),
+			CreatedBy:        fmt.Sprintf("%s - %s", queue.CreatedUser.Name, queue.CreatedUser.Center.Name),
 		})
 	}
 
@@ -68,6 +69,8 @@ func (u QueueUsecase) GetQueueByID(ctx *gin.Context, queueID uuid.UUID) (*model.
 func (u QueueUsecase) CreateQueue(ctx *gin.Context, createdByID uuid.UUID, input *model.CreateQueueRequest) (uuid.UUID, error) {
 	// ##### Check if queue already exists #####
 	isExisting := u.repo.IsExistingQueue(ctx, input.QueueName)
+
+	fmt.Println("Checking if queue exists:", isExisting)
 	if isExisting {
 		return uuid.Nil, fmt.Errorf("queue with name %q already exists", input.QueueName)
 	}
@@ -122,7 +125,7 @@ func (u QueueUsecase) AddUserInQueue(ctx *gin.Context, createdByID uuid.UUID, qu
 	return nil
 }
 
-func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, queueID uuid.UUID, input *model.Queues) error {
+func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, queueID uuid.UUID, input *model.UpdateQueueRequest) error {
 	queue, err := u.repo.GetQueueByID(ctx, queueID)
 	if err != nil {
 		return fmt.Errorf("failed to get queue by ID: %w", err)
@@ -134,8 +137,8 @@ func (u QueueUsecase) UpdateQueueByID(ctx *gin.Context, updatedByID uuid.UUID, q
 
 	queueToSave := &model.Queues{
 		ID:          queueID,
-		Name:        input.Name,
-		Description: input.Description,
+		Name:        input.QueueName,
+		Description: input.QueueDescription,
 		UpdatedAt:   time.Now(),
 		UpdatedBy:   queue.UpdatedBy,
 	}

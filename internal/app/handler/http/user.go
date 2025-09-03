@@ -16,17 +16,6 @@ type UserHandler struct {
 }
 
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
-	// limit, err := getLimit(ctx)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
-
-	// page, err := getPage(ctx)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
 	p := utils.GetPagination(ctx)
 
 	sort := ctx.DefaultQuery("sort", "is_active desc")

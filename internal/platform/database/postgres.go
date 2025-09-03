@@ -79,6 +79,7 @@ func Migrate(db *gorm.DB) error {
 		&model.RolePermission{},
 		&model.CaseStatus{},
 		&model.AuditLogs{},
+		&model.Products{},
 	}
 
 	for _, model := range modelsToMigrate {

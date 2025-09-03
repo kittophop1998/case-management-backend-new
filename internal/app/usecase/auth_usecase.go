@@ -5,7 +5,6 @@ import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
 	"case-management/utils"
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +26,6 @@ func NewAuthUseCase(logUsecase *LogUseCase, repo repository.UserRepository) *Aut
 }
 
 func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.LoginResponse, error) {
-	fmt.Printf("Attempting login for user: %s\n", req.Username)
 	user, err := a.repo.GetByUsername(ctx, req.Username)
 	if err != nil {
 		return nil, err
@@ -164,6 +162,20 @@ func (a *AuthUseCase) loginLocal(ctx *gin.Context, user *model.User) (*model.Log
 		SectionId:  user.SectionID,
 	})
 	if err != nil {
+		return nil, err
+	}
+
+	logs := &model.AccessLogs{
+		UserID:        user.ID,
+		Action:        "login",
+		Details:       nil,
+		CreatedAt:     time.Now(),
+		Username:      user.Username,
+		LogonDatetime: time.Now(),
+		LoginSuccess:  utils.Bool(true),
+	}
+
+	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {
 		return nil, err
 	}
 

@@ -112,7 +112,7 @@ func (h *QueueHandler) UpdateQueueByID(ctx *gin.Context) {
 		return
 	}
 
-	var queueUpdate model.Queues
+	var queueUpdate model.UpdateQueueRequest
 	if err := ctx.ShouldBindJSON(&queueUpdate); err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return

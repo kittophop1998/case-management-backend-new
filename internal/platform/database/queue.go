@@ -16,26 +16,13 @@ func NewQueuePg(db *gorm.DB) *QueuePg {
 	return &QueuePg{db: db}
 }
 
-func (repo *QueuePg) GetQueues(
-	ctx *gin.Context,
-	offset int,
-	limit int,
-	queueName string,
-) ([]*model.Queues, int, error) {
+func (repo *QueuePg) GetQueues(ctx *gin.Context, offset int, limit int, queueName string) ([]*model.Queues, int, error) {
+	// ##### Data Query #####
 	var queues []*model.Queues
+	dataQuery := repo.db.WithContext(ctx).
+		Model(&model.Queues{}).
+		Preload("CreatedUser.Center")
 
-	// Count query
-	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
-	if queueName != "" {
-		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
-	}
-
-	var total int64
-	if err := countQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	dataQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
 	if queueName != "" {
 		dataQuery = dataQuery.Where("name ILIKE ?", "%"+queueName+"%")
 	}
@@ -48,19 +35,30 @@ func (repo *QueuePg) GetQueues(
 		queues = []*model.Queues{}
 	}
 
+	// ##### Count Queue List #####
+	countQuery := repo.db.WithContext(ctx).Model(&model.Queues{})
+	if queueName != "" {
+		countQuery = countQuery.Where("name ILIKE ?", "%"+queueName+"%")
+	}
+
+	var total int64
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	return queues, int(total), nil
 }
 
 func (repo *QueuePg) GetQueueByID(ctx *gin.Context, id uuid.UUID) (*model.Queues, error) {
 	var queue *model.Queues
-	if err := repo.db.WithContext(ctx).Where("id=?", id).Debug().First(&queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Where("id=?", id).First(&queue).Error; err != nil {
 		return nil, err
 	}
 	return queue, nil
 }
 
 func (repo *QueuePg) CreateQueue(ctx *gin.Context, queue *model.Queues) (uuid.UUID, error) {
-	if err := repo.db.WithContext(ctx).FirstOrCreate(queue).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Create(queue).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return queue.ID, nil
@@ -74,7 +72,7 @@ func (repo *QueuePg) AddQueueUser(ctx *gin.Context, queueUsers []*model.QueueUse
 }
 
 func (repo *QueuePg) DeleteQueueUser(ctx *gin.Context, queueID uuid.UUID, users []uuid.UUID) error {
-	if err := repo.db.WithContext(ctx).Where("queue_id = ? AND user_id IN ?", queueID, users).Debug().Delete(&model.QueueUsers{}).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Where("queue_id = ? AND user_id IN ?", queueID, users).Delete(&model.QueueUsers{}).Error; err != nil {
 		return err
 	}
 	return nil

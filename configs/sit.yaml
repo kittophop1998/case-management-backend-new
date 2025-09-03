@@ -26,3 +26,7 @@ ldap:
 services:
   agreement_api:
     base_url: "http://localhost:8001/api/v1"
+
+# Connector API
+connector_api:
+  base_url: "https://connectorapi.aeonth-sit.com"

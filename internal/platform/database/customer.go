@@ -52,7 +52,7 @@ func (c *CustomerPg) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) 
 
 func (c *CustomerPg) CountNotes(ctx *gin.Context, customerID string) (int, error) {
 	var count int64
-	if err := c.db.WithContext(ctx).Model(&model.CustomerNote{}).Where("customer_id = ?", customerID).Debug().Count(&count).Error; err != nil {
+	if err := c.db.WithContext(ctx).Model(&model.CustomerNote{}).Where("customer_id = ?", customerID).Count(&count).Error; err != nil {
 		return 0, err
 	}
 	return int(count), nil

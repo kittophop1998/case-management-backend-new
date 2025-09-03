@@ -10,10 +10,12 @@ import (
 )
 
 type Config struct {
-	App      AppConfig      `yaml:"app"`
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Services ServicesConfig `yaml:"services"`
+	App                AppConfig          `yaml:"app"`
+	Server             ServerConfig       `yaml:"server"`
+	Database           DatabaseConfig     `yaml:"database"`
+	Services           ServicesConfig     `yaml:"services"`
+	ConnectorAPIConfig ConnectorAPIConfig `json:connector_api`
+	Headers            Headers            `json:"headers"`
 }
 
 type AppConfig struct {
@@ -42,6 +44,13 @@ type ServicesConfig struct {
 
 type ConnectorAPIConfig struct {
 	BaseURL string `yaml:"base_url"`
+}
+
+type Headers struct {
+	ApiKey      string `yaml:"api_key"`
+	ApiLanguage string `yaml:"api_language"`
+	ApiDeviceOS string `yaml:"api_device_os"`
+	ApiChannel  string `yaml:"api_channel"`
 }
 
 // allowed environments for config loading

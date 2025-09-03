@@ -66,7 +66,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	customerUsecase := usecase.NewCustomerUseCase(customerRepo)
 
 	// Dashboard repository
-	dashboardAPIClient := api.NewDashboardAPIClient(cfg.Services.ConnectorAPI.BaseURL)
+	dashboardAPIClient := api.NewDashboardAPIClient(cfg)
 	dashboardUsecase := usecase.NewDashboardUseCase(dashboardAPIClient)
 
 	// Queue repository

@@ -38,8 +38,30 @@ func (h *CaseHandler) CreateCaseInquiry(ctx *gin.Context) {
 	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
 }
 
+func (h *CaseHandler) CreateCase(ctx *gin.Context) {
+	userId := ctx.GetString("userId")
+	createdByID, err := uuid.Parse(userId)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	caseReq := &model.CreateCaseRequest{}
+	if err := ctx.ShouldBindJSON(caseReq); err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	caseID, err := h.UseCase.CreateCase(ctx, createdByID, caseReq)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
+}
+
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
-	p := utils.GetPagination(ctx)
 	userId := ctx.GetString("userId")
 	currID, err := uuid.Parse(userId)
 	if err != nil {
@@ -47,7 +69,7 @@ func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
 		return
 	}
 
-	//TODO: Implement filter category
+	p := utils.GetPagination(ctx)
 	category := ctx.Query("category")
 
 	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, category, currID)

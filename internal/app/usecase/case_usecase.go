@@ -68,7 +68,8 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 		CustomerID:        caseReq.CustomerID,
 		DispositionMainID: caseReq.DispositionMainID,
 		DispositionSubID:  caseReq.DispositionSubID,
-		AssignedToUserID:  createdByID,
+		Description:       caseReq.CaseDescription,
+		AssignedToUserID:  &createdByID,
 		ProductID:         caseReq.ProductID,
 		Priority:          "Normal",
 		StatusID:          statusMap["created"],
@@ -94,6 +95,42 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 	// if err != nil {
 	// 	return uuid.Nil, err
 	// }
+
+	return caseId, nil
+}
+
+func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
+	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
+
+	dueDate, err := time.Parse(time.RFC3339, caseReq.DueDate)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid due date format: %v", err)
+	}
+
+	queueID, err := uuid.Parse(caseReq.AllocatedToQueueTeam.String())
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid queue ID format: %v", err)
+	}
+
+	caseToSave := &model.Cases{
+		CaseTypeID:   caseReq.CaseTypeID,
+		CustomerName: caseReq.CustomerName,
+		CustomerID:   caseReq.CustomerID,
+		Description:  caseReq.CaseDescription,
+		Priority:     "Normal",
+		DueDate:      dueDate,
+		QueueID:      &queueID,
+		StatusID:     statusMap["created"],
+		StartDate:    time.Now(),
+		EndDate:      time.Now().Add(72 * time.Hour),
+		CreatedBy:    createdByID,
+		UpdatedBy:    createdByID,
+	}
+
+	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)
+	if err != nil {
+		return uuid.Nil, err
+	}
 
 	return caseId, nil
 }

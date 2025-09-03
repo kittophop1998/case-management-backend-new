@@ -34,7 +34,6 @@ func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string
 		case "myCase":
 			query = query.Where("assigned_to_user_id = ?", currID)
 		case "availableCase":
-			// assigned_to_user_id == null and user in group
 			query = query.Where("assigned_to_user_id = ?", nil)
 		case "inquiryLog":
 			query = query.Where("ct.name = ?", "Inquiry and disposition")
@@ -58,6 +57,14 @@ func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (u
 
 	return caseToSave.ID, nil
 }
+
+// func (c *CasePg) CreateCase(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
+// 	if err := c.db.WithContext(ctx).Create(caseToSave).Error; err != nil {
+// 		return uuid.Nil, err
+// 	}
+
+// 	return caseToSave.ID, nil
+// }
 
 func (c *CasePg) CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error {
 	var dispositions []model.CaseDispositionMain

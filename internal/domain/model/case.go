@@ -18,13 +18,14 @@ type Cases struct {
 	CustomerID        string     `json:"customerId"`
 	AeonID            string     `json:"aeonId"`
 	CustomerName      string     `json:"customerName"`
-	AssignedToUserID  uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
-	AssignedToUser    User       `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
+	AssignedToUserID  *uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
+	AssignedToUser    *User      `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
 	StatusID          uuid.UUID  `json:"statusId"`
 	Status            CaseStatus `gorm:"foreignKey:StatusID;references:ID"`
 	DispositionMainID uuid.UUID  `gorm:"type:uuid" json:"dispositionMainId"`
 	DispositionSubID  uuid.UUID  `gorm:"type:uuid" json:"dispositionSubId"`
 	StartDate         time.Time  `gorm:"type:date" json:"startDate"`
+	DueDate           time.Time  `gorm:"type:date" json:"dueDate"`
 	ClosedDate        time.Time  `gorm:"type:date" json:"closedDate"`
 	EndDate           time.Time  `gorm:"type:date" json:"endDate"`
 	ProductID         uuid.UUID  `gorm:"type:uuid" json:"productId"`
@@ -89,6 +90,21 @@ type CaseResponse struct {
 	CreatedDate  string `json:"createdDate"`
 }
 
+type CaseDetailResponse struct {
+	CaseType        string `json:"caseType"`
+	CaseID          string `json:"caseId"`
+	CreatedBy       string `json:"createdBy"`
+	CreatedDate     string `json:"createdDate"`
+	VerifyStatus    string `json:"verifyStatus"`
+	Channel         string `json:"channel"`
+	Priority        string `json:"priority"`
+	ReasonCode      string `json:"reasonCode"`
+	DueDate         string `json:"dueDate"`
+	Status          string `json:"status"`
+	CurrentQueue    string `json:"currentQueue"`
+	CaseDescription string `json:"caseDescription"`
+}
+
 // ##### Case Management Request #####
 type CreateCaseInquiryRequest struct {
 	CustomerID        string         `json:"customerId"`
@@ -102,6 +118,19 @@ type CreateCaseInquiryRequest struct {
 	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
 	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
 	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
+}
+
+type CreateCaseRequest struct {
+	CustomerID           string         `json:"customerId"`
+	CustomerName         string         `json:"customerName"`
+	CaseTypeID           uuid.UUID      `json:"caseTypeId"`
+	Channel              string         `json:"channel"`
+	Priority             string         `json:"priority"`
+	ReasonCode           string         `json:"reasonCode"`
+	DueDate              string         `json:"dueDate"`
+	AllocatedToQueueTeam uuid.UUID      `json:"allocatedToQueueTeam"`
+	CaseDescription      string         `json:"caseDescription"`
+	CaseNote             datatypes.JSON `json:"caseNote"`
 }
 
 type CaseFilter struct {

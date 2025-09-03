@@ -192,10 +192,8 @@ func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, e
 		for _, sub := range main.Subs {
 			item.DispositionSubs = append(item.DispositionSubs, model.DispositionSubRes{
 				ID: sub.ID.String(),
-				Name: model.SubNameRes{
-					TH: sub.NameTH,
-					EN: sub.NameEN,
-				},
+				TH: sub.NameTH,
+				EN: sub.NameEN,
 			})
 		}
 

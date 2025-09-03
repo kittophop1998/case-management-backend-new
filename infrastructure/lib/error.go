@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -82,6 +83,35 @@ func HandleError(ctx *gin.Context, err error) {
 			Detail:     err.Error(),
 		},
 	})
+}
+
+// lib/error_handler.go
+func HandleErrorContext(ctx context.Context, err error) *ApiErrorResponse {
+	var apiError *ErrorDetail
+	if errors.As(err, &apiError) {
+		return &ApiErrorResponse{
+			Error: ErrorDetail{
+				TimeStamp:  timestampNow(),
+				Path:       ctx.Value("path").(string),
+				StatusCode: apiError.StatusCode,
+				Code:       apiError.Code,
+				Message:    apiError.Message,
+				Detail:     apiError.Detail,
+			},
+		}
+	}
+
+	// fallback
+	return &ApiErrorResponse{
+		Error: ErrorDetail{
+			TimeStamp:  timestampNow(),
+			Path:       ctx.Value("path").(string),
+			StatusCode: http.StatusText(http.StatusInternalServerError),
+			Code:       http.StatusInternalServerError,
+			Message:    MessageError{"เกิดข้อผิดพลาดที่ไม่คาดคิด", "Unexpected Error"},
+			Detail:     err.Error(),
+		},
+	}
 }
 
 // Chainable methods

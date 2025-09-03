@@ -4,6 +4,7 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"context"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,13 +17,13 @@ func NewDashboardUseCase(repo repository.DashboardRepository) *DashboardUseCase 
 	return &DashboardUseCase{repo: repo}
 }
 
-func (uc *DashboardUseCase) CustInfo(ctx *gin.Context, aeonID string) (*model.GetCustInfoResponse, error) {
+func (uc *DashboardUseCase) CustInfo(ctx context.Context, aeonID string) (*model.GetCustInfoResponse, error) {
 	customer, err := uc.repo.GetCustInfoByAeonID(ctx, aeonID)
 	if err != nil {
 		details := map[string]string{
 			"connector_api": "Connection issue from System-i",
 		}
-		lib.HandleError(ctx, lib.GatewayTimeout.WithDetails(details))
+		lib.HandleErrorContext(ctx, lib.GatewayTimeout.WithDetails(details))
 	}
 	return customer, nil
 }

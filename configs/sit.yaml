@@ -30,3 +30,16 @@ services:
 # Connector API
 connector_api:
   base_url: "https://connectorapi.aeonth-sit.com"
+
+# Header
+headers:
+  api_key: "IQARRf8ZhKChCN0ODn0BHQF4cBodzi7z"
+  api_language: "EN"
+  api_channel: "Case-Management"
+  api_device_os: "Web"
+
+# Isilon Storage
+isilon:
+  base_url: "https://isilon-host:8080"
+  username: "admin"
+  password: "your-password"

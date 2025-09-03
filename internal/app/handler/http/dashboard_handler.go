@@ -1,9 +1,13 @@
 package http
 
 import (
+	"case-management/infrastructure/config"
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,40 +18,30 @@ type DashboardHandler struct {
 }
 
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
-	id := ctx.Param("id")
-	// customer, err := h.UseCase.CustInfo(ctx, id)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
+	id := ctx.Param("aeon_id")
 
-	if id == "1102001313257" {
-		customerMock := &model.GetCustInfoResponse{
-			NationalID:      "1102001313257",
-			CustomerNameEng: "ARUNEE TESTCDP",
-			CustomerNameTH:  "อรุณี TESTCDP",
-			MobileNO:        "00913589211",
-			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
-			MailTo:          "Home",
-		}
-		lib.HandleResponse(ctx, http.StatusOK, customerMock)
-		return
+	cfg, err := config.Load("")
+	if err != nil {
+		lib.HandleError(ctx, fmt.Errorf("internal server error"))
 	}
 
-	if id == "1102001313258" {
-		customerMock := &model.GetCustInfoResponse{
-			NationalID:      "1102001313258",
-			CustomerNameEng: "ARUNEE TESTCDP 2",
-			CustomerNameTH:  "อรุณี TESTCDP 2",
-			MobileNO:        "00913589212",
-			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
-			MailTo:          "Home",
-		}
-		lib.HandleResponse(ctx, http.StatusOK, customerMock)
+	reqID := ctx.GetHeader("X-Request-ID")
+
+	c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+	c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+
+	resp, err := h.UseCase.CustInfo(c, id)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
+
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {

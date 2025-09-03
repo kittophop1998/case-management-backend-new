@@ -2,9 +2,12 @@ package api
 
 import (
 	"bytes"
+	"case-management/infrastructure/config"
 	"case-management/internal/domain/model"
 	externalmodel "case-management/internal/domain/model/external_api"
+	"case-management/utils"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,14 +29,24 @@ var (
 type dashboardAPIClient struct {
 	baseURL    string
 	httpClient *http.Client
+	cfg        *config.Config
 }
 
-func NewDashboardAPIClient(baseURL string) *dashboardAPIClient {
+func NewDashboardAPIClient(cfg *config.Config) *dashboardAPIClient {
+
+	defaultTr := http.DefaultTransport.(*http.Transport)
+	transpot := defaultTr.Clone()
+	transpot.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: transpot,
+	}
+
 	return &dashboardAPIClient{
-		baseURL: baseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		baseURL:    cfg.ConnectorAPIConfig.BaseURL,
+		httpClient: client,
+		cfg:        cfg,
 	}
 }
 
@@ -56,6 +69,12 @@ func (c *dashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, aeonID str
 		return nil, fmt.Errorf("cannot create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	utils.SetHeadersFormContext(ctx, req, []utils.CtxKey{
+		utils.CtxKeyApisKey,
+		utils.CtxKeyApiLang,
+		utils.CtxKeyChannel,
+		utils.CtxKeyDeviceOS,
+	})
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

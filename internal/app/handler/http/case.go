@@ -40,11 +40,17 @@ func (h *CaseHandler) CreateCaseInquiry(ctx *gin.Context) {
 
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
 	p := utils.GetPagination(ctx)
+	userId := ctx.GetString("userId")
+	currID, err := uuid.Parse(userId)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
 
 	//TODO: Implement filter category
 	category := ctx.Query("category")
 
-	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, category)
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, category, currID)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return

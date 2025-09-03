@@ -18,9 +18,9 @@ func NewCaseUseCase(repo repository.CaseRepository) *CaseUseCase {
 	return &CaseUseCase{repo: repo}
 }
 
-func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category string) ([]*model.CaseResponse, int, error) {
+func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category string, currID uuid.UUID) ([]*model.CaseResponse, int, error) {
 	offset := (page - 1) * limit
-	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit)
+	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit, category, currID)
 	if err != nil {
 		return nil, 0, err
 	}

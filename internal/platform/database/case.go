@@ -19,15 +19,32 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string, currID uuid.UUID) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
 
 	query := c.db.WithContext(ctx).Model(&model.Cases{}).
 		Preload("Status").
 		Preload("CaseType").
-		Preload("AssignedToUser.Center")
+		Preload("AssignedToUser.Center").
+		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
+		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
 
-	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
+	if category != "" {
+		switch category {
+		case "myCase":
+			query = query.Where("assigned_to_user_id = ?", currID)
+		case "availableCase":
+			// assigned_to_user_id == null and user in group
+			query = query.Where("assigned_to_user_id = ?", nil)
+		case "inquiryLog":
+			query = query.Where("ct.name = ?", "Inquiry and disposition")
+		case "caseHistory":
+			query = query.Where("cs.name = ?", "closed")
+		default:
+		}
+	}
+
+	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cases).Error; err != nil {
 		return nil, 0, err
 	}
 

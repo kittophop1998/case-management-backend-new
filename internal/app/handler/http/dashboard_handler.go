@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/config"
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
@@ -11,39 +12,41 @@ import (
 
 type DashboardHandler struct {
 	UseCase usecase.DashboardUseCase
+	Config  *config.Config
 }
 
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
-	id := ctx.Param("id")
-	// customer, err := h.UseCase.CustInfo(ctx, id)
+	id := ctx.Param("aeon_id")
+
+	// reqID := ctx.GetHeader("X-Request-ID")
+
+	// c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, h.Config.Headers.ApiKey)
+	// c = context.WithValue(c, utils.CtxKeyApiLang, h.Config.Headers.ApiLanguage)
+	// c = context.WithValue(c, utils.CtxKeyDeviceOS, h.Config.Headers.ApiDeviceOS)
+	// c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
+	// c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+
+	// _, err := h.UseCase.CustInfo(c, id)
 	// if err != nil {
 	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 	// 	return
 	// }
 
-	if id == "1102001313257" {
-		customerMock := &model.GetCustInfoResponse{
-			NationalID:      "1102001313257",
-			CustomerNameEng: "ARUNEE TESTCDP",
-			CustomerNameTH:  "อรุณี TESTCDP",
-			MobileNO:        "00913589211",
-			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
-			MailTo:          "Home",
-		}
-		lib.HandleResponse(ctx, http.StatusOK, customerMock)
-		return
-	}
+	// lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
 
-	if id == "1102001313258" {
-		customerMock := &model.GetCustInfoResponse{
-			NationalID:      "1102001313258",
-			CustomerNameEng: "ARUNEE TESTCDP 2",
-			CustomerNameTH:  "อรุณี TESTCDP 2",
-			MobileNO:        "00913589212",
-			MailToAddress:   "40 ม.1 ต.สวนแตง อ.ละแม จ.ชุมพร 86170",
-			MailTo:          "Home",
+	// lib.HandleResponse(ctx, http.StatusOK, mock)
+
+	//TODO: Remove this mock when API is ready
+	if id == "1234" {
+		mock := &model.GetCustInfoResponse{
+			NationalID:      "1234",
+			CustomerNameEng: "Jane Doe",
+			CustomerNameTH:  "เจน โด",
+			MobileNO:        "0812345678",
+			MailToAddress:   "123/45 หมู่บ้านสุขสันต์ ถ.สุขสวัสดิ์ แขวงบางปะกอก เขตราษฎร์บูรณะ กทม. 10140",
+			MailTo:          "Jane Doe",
 		}
-		lib.HandleResponse(ctx, http.StatusOK, customerMock)
+		lib.HandleResponse(ctx, http.StatusOK, mock)
 		return
 	}
 

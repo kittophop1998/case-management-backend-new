@@ -90,11 +90,7 @@ type DispositionMainRes struct {
 }
 
 type DispositionSubRes struct {
-	ID   string     `json:"id"`
-	Name SubNameRes `json:"name"`
-}
-
-type SubNameRes struct {
+	ID string `json:"id"`
 	TH string `json:"th"`
 	EN string `json:"en"`
 }

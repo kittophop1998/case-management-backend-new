@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/config"
 	"case-management/internal/app/usecase"
 )
 
@@ -17,6 +18,7 @@ type Handlers struct {
 }
 
 type HandlerDeps struct {
+	Config       *config.Config
 	UserUC       *usecase.UserUseCase
 	MasterDataUC *usecase.MasterDataUseCase
 	AuthUC       *usecase.AuthUseCase
@@ -39,7 +41,7 @@ func InitHandlers(deps HandlerDeps) {
 		Log:        &LogHandler{UseCase: *deps.LogUC},
 		Case:       &CaseHandler{UseCase: *deps.CaseUC},
 		Customer:   &CustomerHandler{UseCase: *deps.CustomerUC},
-		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC},
+		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC, Config: deps.Config},
 		Queue:      &QueueHandler{UserCase: *deps.QueueUC},
 	}
 }

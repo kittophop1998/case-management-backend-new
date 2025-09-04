@@ -19,15 +19,31 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int) ([]*model.Cases, int, error) {
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string, currID uuid.UUID) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
 
 	query := c.db.WithContext(ctx).Model(&model.Cases{}).
 		Preload("Status").
 		Preload("CaseType").
-		Preload("AssignedToUser.Center")
+		Preload("AssignedToUser.Center").
+		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
+		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
 
-	if err := query.Limit(limit).Offset(offset).Find(&cases).Error; err != nil {
+	if category != "" {
+		switch category {
+		case "myCase":
+			query = query.Where("assigned_to_user_id = ?", currID)
+		case "availableCase":
+			query = query.Where("assigned_to_user_id = ?", nil)
+		case "inquiryLog":
+			query = query.Where("ct.name = ?", "Inquiry and disposition")
+		case "caseHistory":
+			query = query.Where("cs.name = ?", "closed")
+		default:
+		}
+	}
+
+	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cases).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -119,7 +135,13 @@ func (c *CasePg) CreateNoteType(ctx *gin.Context, note model.NoteTypes) (*model.
 
 func (c *CasePg) GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error) {
 	var cases model.Cases
-	if err := c.db.WithContext(ctx).First(&cases, "id = ?", id).Error; err != nil {
+	if err := c.db.WithContext(ctx).
+		Preload("Status").
+		Preload("CaseType").
+		Preload("Queue").
+		Preload("AssignedToUser.Center").
+		Preload("Creator.Center").
+		First(&cases, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &cases, nil
@@ -192,10 +214,8 @@ func (r *CasePg) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, e
 		for _, sub := range main.Subs {
 			item.DispositionSubs = append(item.DispositionSubs, model.DispositionSubRes{
 				ID: sub.ID.String(),
-				Name: model.SubNameRes{
-					TH: sub.NameTH,
-					EN: sub.NameEN,
-				},
+				TH: sub.NameTH,
+				EN: sub.NameEN,
 			})
 		}
 
@@ -217,6 +237,20 @@ func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) 
 	}
 
 	return statusMap, nil
+}
+
+func (r *CasePg) LoadCaseType(ctx *gin.Context) (map[string]uuid.UUID, error) {
+	typeMap := make(map[string]uuid.UUID)
+	var types []model.CaseTypes
+	if err := r.db.WithContext(ctx).Find(&types).Error; err != nil {
+		return nil, err
+	}
+
+	for _, t := range types {
+		typeMap[t.Name] = t.ID
+	}
+
+	return typeMap, nil
 }
 
 func (c *CasePg) AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error) {

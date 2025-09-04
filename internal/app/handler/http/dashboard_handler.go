@@ -5,8 +5,6 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
-	"case-management/utils"
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,32 +18,39 @@ type DashboardHandler struct {
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 	id := ctx.Param("aeon_id")
 
-	reqID := ctx.GetHeader("X-Request-ID")
+	// reqID := ctx.GetHeader("X-Request-ID")
 
-	c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, h.Config.Headers.ApiKey)
-	c = context.WithValue(c, utils.CtxKeyApiLang, h.Config.Headers.ApiLanguage)
-	c = context.WithValue(c, utils.CtxKeyDeviceOS, h.Config.Headers.ApiDeviceOS)
-	c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
-	c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+	// c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, h.Config.Headers.ApiKey)
+	// c = context.WithValue(c, utils.CtxKeyApiLang, h.Config.Headers.ApiLanguage)
+	// c = context.WithValue(c, utils.CtxKeyDeviceOS, h.Config.Headers.ApiDeviceOS)
+	// c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
+	// c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
 
-	_, err := h.UseCase.CustInfo(c, id)
-	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// _, err := h.UseCase.CustInfo(c, id)
+	// if err != nil {
+	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	// 	return
+	// }
+
+	// lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
+
+	// lib.HandleResponse(ctx, http.StatusOK, mock)
+
+	//TODO: Remove this mock when API is ready
+	if id == "1234" {
+		mock := &model.GetCustInfoResponse{
+			NationalID:      "1234",
+			CustomerNameEng: "Jane Doe",
+			CustomerNameTH:  "เจน โด",
+			MobileNO:        "0812345678",
+			MailToAddress:   "123/45 หมู่บ้านสุขสันต์ ถ.สุขสวัสดิ์ แขวงบางปะกอก เขตราษฎร์บูรณะ กทม. 10140",
+			MailTo:          "Jane Doe",
+		}
+		lib.HandleResponse(ctx, http.StatusOK, mock)
 		return
 	}
 
 	lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
-
-	mock := &model.GetCustInfoResponse{
-		NationalID:      "1234",
-		CustomerNameEng: "Jane Doe",
-		CustomerNameTH:  "เจน โด",
-		MobileNO:        "0812345678",
-		MailToAddress:   "123/45 หมู่บ้านสุขสันต์ ถ.สุขสวัสดิ์ แขวงบางปะกอก เขตราษฎร์บูรณะ กทม. 10140",
-		MailTo:          "Jane Doe",
-	}
-
-	lib.HandleResponse(ctx, http.StatusOK, mock)
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {

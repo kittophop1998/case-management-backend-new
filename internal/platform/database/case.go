@@ -135,7 +135,13 @@ func (c *CasePg) CreateNoteType(ctx *gin.Context, note model.NoteTypes) (*model.
 
 func (c *CasePg) GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error) {
 	var cases model.Cases
-	if err := c.db.WithContext(ctx).First(&cases, "id = ?", id).Error; err != nil {
+	if err := c.db.WithContext(ctx).
+		Preload("Status").
+		Preload("CaseType").
+		Preload("Queue").
+		Preload("AssignedToUser.Center").
+		Preload("Creator.Center").
+		First(&cases, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &cases, nil

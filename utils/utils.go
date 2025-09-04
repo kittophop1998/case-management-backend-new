@@ -75,3 +75,7 @@ func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
 	}
 	return &id, nil
 }
+
+func StringPtr(s string) *string {
+	return &s
+}

@@ -30,8 +30,12 @@ type Cases struct {
 	EndDate           time.Time  `gorm:"type:date" json:"endDate"`
 	ProductID         *uuid.UUID `gorm:"type:uuid" json:"productId"`
 	Product           *Products  `gorm:"foreignKey:ProductID;references:ID" json:"product"`
+	Channel           *string    `json:"channel"`
+	ReasonCode        *string    `json:"reasonCode"`
+	VerifyStatus      *string    `json:"verifyStatus"`
 	Description       string     `json:"description"`
 	CreatedBy         uuid.UUID  `gorm:"type:uuid" json:"createdBy"`
+	Creator           User       `gorm:"foreignKey:CreatedBy;references:ID" json:"creator"`
 	CreatedAt         time.Time  `gorm:"type:timestamp" json:"createdAt"`
 	UpdatedBy         uuid.UUID  `gorm:"type:uuid" json:"updatedBy"`
 	UpdatedAt         time.Time  `gorm:"type:timestamp" json:"updatedAt"`
@@ -108,18 +112,19 @@ type CaseResponse struct {
 }
 
 type CaseDetailResponse struct {
-	CaseType        string `json:"caseType"`
-	CaseID          string `json:"caseId"`
-	CreatedBy       string `json:"createdBy"`
-	CreatedDate     string `json:"createdDate"`
-	VerifyStatus    string `json:"verifyStatus"`
-	Channel         string `json:"channel"`
-	Priority        string `json:"priority"`
-	ReasonCode      string `json:"reasonCode"`
-	DueDate         string `json:"dueDate"`
-	Status          string `json:"status"`
-	CurrentQueue    string `json:"currentQueue"`
-	CaseDescription string `json:"caseDescription"`
+	CaseType            string  `json:"caseType"`
+	CaseID              string  `json:"caseId"`
+	CreatedBy           string  `json:"createdBy"`
+	CreatedDate         string  `json:"createdDate"`
+	VerifyStatus        string  `json:"verifyStatus"`
+	Channel             *string `json:"channel"`
+	Priority            string  `json:"priority"`
+	ReasonCode          string  `json:"reasonCode"`
+	DueDate             string  `json:"dueDate"`
+	Status              string  `json:"status"`
+	CurrentQueue        string  `json:"currentQueue"`
+	CaseDescription     string  `json:"caseDescription"`
+	AllocateToQueueTeam *string `json:"allocateToQueueTeam"`
 }
 
 type ReasonCodeResponse struct {
@@ -143,6 +148,7 @@ type CreateCaseRequest struct {
 	DispositionMains    datatypes.JSON `json:"dispositionMains"`
 	DispositionSubID    *string        `json:"dispositionSubId"`
 	DispositionSubs     datatypes.JSON `json:"dispositionSubs"`
+	VerifyStatus        *string        `json:"verifyStatus"`
 	ProductID           *string        `json:"productId"`
 	AllocateToQueueTeam *string        `json:"allocateToQueueTeam"`
 	QueueID             *string        `json:"queueId"`

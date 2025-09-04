@@ -56,7 +56,7 @@ func SetupRoutes(
 		caseManagementRoutes := apiV1.Group("/cases")
 		caseManagementRoutes.Use(handler.ValidateToken())
 		{
-			caseManagementRoutes.POST("/inquiry", H.Case.CreateCaseInquiry)
+			caseManagementRoutes.POST("", H.Case.CreateCase)
 			caseManagementRoutes.GET("", H.Case.GetAllCases)
 			caseManagementRoutes.GET("/:id", H.Case.GetCaseByID)
 			caseManagementRoutes.GET("/disposition", H.Case.GetAllDisposition)

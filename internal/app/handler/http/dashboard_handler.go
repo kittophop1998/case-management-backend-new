@@ -28,7 +28,7 @@ func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 	c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
 	c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
 
-	resp, err := h.UseCase.CustInfo(c, id)
+	_, err := h.UseCase.CustInfo(c, id)
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return
@@ -36,7 +36,16 @@ func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 
 	lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
 
-	lib.HandleResponse(ctx, http.StatusOK, resp)
+	mock := &model.GetCustInfoResponse{
+		NationalID:      "1234",
+		CustomerNameEng: "Jane Doe",
+		CustomerNameTH:  "เจน โด",
+		MobileNO:        "0812345678",
+		MailToAddress:   "123/45 หมู่บ้านสุขสันต์ ถ.สุขสวัสดิ์ แขวงบางปะกอก เขตราษฎร์บูรณะ กทม. 10140",
+		MailTo:          "Jane Doe",
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, mock)
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {

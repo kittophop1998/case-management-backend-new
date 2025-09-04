@@ -52,12 +52,29 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category s
 
 }
 
-func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, error) {
-	caseID, err := uuid.Parse(id)
+func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDetailResponse, error) {
+	caseData, err := uc.repo.GetCaseByID(c, id)
 	if err != nil {
 		return nil, err
 	}
-	return uc.repo.GetCaseByID(c, caseID)
+
+	caseDetail := &model.CaseDetailResponse{
+		CaseType:            caseData.CaseType.Name,
+		CaseID:              caseData.ID.String(),
+		CreatedBy:           fmt.Sprintf("%s - %s", caseData.Creator.Name, caseData.Creator.Center.Name),
+		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04:05"),
+		VerifyStatus:        *caseData.VerifyStatus,
+		Channel:             caseData.Channel,
+		Priority:            caseData.Priority,
+		ReasonCode:          *caseData.ReasonCode,
+		DueDate:             caseData.EndDate.Format("2006-01-02"),
+		AllocateToQueueTeam: utils.StringPtr(caseData.QueueID.String()),
+		CaseDescription:     caseData.Description,
+		Status:              caseData.Status.Name,
+		CurrentQueue:        caseData.Queue.Name,
+	}
+
+	return caseDetail, nil
 }
 
 func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
@@ -106,6 +123,7 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 		CustomerID:        caseReq.CustomerID,
 		DispositionMainID: dispositionMainID,
 		DispositionSubID:  dispositionSubID,
+		VerifyStatus:      caseReq.VerifyStatus,
 		QueueID:           queueID,
 		Description:       caseReq.CaseDescription,
 		AssignedToUserID:  &createdByID,

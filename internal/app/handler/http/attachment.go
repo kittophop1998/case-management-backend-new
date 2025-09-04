@@ -4,7 +4,6 @@ import (
 	"case-management/infrastructure/config"
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +12,7 @@ import (
 
 type AttachmentHandler struct {
 	UseCase usecase.AttachmentUseCase
+	Config  *config.Config
 }
 
 func (h *AttachmentHandler) UploadAttachment(ctx *gin.Context) {
@@ -46,14 +46,10 @@ func (h *AttachmentHandler) UploadAttachment(ctx *gin.Context) {
 		return
 	}
 
-	cfg, err := config.Load("")
-	if err != nil {
-		lib.HandleError(ctx, fmt.Errorf("internal server error"))
-	}
+	isilonBaseURL := h.Config.Isilon.BaseURL
+	isilonUser := h.Config.Isilon.Username
+	isilonPass := h.Config.Isilon.Password
 
-	isilonBaseURL := cfg.Isilon.BaseURL
-	isilonUser := cfg.Isilon.Username
-	isilonPass := cfg.Isilon.Password
 	err = h.UseCase.UploadAttachment(ctx, files, caseID, userId, isilonBaseURL, isilonUser, isilonPass)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))

@@ -41,7 +41,7 @@ func InitHandlers(deps HandlerDeps) {
 		Log:        &LogHandler{UseCase: *deps.LogUC},
 		Case:       &CaseHandler{UseCase: *deps.CaseUC},
 		Customer:   &CustomerHandler{UseCase: *deps.CustomerUC},
-		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC},
+		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC, Config: deps.Config},
 		Queue:      &QueueHandler{UserCase: *deps.QueueUC},
 	}
 }

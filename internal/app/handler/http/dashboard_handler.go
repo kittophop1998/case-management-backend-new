@@ -7,7 +7,6 @@ import (
 	"case-management/internal/domain/model"
 	"case-management/utils"
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,22 +14,18 @@ import (
 
 type DashboardHandler struct {
 	UseCase usecase.DashboardUseCase
+	Config  *config.Config
 }
 
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 	id := ctx.Param("aeon_id")
 
-	cfg, err := config.Load("")
-	if err != nil {
-		lib.HandleError(ctx, fmt.Errorf("internal server error"))
-	}
-
 	reqID := ctx.GetHeader("X-Request-ID")
 
-	c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, cfg.Headers.ApiKey)
-	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
-	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
-	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+	c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, h.Config.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, h.Config.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, h.Config.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
 	c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
 
 	resp, err := h.UseCase.CustInfo(c, id)

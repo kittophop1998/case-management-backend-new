@@ -23,7 +23,9 @@ func SeedReasonCodes(db *gorm.DB) {
 		},
 	}
 
-	if err := db.Create(&reasonCodes).Error; err != nil {
-		panic("Failed to seed reason codes: " + err.Error())
+	for _, rc := range reasonCodes {
+		if err := db.FirstOrCreate(&rc, model.ReasonCode{Code: rc.Code}).Error; err != nil {
+			panic("Failed to seed reason codes: " + err.Error())
+		}
 	}
 }

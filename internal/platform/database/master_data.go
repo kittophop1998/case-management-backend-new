@@ -2,6 +2,7 @@ package database
 
 import (
 	"case-management/internal/domain/model"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -59,6 +60,23 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 		return nil, err
 	}
 	result["products"] = product
+
+	var reason []model.ReasonCode
+	if err := repo.db.WithContext(ctx).Find(&reason).Error; err != nil {
+		return nil, err
+	}
+
+	reasonCodes := []model.ReasonCodeResponse{}
+	for _, rc := range reason {
+		reasonCodes = append(reasonCodes, model.ReasonCodeResponse{
+			ID:            rc.ID,
+			Code:          rc.Code,
+			DescriptionEn: rc.DescriptionEn,
+			DescriptionTh: rc.DescriptionTh,
+			Notice:        fmt.Sprintf("SLA Response Time: %s, SLA Resolution Time: %s", rc.SLAResponseTime, rc.SLAResolutionTime),
+		})
+	}
+	result["reasonCodes"] = reasonCodes
 
 	return result, nil
 }

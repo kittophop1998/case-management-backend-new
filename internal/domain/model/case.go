@@ -65,7 +65,7 @@ type VerifyQuestionHistory struct {
 	Question         string    `json:"question" gorm:"type:text"`
 	AnswerProvided   string    `json:"answer_provided" gorm:"type:text"`
 	IsCorrect        bool      `json:"is_correct"`
-	VeryfyByUserId   uuid.UUID `json:"verify_by_user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	VerifyByUserId   uuid.UUID `json:"verify_by_user_id" gorm:"type:uuid;default:uuid_generate_v4()"`
 	VerificationDate time.Time `json:"verification_date"`
 	CaseId           uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
 }
@@ -120,6 +120,14 @@ type CaseDetailResponse struct {
 	Status          string `json:"status"`
 	CurrentQueue    string `json:"currentQueue"`
 	CaseDescription string `json:"caseDescription"`
+}
+
+type ReasonCodeResponse struct {
+	ID            uuid.UUID `json:"id"`
+	Code          string    `json:"code"`
+	DescriptionEn string    `json:"descriptionEn"`
+	DescriptionTh string    `json:"descriptionTh"`
+	Notice        string    `json:"notice"`
 }
 
 // ##### Case Management Request #####

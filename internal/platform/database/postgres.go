@@ -80,6 +80,7 @@ func Migrate(db *gorm.DB) error {
 		&model.CaseStatus{},
 		&model.AuditLogs{},
 		&model.Products{},
+		&model.ReasonCode{},
 	}
 
 	for _, model := range modelsToMigrate {

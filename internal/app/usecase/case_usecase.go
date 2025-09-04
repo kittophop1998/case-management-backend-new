@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"case-management/utils"
 	"fmt"
 	"time"
 
@@ -59,72 +60,62 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id string) (*model.Cases, err
 	return uc.repo.GetCaseByID(c, caseID)
 }
 
-func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseInquiryRequest) (uuid.UUID, error) {
+func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
+	caseTypeMap, _ := uc.repo.LoadCaseType(ctx)
 
-	caseToSave := &model.Cases{
-		CaseTypeID:        caseReq.CaseTypeID,
-		CustomerName:      caseReq.CustomerName,
-		CustomerID:        caseReq.CustomerID,
-		DispositionMainID: caseReq.DispositionMainID,
-		DispositionSubID:  caseReq.DispositionSubID,
-		Description:       caseReq.CaseDescription,
-		AssignedToUserID:  &createdByID,
-		ProductID:         caseReq.ProductID,
-		Priority:          "Normal",
-		StatusID:          statusMap["created"],
-		StartDate:         time.Now(),
-		EndDate:           time.Now().Add(72 * time.Hour), // SLA 3 days
-		CreatedBy:         createdByID,
-		UpdatedBy:         createdByID,
+	var caseTypeID uuid.UUID
+	if caseReq.CaseTypeID != "" {
+		id, err := utils.ParseUUID(caseReq.CaseTypeID)
+		if err != nil {
+			return uuid.Nil, err
+		}
+		caseTypeID = id
 	}
 
-	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)
+	queueID, err := utils.ParseOptionalUUID(caseReq.AllocateToQueueTeam)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	// Save Case Disposition Main
-	// err := uc.repo.CreateCaseDispositionMains(c, caseData.DispositionMains)
-	// if err != nil {
-	// 	return uuid.Nil, err
-	// }
-
-	// // Save Case Disposition Subs
-	// err = uc.repo.CreateCaseDispositionSubs(c, caseData.DispositionSubs)
-	// if err != nil {
-	// 	return uuid.Nil, err
-	// }
-
-	return caseId, nil
-}
-
-func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
-	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
-
-	dueDate, err := time.Parse(time.RFC3339, caseReq.DueDate)
+	dispositionMainID, err := utils.ParseOptionalUUID(caseReq.DispositionMainID)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid due date format: %v", err)
+		return uuid.Nil, err
 	}
 
-	queueID, err := uuid.Parse(caseReq.AllocatedToQueueTeam.String())
+	dispositionSubID, err := utils.ParseOptionalUUID(caseReq.DispositionSubID)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid queue ID format: %v", err)
+		return uuid.Nil, err
+	}
+
+	productID, err := utils.ParseOptionalUUID(caseReq.ProductID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	var priority string
+	if caseTypeID == caseTypeMap["Inquiry and disposition"] {
+		priority = "Normal"
+	} else {
+		priority = caseReq.Priority
 	}
 
 	caseToSave := &model.Cases{
-		CaseTypeID:   caseReq.CaseTypeID,
-		CustomerName: caseReq.CustomerName,
-		CustomerID:   caseReq.CustomerID,
-		Description:  caseReq.CaseDescription,
-		Priority:     "Normal",
-		DueDate:      dueDate,
-		QueueID:      &queueID,
-		StatusID:     statusMap["created"],
-		StartDate:    time.Now(),
-		EndDate:      time.Now().Add(72 * time.Hour),
-		CreatedBy:    createdByID,
-		UpdatedBy:    createdByID,
+		CaseTypeID:        caseTypeID,
+		CustomerName:      caseReq.CustomerName,
+		CustomerID:        caseReq.CustomerID,
+		DispositionMainID: dispositionMainID,
+		DispositionSubID:  dispositionSubID,
+		QueueID:           queueID,
+		Description:       caseReq.CaseDescription,
+		AssignedToUserID:  &createdByID,
+		ProductID:         productID,
+		Priority:          priority,
+		StatusID:          statusMap["created"],
+		StartDate:         time.Now(),
+		EndDate:           time.Now().Add(72 * time.Hour),
+		CreatedBy:         createdByID,
+		UpdatedBy:         createdByID,
 	}
 
 	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)

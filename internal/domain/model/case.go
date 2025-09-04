@@ -22,14 +22,14 @@ type Cases struct {
 	AssignedToUser    *User      `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
 	StatusID          uuid.UUID  `json:"statusId"`
 	Status            CaseStatus `gorm:"foreignKey:StatusID;references:ID"`
-	DispositionMainID uuid.UUID  `gorm:"type:uuid" json:"dispositionMainId"`
-	DispositionSubID  uuid.UUID  `gorm:"type:uuid" json:"dispositionSubId"`
+	DispositionMainID *uuid.UUID `gorm:"type:uuid" json:"dispositionMainId"`
+	DispositionSubID  *uuid.UUID `gorm:"type:uuid" json:"dispositionSubId"`
 	StartDate         time.Time  `gorm:"type:date" json:"startDate"`
 	DueDate           time.Time  `gorm:"type:date" json:"dueDate"`
 	ClosedDate        time.Time  `gorm:"type:date" json:"closedDate"`
 	EndDate           time.Time  `gorm:"type:date" json:"endDate"`
-	ProductID         uuid.UUID  `gorm:"type:uuid" json:"productId"`
-	Product           Products   `gorm:"foreignKey:ProductID;references:ID" json:"product"`
+	ProductID         *uuid.UUID `gorm:"type:uuid" json:"productId"`
+	Product           *Products  `gorm:"foreignKey:ProductID;references:ID" json:"product"`
 	Description       string     `json:"description"`
 	CreatedBy         uuid.UUID  `gorm:"type:uuid" json:"createdBy"`
 	CreatedAt         time.Time  `gorm:"type:timestamp" json:"createdAt"`
@@ -70,6 +70,23 @@ type VerifyQuestionHistory struct {
 	CaseId           uuid.UUID `json:"case_id" gorm:"type:uuid;default:uuid_generate_v4()"`
 }
 
+type ReasonCode struct {
+	ID                uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	Code              string    `json:"code"`
+	DescriptionEn     string    `json:"description_en"`
+	DescriptionTh     string    `json:"description_th"`
+	Category          string    `json:"category"`
+	SLAResponseTime   string    `json:"sla_response_time"`
+	SLAResolutionTime string    `json:"sla_resolution_time"`
+	Note              string    `json:"note"`
+	CreatedBy         uuid.UUID `gorm:"type:uuid" json:"createdBy"`
+	CreatedAt         time.Time `gorm:"type:timestamp" json:"createdAt"`
+	UpdatedBy         uuid.UUID `gorm:"type:uuid" json:"updatedBy"`
+	UpdatedAt         time.Time `gorm:"type:timestamp" json:"updatedAt"`
+	DeletedBy         uuid.UUID `gorm:"type:uuid" json:"deletedBy"`
+	DeletedAt         time.Time `gorm:"type:timestamp" json:"deletedAt"`
+}
+
 // ##### Case Management For Response #####
 type CaseResponse struct {
 	CaseID       string `json:"caseId"`
@@ -106,31 +123,23 @@ type CaseDetailResponse struct {
 }
 
 // ##### Case Management Request #####
-type CreateCaseInquiryRequest struct {
-	CustomerID        string         `json:"customerId"`
-	CustomerName      string         `json:"customerName"`
-	CaseTypeID        uuid.UUID      `json:"caseTypeId"`
-	DispositionMainID uuid.UUID      `json:"dispositionMainId" gorm:"type:uuid"`
-	DispositionMains  datatypes.JSON `json:"dispositionMains" gorm:"type:jsonb"`
-	DispositionSubID  uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
-	DispositionSubs   datatypes.JSON `json:"dispositionSubs" gorm:"type:jsonb"`
-	ProductID         uuid.UUID      `json:"productId" gorm:"type:uuid"`
-	QueueID           uuid.UUID      `json:"queueId" gorm:"type:uuid"`
-	CaseDescription   string         `json:"caseDescription" gorm:"type:text"`
-	CaseNote          datatypes.JSON `json:"caseNote" gorm:"type:jsonb"`
-}
-
 type CreateCaseRequest struct {
-	CustomerID           string         `json:"customerId"`
-	CustomerName         string         `json:"customerName"`
-	CaseTypeID           uuid.UUID      `json:"caseTypeId"`
-	Channel              string         `json:"channel"`
-	Priority             string         `json:"priority"`
-	ReasonCode           string         `json:"reasonCode"`
-	DueDate              string         `json:"dueDate"`
-	AllocatedToQueueTeam uuid.UUID      `json:"allocatedToQueueTeam"`
-	CaseDescription      string         `json:"caseDescription"`
-	CaseNote             datatypes.JSON `json:"caseNote"`
+	CustomerID          string         `json:"customerId"`
+	CustomerName        string         `json:"customerName"`
+	CaseTypeID          string         `json:"caseTypeId"`
+	Channel             *string        `json:"channel"`
+	Priority            string         `json:"priority"`
+	ReasonCode          *string        `json:"reasonCode"`
+	DueDate             *string        `json:"dueDate"`
+	DispositionMainID   *string        `json:"dispositionMainId"`
+	DispositionMains    datatypes.JSON `json:"dispositionMains"`
+	DispositionSubID    *string        `json:"dispositionSubId"`
+	DispositionSubs     datatypes.JSON `json:"dispositionSubs"`
+	ProductID           *string        `json:"productId"`
+	AllocateToQueueTeam *string        `json:"allocateToQueueTeam"`
+	QueueID             *string        `json:"queueId"`
+	CaseDescription     string         `json:"caseDescription"`
+	CaseNote            datatypes.JSON `json:"caseNote"`
 }
 
 type CaseFilter struct {

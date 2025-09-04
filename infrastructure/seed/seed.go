@@ -18,6 +18,7 @@ func SeedAllData(db *gorm.DB) error {
 	SeedDispositionSub(db, dispositionMainMap)
 	SeedCaseStatus(db)
 	SeedProducts(db)
+	SeedReasonCodes(db)
 
 	return nil
 }

@@ -15,30 +15,31 @@ type CaseHandler struct {
 	UseCase usecase.CaseUseCase
 }
 
+// ##### Create Case Other Case #####
+// func (h *CaseHandler) CreateCase(ctx *gin.Context) {
+// 	userId := ctx.GetString("userId")
+// 	createdByID, err := uuid.Parse(userId)
+// 	if err != nil {
+// 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+// 		return
+// 	}
+
+// 	caseReq := &model.CreateCaseRequest{}
+// 	if err := ctx.ShouldBindJSON(caseReq); err != nil {
+// 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+// 		return
+// 	}
+
+// 	caseID, err := h.UseCase.CreateCase(ctx, createdByID, caseReq)
+// 	if err != nil {
+// 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+// 		return
+// 	}
+
+// 	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
+// }
+
 func (h *CaseHandler) CreateCaseInquiry(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
-	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
-		return
-	}
-
-	caseReq := &model.CreateCaseInquiryRequest{}
-	if err := ctx.ShouldBindJSON(caseReq); err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
-
-	caseID, err := h.UseCase.CreateCaseInquiry(ctx, createdByID, caseReq)
-	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
-		return
-	}
-
-	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
-}
-
-func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 	userId := ctx.GetString("userId")
 	createdByID, err := uuid.Parse(userId)
 	if err != nil {
@@ -52,7 +53,7 @@ func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 		return
 	}
 
-	caseID, err := h.UseCase.CreateCase(ctx, createdByID, caseReq)
+	caseID, err := h.UseCase.CreateCaseInquiry(ctx, createdByID, caseReq)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return

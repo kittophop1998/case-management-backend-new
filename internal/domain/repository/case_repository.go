@@ -17,5 +17,6 @@ type CaseRepository interface {
 	CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error
 	GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error)
 	LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error)
+	LoadCaseType(ctx *gin.Context) (map[string]uuid.UUID, error)
 	AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error)
 }

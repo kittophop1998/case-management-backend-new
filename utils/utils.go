@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"reflect"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 func NormalizeUserInput(user *model.CreateUpdateUserRequest) {
@@ -57,4 +59,19 @@ func RandStringRunes(n int) (string, error) {
 		b[i] = letterRunes[num.Int64()]
 	}
 	return string(b), nil
+}
+
+func ParseUUID(s string) (uuid.UUID, error) {
+	return uuid.Parse(s)
+}
+
+func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
+	if s == nil || *s == "" {
+		return nil, nil
+	}
+	id, err := uuid.Parse(*s)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
 }

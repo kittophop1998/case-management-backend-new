@@ -58,14 +58,6 @@ func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (u
 	return caseToSave.ID, nil
 }
 
-// func (c *CasePg) CreateCase(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
-// 	if err := c.db.WithContext(ctx).Create(caseToSave).Error; err != nil {
-// 		return uuid.Nil, err
-// 	}
-
-// 	return caseToSave.ID, nil
-// }
-
 func (c *CasePg) CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error {
 	var dispositions []model.CaseDispositionMain
 	if err := json.Unmarshal(data, &dispositions); err != nil {
@@ -239,6 +231,20 @@ func (r *CasePg) LoadCaseStatus(ctx *gin.Context) (map[string]uuid.UUID, error) 
 	}
 
 	return statusMap, nil
+}
+
+func (r *CasePg) LoadCaseType(ctx *gin.Context) (map[string]uuid.UUID, error) {
+	typeMap := make(map[string]uuid.UUID)
+	var types []model.CaseTypes
+	if err := r.db.WithContext(ctx).Find(&types).Error; err != nil {
+		return nil, err
+	}
+
+	for _, t := range types {
+		typeMap[t.Name] = t.ID
+	}
+
+	return typeMap, nil
 }
 
 func (c *CasePg) AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error) {

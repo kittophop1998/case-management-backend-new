@@ -1,6 +1,7 @@
 package http
 
 import (
+	"case-management/infrastructure/config"
 	"case-management/internal/app/usecase"
 )
 
@@ -17,6 +18,7 @@ type Handlers struct {
 }
 
 type HandlerDeps struct {
+	Config       *config.Config
 	UserUC       *usecase.UserUseCase
 	MasterDataUC *usecase.MasterDataUseCase
 	AuthUC       *usecase.AuthUseCase

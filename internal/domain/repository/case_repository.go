@@ -10,7 +10,7 @@ import (
 
 type CaseRepository interface {
 	CreateCaseInquiry(ctx *gin.Context, c *model.Cases) (uuid.UUID, error)
-	GetAllCase(ctx *gin.Context, offset, limit int, category string, currID uuid.UUID) ([]*model.Cases, int, error)
+	GetAllCase(ctx *gin.Context, offset, limit int, filter model.CaseFilter, category string, currID uuid.UUID) ([]*model.Cases, int, error)
 	GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error)
 	CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error
 	CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error

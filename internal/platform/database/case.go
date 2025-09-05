@@ -21,7 +21,7 @@ func NewCasePg(db *gorm.DB) *CasePg {
 	return &CasePg{db: db}
 }
 
-func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string, currID uuid.UUID) ([]*model.Cases, int, error) {
+func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, filter model.CaseFilter, category string, currID uuid.UUID) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
 
 	query := c.db.WithContext(ctx).Model(&model.Cases{}).
@@ -47,7 +47,23 @@ func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string
 		}
 	}
 
-	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cases).Error; err != nil {
+	if filter.Keyword != "" {
+		query.Where("customer_name ILIKE ?", "%"+strings.TrimSpace(filter.Keyword)+"%")
+	}
+
+	if filter.Priority != "" {
+		query.Where("priority ILIKE ?", "%"+strings.TrimSpace(filter.Priority)+"%")
+	}
+
+	if filter.StatusID != nil && *filter.StatusID != uuid.Nil {
+		query.Where("status_id=?", *filter.StatusID)
+	}
+
+	if filter.QueueID != nil && *filter.QueueID != uuid.Nil {
+		query.Where("queue_id=?", *filter.QueueID)
+	}
+
+	if err := query.Offset(offset).Limit(limit).Order("created_at ASC").Find(&cases).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -106,43 +122,43 @@ func (c *CasePg) CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON
 	return nil
 }
 
-func (c *CasePg) CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error) {
-	var count int64
-	query := c.db.WithContext(ctx).Model(&model.Cases{})
+// func (c *CasePg) CountWithFilter(ctx *gin.Context, filter model.CaseFilter) (int, error) {
+// 	var count int64
+// 	query := c.db.WithContext(ctx).Model(&model.Cases{})
 
-	if filter.Keyword != "" {
-		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
-		query = query.Where(
-			c.db.Where("title ILIKE ?", kw).
-				Or("customer_id ILIKE ?", kw).
-				Or("created_by ILIKE ?", kw).
-				Or("CAST(sla_date AS TEXT) ILIKE ?", kw).
-				Or("CAST(created_at AS TEXT) ILIKE ?", kw),
-		)
-	}
+// 	if filter.Keyword != "" {
+// 		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
+// 		query = query.Where(
+// 			c.db.Where("title ILIKE ?", kw).
+// 				Or("customer_id ILIKE ?", kw).
+// 				Or("created_by ILIKE ?", kw).
+// 				Or("CAST(sla_date AS TEXT) ILIKE ?", kw).
+// 				Or("CAST(created_at AS TEXT) ILIKE ?", kw),
+// 		)
+// 	}
 
-	if filter.StatusID != nil {
-		query = query.Where("status_id = ?", *filter.StatusID)
-	}
+// 	if filter.StatusID != nil {
+// 		query = query.Where("status_id = ?", *filter.StatusID)
+// 	}
 
-	if filter.PriorityID != nil {
-		query = query.Where("priority_id = ?", *filter.PriorityID)
-	}
+// 	if filter.PriorityID != nil {
+// 		query = query.Where("priority_id = ?", *filter.PriorityID)
+// 	}
 
-	if filter.SLADateFrom != nil {
-		query = query.Where("sla_date >= ?", *filter.SLADateFrom)
-	}
+// 	if filter.SLADateFrom != nil {
+// 		query = query.Where("sla_date >= ?", *filter.SLADateFrom)
+// 	}
 
-	if filter.SLADateTo != nil {
-		query = query.Where("sla_date <= ?", *filter.SLADateTo)
-	}
+// 	if filter.SLADateTo != nil {
+// 		query = query.Where("sla_date <= ?", *filter.SLADateTo)
+// 	}
 
-	if err := query.Count(&count).Error; err != nil {
-		return 0, err
-	}
+// 	if err := query.Count(&count).Error; err != nil {
+// 		return 0, err
+// 	}
 
-	return int(count), nil
-}
+// 	return int(count), nil
+// }
 
 func (c *CasePg) CreateNoteType(ctx *gin.Context, note model.NoteTypes) (*model.NoteTypes, error) {
 	if err := c.db.WithContext(ctx).Create(&note).Error; err != nil {

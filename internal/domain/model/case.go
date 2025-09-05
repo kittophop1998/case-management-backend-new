@@ -159,12 +159,10 @@ type CreateCaseRequest struct {
 }
 
 type CaseFilter struct {
-	Keyword     string     `form:"keyword" json:"keyword"`
-	StatusID    *uint      `form:"statusId" json:"statusId"`
-	PriorityID  *uint      `form:"priorityId" json:"priorityId"`
-	SLADateFrom *time.Time `form:"slaDateFrom" json:"slaDateFrom"`
-	SLADateTo   *time.Time `form:"slaDateTo" json:"slaDateTo"`
-	Sort        string     `form:"sort" json:"sort"`
+	Keyword  string     `form:"keyword" json:"keyword"`
+	StatusID *uuid.UUID `form:"statusId" json:"statusId"`
+	QueueID  *uuid.UUID `form:"queueId" json:"queueId"`
+	Priority string     `form:"priority" json:"priority" binding:"omitempty,oneof=High,Normal"`
 }
 
 type CreateUpdateUserRequest struct {

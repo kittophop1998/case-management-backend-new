@@ -49,7 +49,27 @@ func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
 	p := utils.GetPagination(ctx)
 	category := ctx.Query("category")
 
-	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, category, currID)
+	keyword := ctx.Query("keyword")
+	statusID, err := uuid.Parse(ctx.Query("status"))
+	if err != nil && ctx.Query("status") != "" {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("invalid status ID"))
+		return
+	}
+	priority := ctx.Query("priority")
+	queueID, err := uuid.Parse(ctx.Query("queue"))
+	if err != nil && ctx.Query("queue") != "" {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("invalid queue ID"))
+		return
+	}
+
+	filter := model.CaseFilter{
+		Keyword:  keyword,
+		StatusID: &statusID,
+		QueueID:  &queueID,
+		Priority: priority,
+	}
+
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, category, currID)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return

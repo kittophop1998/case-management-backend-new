@@ -63,12 +63,12 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 		CaseID:              caseData.ID.String(),
 		CreatedBy:           fmt.Sprintf("%s - %s", caseData.Creator.Name, caseData.Creator.Center.Name),
 		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04:05"),
-		VerifyStatus:        *caseData.VerifyStatus,
+		VerifyStatus:        caseData.VerifyStatus,
 		Channel:             caseData.Channel,
 		Priority:            caseData.Priority,
-		ReasonCode:          *caseData.ReasonCode,
+		ReasonCode:          caseData.ReasonCode,
 		DueDate:             caseData.EndDate.Format("2006-01-02"),
-		AllocateToQueueTeam: utils.StringPtr(caseData.QueueID.String()),
+		AllocateToQueueTeam: utils.UUIDPtrToStringPtr(caseData.QueueID),
 		CaseDescription:     caseData.Description,
 		Status:              caseData.Status.Name,
 		CurrentQueue:        caseData.Queue.Name,
@@ -77,7 +77,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	return caseDetail, nil
 }
 
-func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
+func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
 	caseTypeMap, _ := uc.repo.LoadCaseType(ctx)
 
@@ -117,6 +117,15 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 		priority = caseReq.Priority
 	}
 
+	var dueDate *time.Time
+	if caseReq.DueDate != nil && *caseReq.DueDate != "" {
+		parsedDueDate, err := time.Parse("2006-01-02", *caseReq.DueDate)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid due date format: %w", err)
+		}
+		dueDate = &parsedDueDate
+	}
+
 	caseToSave := &model.Cases{
 		CaseTypeID:        caseTypeID,
 		CustomerName:      caseReq.CustomerName,
@@ -125,13 +134,16 @@ func (uc *CaseUseCase) CreateCaseInquiry(ctx *gin.Context, createdByID uuid.UUID
 		DispositionSubID:  dispositionSubID,
 		VerifyStatus:      caseReq.VerifyStatus,
 		QueueID:           queueID,
+		Channel:           caseReq.Channel,
 		Description:       caseReq.CaseDescription,
+		ReasonCode:        caseReq.ReasonCode,
 		AssignedToUserID:  &createdByID,
 		ProductID:         productID,
 		Priority:          priority,
 		StatusID:          statusMap["created"],
 		StartDate:         time.Now(),
 		EndDate:           time.Now().Add(72 * time.Hour),
+		DueDate:           dueDate,
 		CreatedBy:         createdByID,
 		UpdatedBy:         createdByID,
 	}

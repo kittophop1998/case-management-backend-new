@@ -29,7 +29,7 @@ func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 		return
 	}
 
-	caseID, err := h.UseCase.CreateCaseInquiry(ctx, createdByID, caseReq)
+	caseID, err := h.UseCase.CreateCase(ctx, createdByID, caseReq)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return

@@ -25,6 +25,7 @@ func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string
 	query := c.db.WithContext(ctx).Model(&model.Cases{}).
 		Preload("Status").
 		Preload("CaseType").
+		Preload("Queue").
 		Preload("AssignedToUser.Center").
 		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
 		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
@@ -48,6 +49,20 @@ func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string
 	}
 
 	return cases, 10, nil
+}
+
+func (c *CasePg) GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error) {
+	var cases model.Cases
+	if err := c.db.WithContext(ctx).
+		Preload("Status").
+		Preload("CaseType").
+		Preload("Queue").
+		Preload("AssignedToUser.Center").
+		Preload("Creator.Center").
+		First(&cases, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &cases, nil
 }
 
 func (c *CasePg) CreateCaseInquiry(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error) {
@@ -131,20 +146,6 @@ func (c *CasePg) CreateNoteType(ctx *gin.Context, note model.NoteTypes) (*model.
 		return nil, err
 	}
 	return &note, nil
-}
-
-func (c *CasePg) GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error) {
-	var cases model.Cases
-	if err := c.db.WithContext(ctx).
-		Preload("Status").
-		Preload("CaseType").
-		Preload("Queue").
-		Preload("AssignedToUser.Center").
-		Preload("Creator.Center").
-		First(&cases, "id = ?", id).Error; err != nil {
-		return nil, err
-	}
-	return &cases, nil
 }
 
 func (c *CasePg) AddInitialDescription(ctx *gin.Context, caseID uuid.UUID, newDescription string) error {

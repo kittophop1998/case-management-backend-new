@@ -25,7 +25,7 @@ type Cases struct {
 	DispositionMainID *uuid.UUID `gorm:"type:uuid" json:"dispositionMainId"`
 	DispositionSubID  *uuid.UUID `gorm:"type:uuid" json:"dispositionSubId"`
 	StartDate         time.Time  `gorm:"type:date" json:"startDate"`
-	DueDate           time.Time  `gorm:"type:date" json:"dueDate"`
+	DueDate           *time.Time `gorm:"type:date" json:"dueDate"`
 	ClosedDate        time.Time  `gorm:"type:date" json:"closedDate"`
 	EndDate           time.Time  `gorm:"type:date" json:"endDate"`
 	ProductID         *uuid.UUID `gorm:"type:uuid" json:"productId"`
@@ -116,10 +116,10 @@ type CaseDetailResponse struct {
 	CaseID              string  `json:"caseId"`
 	CreatedBy           string  `json:"createdBy"`
 	CreatedDate         string  `json:"createdDate"`
-	VerifyStatus        string  `json:"verifyStatus"`
+	VerifyStatus        *string `json:"verifyStatus"`
 	Channel             *string `json:"channel"`
 	Priority            string  `json:"priority"`
-	ReasonCode          string  `json:"reasonCode"`
+	ReasonCode          *string `json:"reasonCode"`
 	DueDate             string  `json:"dueDate"`
 	Status              string  `json:"status"`
 	CurrentQueue        string  `json:"currentQueue"`

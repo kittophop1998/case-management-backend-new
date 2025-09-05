@@ -5,6 +5,7 @@ import (
 	"case-management/internal/domain/repository"
 	"case-management/utils"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,17 +31,18 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category s
 	for _, c := range caseRepo {
 
 		caseResponses = append(caseResponses, &model.CaseResponse{
+			Code:         c.Code,
 			CustomerID:   c.CustomerID,
 			CustomerName: c.CustomerName,
 			Status:       c.Status.Name,
 			CaseType:     c.CaseType.Name,
 			CurrentQueue: c.Queue.Name,
-			CurrentUser:  fmt.Sprintf("%s - %s", c.AssignedToUser.Name, c.AssignedToUser.Center.Name),
+			CurrentUser:  utils.UserNameCenter(*c.AssignedToUser),
 			SLADate:      c.EndDate.String(),
 			CreateDate:   c.CreatedAt.String(),
 			CaseID:       c.ID.String(),
 			AeonID:       c.AeonID,
-			CaseGroup:    "General",
+			CaseGroup:    c.CaseType.Group,
 			CreatedBy:    utils.UserNameCenter(c.Creator),
 			CreatedDate:  c.CreatedAt.String(),
 			CasePriority: c.Priority,
@@ -59,9 +61,10 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	}
 
 	caseDetail := &model.CaseDetailResponse{
+		Code:                caseData.Code,
 		CaseType:            caseData.CaseType.Name,
 		CaseID:              caseData.ID.String(),
-		CreatedBy:           fmt.Sprintf("%s - %s", caseData.Creator.Name, caseData.Creator.Center.Name),
+		CreatedBy:           utils.UserNameCenter(caseData.Creator),
 		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04"),
 		VerifyStatus:        caseData.VerifyStatus,
 		Channel:             caseData.Channel,
@@ -126,7 +129,13 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		dueDate = &parsedDueDate
 	}
 
+	code, err := uc.repo.GenCaseCode(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	caseToSave := &model.Cases{
+		Code:              code,
 		CaseTypeID:        caseTypeID,
 		CustomerName:      caseReq.CustomerName,
 		CustomerID:        caseReq.CustomerID,

@@ -3,6 +3,8 @@ package database
 import (
 	"case-management/internal/domain/model"
 	"encoding/json"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -260,4 +262,29 @@ func (c *CasePg) AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID
 		return uuid.Nil, err
 	}
 	return note.ID, nil
+}
+
+func (r *CasePg) GenCaseCode(ctx *gin.Context) (string, error) {
+	var lastCase model.Cases
+	if err := r.db.WithContext(ctx).
+		Order("created_at DESC").
+		Limit(1).
+		Debug().Find(&lastCase).Error; err != nil {
+		return "", err
+	}
+	// ถ้าไม่มีเคสเลย ให้เริ่มที่ 1
+	newNumber := 1
+
+	if lastCase.Code != "" {
+		parts := strings.Split(lastCase.Code, "_")
+		if len(parts) == 2 {
+			if n, err := strconv.Atoi(parts[1]); err == nil {
+				newNumber = n + 1
+			}
+		}
+	}
+
+	// สร้างรหัสเคสใหม่ ในรูปแบบ CASE_001, CASE_002, ...
+	newCode := fmt.Sprintf("CASE_%03d", newNumber)
+	return newCode, nil
 }

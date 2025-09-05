@@ -102,7 +102,6 @@ type CaseResponse struct {
 	CaseType     string `json:"caseType"`
 	CurrentQueue string `json:"currentQueue"`
 	CurrentUser  string `json:"currentUser"`
-	CreateDate   string `json:"createDate"`
 	CaseGroup    string `json:"caseGroup"`
 	CasePriority string `json:"casePriority"`
 	ClosedDate   string `json:"closedDate"`

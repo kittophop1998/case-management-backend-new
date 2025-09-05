@@ -5,6 +5,7 @@ import (
 	"case-management/internal/domain/repository"
 	"case-management/utils"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,25 +27,24 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category s
 		return nil, 0, err
 	}
 
-	var caseResponses []*model.CaseResponse
+	caseResponses := make([]*model.CaseResponse, 0, len(caseRepo))
 	for _, c := range caseRepo {
-
 		caseResponses = append(caseResponses, &model.CaseResponse{
+			Code:         c.Code,
 			CustomerID:   c.CustomerID,
 			CustomerName: c.CustomerName,
 			Status:       c.Status.Name,
 			CaseType:     c.CaseType.Name,
 			CurrentQueue: c.Queue.Name,
-			CurrentUser:  fmt.Sprintf("%s - %s", c.AssignedToUser.Name, c.AssignedToUser.Center.Name),
-			SLADate:      c.EndDate.String(),
-			CreateDate:   c.CreatedAt.String(),
+			CurrentUser:  utils.UserNameCenter(*c.AssignedToUser),
+			SLADate:      utils.FormatDate(&c.EndDate, "2006-01-02 15:04"),
 			CaseID:       c.ID.String(),
 			AeonID:       c.AeonID,
-			CaseGroup:    "General",
+			CaseGroup:    c.CaseType.Group,
 			CreatedBy:    utils.UserNameCenter(c.Creator),
-			CreatedDate:  c.CreatedAt.String(),
+			CreatedDate:  utils.FormatDate(&c.CreatedAt, "2006-01-02 15:04"),
 			CasePriority: c.Priority,
-			ClosedDate:   c.ClosedDate.String(),
+			ClosedDate:   utils.FormatDate(&c.ClosedDate, "2006-01-02 15:04"),
 			ReceivedFrom: "Fraud",
 		})
 	}
@@ -59,19 +59,20 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	}
 
 	caseDetail := &model.CaseDetailResponse{
+		Code:                caseData.Code,
 		CaseType:            caseData.CaseType.Name,
 		CaseID:              caseData.ID.String(),
-		CreatedBy:           fmt.Sprintf("%s - %s", caseData.Creator.Name, caseData.Creator.Center.Name),
-		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04"),
+		CreatedBy:           utils.UserNameCenter(caseData.Creator),
 		VerifyStatus:        caseData.VerifyStatus,
 		Channel:             caseData.Channel,
 		Priority:            caseData.Priority,
 		ReasonCode:          caseData.ReasonCode,
-		DueDate:             caseData.DueDate.Format("2006-01-02"),
 		AllocateToQueueTeam: utils.UUIDPtrToStringPtr(caseData.QueueID),
 		CaseDescription:     caseData.Description,
 		Status:              caseData.Status.Name,
 		CurrentQueue:        caseData.Queue.Name,
+		CreatedDate:         utils.FormatDate(&caseData.CreatedAt, "2006-01-02 15:04"),
+		DueDate:             utils.FormatDate(caseData.DueDate, "2006-01-02"),
 	}
 
 	return caseDetail, nil
@@ -110,23 +111,23 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		return uuid.Nil, err
 	}
 
-	var priority string
+	priority := caseReq.Priority
 	if caseTypeID == caseTypeMap["Inquiry and disposition"] {
 		priority = "Normal"
-	} else {
-		priority = caseReq.Priority
 	}
 
-	var dueDate *time.Time
-	if caseReq.DueDate != nil && *caseReq.DueDate != "" {
-		parsedDueDate, err := time.Parse("2006-01-02", *caseReq.DueDate)
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid due date format: %w", err)
-		}
-		dueDate = &parsedDueDate
+	dueDate, err := utils.ParseOptionalDate(caseReq.DueDate, "2006-01-02")
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid dueDate format: %v", err)
+	}
+
+	code, err := uc.repo.GenCaseCode(ctx)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	caseToSave := &model.Cases{
+		Code:              code,
 		CaseTypeID:        caseTypeID,
 		CustomerName:      caseReq.CustomerName,
 		CustomerID:        caseReq.CustomerID,
@@ -156,6 +157,16 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 	return caseId, nil
 }
 
+func (uc *CaseUseCase) AddCaseNote(ctx *gin.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
+	note := &model.CaseNotes{
+		CaseId:  caseID,
+		UserId:  createdByID,
+		Content: input.Content,
+	}
+
+	return uc.repo.AddCaseNote(ctx, note)
+}
+
 func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newDescription string) error {
 	caseUUID, err := uuid.Parse(caseID)
 	if err != nil {
@@ -166,14 +177,4 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 
 func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error) {
 	return uc.repo.GetAllDisposition(ctx)
-}
-
-func (uc *CaseUseCase) AddCaseNote(ctx *gin.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
-	note := &model.CaseNotes{
-		CaseId:  caseID,
-		UserId:  createdByID,
-		Content: input.Content,
-	}
-
-	return uc.repo.AddCaseNote(ctx, note)
 }

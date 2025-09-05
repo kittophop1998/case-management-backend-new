@@ -3,9 +3,11 @@ package utils
 import (
 	"case-management/internal/domain/model"
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -90,4 +92,22 @@ func UUIDPtrToStringPtr(u *uuid.UUID) *string {
 
 func UserNameCenter(user model.User) string {
 	return user.Name + " - " + user.Center.Name
+}
+
+func FormatDate(t *time.Time, layout string) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(layout)
+}
+
+func ParseOptionalDate(dateStr *string, layout string) (*time.Time, error) {
+	if dateStr == nil || *dateStr == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(layout, *dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format: %w", err)
+	}
+	return &parsed, nil
 }

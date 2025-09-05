@@ -9,6 +9,7 @@ import (
 
 type Cases struct {
 	ID                uuid.UUID  `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
+	Code              string     `json:"code" gorm:"type:varchar(100);uniqueIndex"`
 	CaseTitle         string     `json:"caseTitle"`
 	CaseTypeID        uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4()" json:"caseTypeId"`
 	CaseType          CaseTypes  `gorm:"foreignKey:CaseTypeID;references:ID"`
@@ -93,6 +94,7 @@ type ReasonCode struct {
 
 // ##### Case Management For Response #####
 type CaseResponse struct {
+	Code         string `json:"code"`
 	CaseID       string `json:"caseId"`
 	CustomerID   string `json:"customerId"`
 	AeonID       string `json:"aeonId"`
@@ -100,7 +102,6 @@ type CaseResponse struct {
 	CaseType     string `json:"caseType"`
 	CurrentQueue string `json:"currentQueue"`
 	CurrentUser  string `json:"currentUser"`
-	CreateDate   string `json:"createDate"`
 	CaseGroup    string `json:"caseGroup"`
 	CasePriority string `json:"casePriority"`
 	ClosedDate   string `json:"closedDate"`
@@ -112,6 +113,7 @@ type CaseResponse struct {
 }
 
 type CaseDetailResponse struct {
+	Code                string  `json:"code"`
 	CaseType            string  `json:"caseType"`
 	CaseID              string  `json:"caseId"`
 	CreatedBy           string  `json:"createdBy"`

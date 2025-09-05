@@ -67,7 +67,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 		Channel:             caseData.Channel,
 		Priority:            caseData.Priority,
 		ReasonCode:          caseData.ReasonCode,
-		DueDate:             caseData.EndDate.Format("2006-01-02"),
+		DueDate:             caseData.DueDate.Format("2006-01-02"),
 		AllocateToQueueTeam: utils.UUIDPtrToStringPtr(caseData.QueueID),
 		CaseDescription:     caseData.Description,
 		Status:              caseData.Status.Name,

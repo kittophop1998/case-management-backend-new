@@ -62,7 +62,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 		CaseType:            caseData.CaseType.Name,
 		CaseID:              caseData.ID.String(),
 		CreatedBy:           fmt.Sprintf("%s - %s", caseData.Creator.Name, caseData.Creator.Center.Name),
-		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04:05"),
+		CreatedDate:         caseData.CreatedAt.Format("2006-01-02 15:04"),
 		VerifyStatus:        caseData.VerifyStatus,
 		Channel:             caseData.Channel,
 		Priority:            caseData.Priority,

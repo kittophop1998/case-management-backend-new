@@ -87,3 +87,7 @@ func UUIDPtrToStringPtr(u *uuid.UUID) *string {
 	str := u.String()
 	return &str
 }
+
+func UserNameCenter(user model.User) string {
+	return user.Name + " - " + user.Center.Name
+}

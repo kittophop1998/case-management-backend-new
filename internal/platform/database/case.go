@@ -27,6 +27,7 @@ func (c *CasePg) GetAllCase(ctx *gin.Context, offset, limit int, category string
 		Preload("CaseType").
 		Preload("Queue").
 		Preload("AssignedToUser.Center").
+		Preload("Creator.Center").
 		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
 		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
 

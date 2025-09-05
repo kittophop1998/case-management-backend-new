@@ -3,6 +3,7 @@ package usecase
 import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"case-management/utils"
 	"fmt"
 	"time"
 
@@ -42,7 +43,7 @@ func (u QueueUsecase) GetQueues(ctx *gin.Context, page, limit int, queueName str
 			QueueName:        queue.Name,
 			QueueDescription: queue.Description,
 			CreatedAt:        queue.CreatedAt,
-			CreatedBy:        fmt.Sprintf("%s - %s", queue.CreatedUser.Name, queue.CreatedUser.Center.Name),
+			CreatedBy:        utils.UserNameCenter(queue.CreatedUser),
 		})
 	}
 

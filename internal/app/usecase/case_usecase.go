@@ -41,7 +41,7 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category s
 			CaseID:       c.ID.String(),
 			AeonID:       c.AeonID,
 			CaseGroup:    "General",
-			CreatedBy:    c.CreatedBy.String(),
+			CreatedBy:    utils.UserNameCenter(c.Creator),
 			CreatedDate:  c.CreatedAt.String(),
 			CasePriority: c.Priority,
 			ClosedDate:   c.ClosedDate.String(),

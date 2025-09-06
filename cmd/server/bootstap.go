@@ -34,6 +34,9 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		return nil, fmt.Errorf("database setup failed: %w", err)
 	}
 
+	//TODO: Enable storage (MinIO) later
+	// storage.InitStorage(cfg.Isilon)
+
 	auditLogger := database.NewAsyncAuditLogger(db, 100)
 	gracefulExit(auditLogger)
 

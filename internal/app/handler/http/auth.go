@@ -48,9 +48,13 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Profile(ctx *gin.Context) {
-	idStr := ctx.GetString("userId")
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
 
-	userId, err := uuid.Parse(idStr)
+	userId, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return

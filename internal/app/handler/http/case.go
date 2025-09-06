@@ -16,8 +16,12 @@ type CaseHandler struct {
 }
 
 func (h *CaseHandler) CreateCase(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -39,8 +43,12 @@ func (h *CaseHandler) CreateCase(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	currID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	currID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -110,8 +118,12 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 }
 
 func (h *CaseHandler) AddCaseNote(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return

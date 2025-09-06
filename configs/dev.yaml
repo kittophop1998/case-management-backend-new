@@ -18,6 +18,14 @@ database:
   dbname: "postgres"
   sslmode: "disable"
 
+# Isilon Configuration
+isilon:
+  base_url: "localhost:9000"
+  access_key: "ROOTNAME"
+  secret_key: "CHANGEME123"
+  bucket_name: "miniobucket"
+  ssl: false
+
 # External Services Configuration
 services:
   agreement_api:

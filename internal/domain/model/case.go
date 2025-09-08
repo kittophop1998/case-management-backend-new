@@ -115,6 +115,7 @@ type CaseResponse struct {
 type CaseDetailResponse struct {
 	Code                string  `json:"code"`
 	CaseType            string  `json:"caseType"`
+	CaseGroup           string  `json:"caseGroup"`
 	CaseID              string  `json:"caseId"`
 	CreatedBy           string  `json:"createdBy"`
 	CreatedDate         string  `json:"createdDate"`

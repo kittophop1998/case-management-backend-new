@@ -61,6 +61,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	caseDetail := &model.CaseDetailResponse{
 		Code:                caseData.Code,
 		CaseType:            caseData.CaseType.Name,
+		CaseGroup:           caseData.CaseType.Group,
 		CaseID:              caseData.ID.String(),
 		CreatedBy:           utils.UserNameCenter(caseData.Creator),
 		VerifyStatus:        caseData.VerifyStatus,

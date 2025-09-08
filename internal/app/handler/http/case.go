@@ -52,44 +52,39 @@ func (h *CaseHandler) GetAllCases(c *gin.Context) {
 		lib.HandleError(c, lib.InternalServer.WithDetails("userId not found"))
 		return
 	}
-	currID, err := uuid.Parse(userIdRaw.(string))
+	currentUserID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
-		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails("invalid userId"))
 		return
 	}
 
 	p := utils.GetPagination(c)
 	category := c.Query("category")
-
 	keyword := c.Query("keyword")
-	var statusID *uuid.UUID
-	if s := c.Query("status"); s != "" {
-		id, err := uuid.Parse(s)
-		if err != nil {
-			lib.HandleError(c, lib.BadRequest.WithDetails("invalid status ID"))
-			return
-		}
-		statusID = &id
+	priority := c.Query("priority")
+
+	statusID, err := utils.ParseUUIDParam(c, "status")
+	if err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
+		return
 	}
 
-	var queueID *uuid.UUID
-	if q := c.Query("queue"); q != "" {
-		id, err := uuid.Parse(q)
-		if err != nil {
-			lib.HandleError(c, lib.BadRequest.WithDetails("invalid queue ID"))
-			return
-		}
-		queueID = &id
+	queueID, err := utils.ParseUUIDParam(c, "queue")
+	if err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
+		return
 	}
 
+	// compose filter
 	filter := model.CaseFilter{
 		Keyword:  keyword,
 		StatusID: statusID,
 		QueueID:  queueID,
-		Priority: c.Query("priority"),
+		Priority: priority,
 	}
 
-	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, category, currID)
+	// call usecase
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, category, currentUserID)
 	if err != nil {
 		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return

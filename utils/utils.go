@@ -9,17 +9,110 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+//
+// ====== String Helpers ======
+//
 
 func NormalizeUserInput(user *model.CreateUpdateUserRequest) {
 	user.Username = strings.ToLower(user.Username)
 	user.Email = strings.ToLower(user.Email)
 }
 
+func StringPtr(s string) *string {
+	return &s
+}
+
+//
+// ====== Bool Helpers ======
+//
+
 func Bool(v bool) *bool {
 	return &v
 }
+
+//
+// ====== UUID Helpers ======
+//
+
+func ParseUUID(s string) (uuid.UUID, error) {
+	return uuid.Parse(s)
+}
+
+func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
+	if s == nil || *s == "" {
+		return nil, nil
+	}
+	id, err := uuid.Parse(*s)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
+// แปลง query string -> *uuid.UUID
+func ParseUUIDParam(c *gin.Context, param string) (*uuid.UUID, error) {
+	val := c.Query(param)
+	if val == "" {
+		return nil, nil
+	}
+	return ParseOptionalUUID(&val)
+}
+
+func UUIDPtrToStringPtr(u *uuid.UUID) *string {
+	if u == nil {
+		return nil
+	}
+	str := u.String()
+	return &str
+}
+
+//
+// ====== Random Helpers ======
+//
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandStringRunes(n int) (string, error) {
+	b := make([]rune, n)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterRunes))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = letterRunes[num.Int64()]
+	}
+	return string(b), nil
+}
+
+//
+// ====== Date Helpers ======
+//
+
+func FormatDate(t *time.Time, layout string) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(layout)
+}
+
+func ParseOptionalDate(dateStr *string, layout string) (*time.Time, error) {
+	if dateStr == nil || *dateStr == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(layout, *dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format: %w", err)
+	}
+	return &parsed, nil
+}
+
+//
+// ====== Reflection Helpers ======
+//
 
 func IsEmpty(v any) bool {
 	if v == nil {
@@ -49,65 +142,10 @@ func IsEmpty(v any) bool {
 	}
 }
 
-func RandStringRunes(n int) (string, error) {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, n)
-	for i := range b {
-		maxBigInt := big.NewInt(int64(len(letterRunes)))
-		num, err := rand.Int(rand.Reader, maxBigInt)
-		if err != nil {
-			return "", err
-		}
-		b[i] = letterRunes[num.Int64()]
-	}
-	return string(b), nil
-}
-
-func ParseUUID(s string) (uuid.UUID, error) {
-	return uuid.Parse(s)
-}
-
-func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
-	if s == nil || *s == "" {
-		return nil, nil
-	}
-	id, err := uuid.Parse(*s)
-	if err != nil {
-		return nil, err
-	}
-	return &id, nil
-}
-
-func StringPtr(s *string) *string {
-	return s
-}
-
-func UUIDPtrToStringPtr(u *uuid.UUID) *string {
-	if u == nil {
-		return nil
-	}
-	str := u.String()
-	return &str
-}
+//
+// ====== Domain Specific ======
+//
 
 func UserNameCenter(user model.User) string {
 	return user.Name + " - " + user.Center.Name
-}
-
-func FormatDate(t *time.Time, layout string) string {
-	if t == nil {
-		return ""
-	}
-	return t.Format(layout)
-}
-
-func ParseOptionalDate(dateStr *string, layout string) (*time.Time, error) {
-	if dateStr == nil || *dateStr == "" {
-		return nil, nil
-	}
-	parsed, err := time.Parse(layout, *dateStr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid date format: %w", err)
-	}
-	return &parsed, nil
 }

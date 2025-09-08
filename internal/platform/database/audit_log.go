@@ -30,7 +30,7 @@ func NewAsyncAuditLogger(db *gorm.DB, bufferSize int) *AsyncAuditLogger {
 	return logger
 }
 
-func (l *AsyncAuditLogger) LogAction(ctx *gin.Context, entry model.AuditLogs) {
+func (l *AsyncAuditLogger) LogAction(c *gin.Context, entry model.AuditLogs) {
 	select {
 	case l.ch <- entry:
 		// OK
@@ -41,6 +41,7 @@ func (l *AsyncAuditLogger) LogAction(ctx *gin.Context, entry model.AuditLogs) {
 
 func (l *AsyncAuditLogger) startWorker() {
 	l.wg.Add(1)
+
 	go func() {
 		defer l.wg.Done()
 		for {

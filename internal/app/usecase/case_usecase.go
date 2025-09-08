@@ -4,11 +4,11 @@ import (
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
 	"case-management/utils"
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -20,9 +20,9 @@ func NewCaseUseCase(repo repository.CaseRepository) *CaseUseCase {
 	return &CaseUseCase{repo: repo}
 }
 
-func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category string, currID uuid.UUID) ([]*model.CaseResponse, int, error) {
+func (uc *CaseUseCase) GetAllCases(ctx context.Context, page, limit int, filter model.CaseFilter, category string, currID uuid.UUID) ([]*model.CaseResponse, int, error) {
 	offset := (page - 1) * limit
-	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit, category, currID)
+	caseRepo, total, err := uc.repo.GetAllCase(ctx, offset, limit, filter, category, currID)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -52,8 +52,8 @@ func (uc *CaseUseCase) GetAllCases(ctx *gin.Context, page, limit int, category s
 
 }
 
-func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDetailResponse, error) {
-	caseData, err := uc.repo.GetCaseByID(c, id)
+func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.CaseDetailResponse, error) {
+	caseData, err := uc.repo.GetCaseByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +61,13 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	caseDetail := &model.CaseDetailResponse{
 		Code:                caseData.Code,
 		CaseType:            caseData.CaseType.Name,
+		CaseGroup:           caseData.CaseType.Group,
 		CaseID:              caseData.ID.String(),
 		CreatedBy:           utils.UserNameCenter(caseData.Creator),
 		VerifyStatus:        caseData.VerifyStatus,
 		Channel:             caseData.Channel,
 		Priority:            caseData.Priority,
-		ReasonCode:          caseData.ReasonCode,
+		ReasonCode:          utils.UUIDPtrToStringPtr(caseData.ReasonCodeID),
 		AllocateToQueueTeam: utils.UUIDPtrToStringPtr(caseData.QueueID),
 		CaseDescription:     caseData.Description,
 		Status:              caseData.Status.Name,
@@ -78,7 +79,7 @@ func (uc *CaseUseCase) GetCaseByID(c *gin.Context, id uuid.UUID) (*model.CaseDet
 	return caseDetail, nil
 }
 
-func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
+func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
 	caseTypeMap, _ := uc.repo.LoadCaseType(ctx)
 
@@ -111,6 +112,11 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		return uuid.Nil, err
 	}
 
+	reasonCodeID, err := utils.ParseOptionalUUID(caseReq.ReasonCode)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
 	priority := caseReq.Priority
 	if caseTypeID == caseTypeMap["Inquiry and disposition"] {
 		priority = "Normal"
@@ -137,7 +143,7 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		QueueID:           queueID,
 		Channel:           caseReq.Channel,
 		Description:       caseReq.CaseDescription,
-		ReasonCode:        caseReq.ReasonCode,
+		ReasonCodeID:      reasonCodeID,
 		AssignedToUserID:  &createdByID,
 		ProductID:         productID,
 		Priority:          priority,
@@ -149,7 +155,7 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		UpdatedBy:         createdByID,
 	}
 
-	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)
+	caseId, err := uc.repo.CreateCase(ctx, caseToSave)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -157,7 +163,33 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 	return caseId, nil
 }
 
-func (uc *CaseUseCase) AddCaseNote(ctx *gin.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
+func (uc *CaseUseCase) UpdateCaseDetail(ctx context.Context, caseID uuid.UUID, input *model.UpdateCaseRequest) error {
+	ReasonCodeID, err := utils.ParseOptionalUUID(&input.ReasonCodeID)
+	if err != nil {
+		return err
+	}
+
+	dueDate, err := utils.ParseOptionalDate(&input.DueDate, "2006-01-02")
+	if err != nil {
+		return err
+	}
+
+	queueID, err := utils.ParseOptionalUUID(&input.ReallocateToQueueTeam)
+	if err != nil {
+		return err
+	}
+
+	caseToSave := &model.Cases{
+		ID:           caseID,
+		Priority:     input.Priority,
+		ReasonCodeID: ReasonCodeID,
+		DueDate:      dueDate,
+		QueueID:      queueID,
+	}
+	return uc.repo.UpdateCaseDetail(ctx, caseToSave)
+}
+
+func (uc *CaseUseCase) AddCaseNote(ctx context.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
 	note := &model.CaseNotes{
 		CaseId:  caseID,
 		UserId:  createdByID,
@@ -167,7 +199,7 @@ func (uc *CaseUseCase) AddCaseNote(ctx *gin.Context, createdByID uuid.UUID, case
 	return uc.repo.AddCaseNote(ctx, note)
 }
 
-func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newDescription string) error {
+func (uc *CaseUseCase) AddInitialDescription(c context.Context, caseID string, newDescription string) error {
 	caseUUID, err := uuid.Parse(caseID)
 	if err != nil {
 		return err
@@ -175,6 +207,23 @@ func (uc *CaseUseCase) AddInitialDescription(c *gin.Context, caseID string, newD
 	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
 }
 
-func (uc *CaseUseCase) GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error) {
+func (uc *CaseUseCase) GetAllDisposition(ctx context.Context) ([]model.DispositionItem, error) {
 	return uc.repo.GetAllDisposition(ctx)
+}
+
+func (uc *CaseUseCase) GetCaseTypeByID(ctx context.Context, caseTypeID uuid.UUID) (model.CaseTypes, error) {
+	caseTypes, err := uc.repo.LoadCaseType(ctx)
+	if err != nil {
+		return model.CaseTypes{}, err
+	}
+
+	var caseTypeName string
+	for name, id := range caseTypes {
+		if id == caseTypeID {
+			caseTypeName = name
+			break
+		}
+	}
+
+	return model.CaseTypes{Name: caseTypeName}, nil
 }

@@ -46,8 +46,12 @@ func (h *QueueHandler) GetQueueByID(ctx *gin.Context) {
 }
 
 func (h *QueueHandler) CreateQueue(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return
@@ -69,8 +73,12 @@ func (h *QueueHandler) CreateQueue(ctx *gin.Context) {
 }
 
 func (h QueueHandler) AddUserInQueue(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return
@@ -98,8 +106,12 @@ func (h QueueHandler) AddUserInQueue(ctx *gin.Context) {
 }
 
 func (h *QueueHandler) UpdateQueueByID(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	updatedByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	updatedByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return
@@ -127,8 +139,12 @@ func (h *QueueHandler) UpdateQueueByID(ctx *gin.Context) {
 }
 
 func (h *QueueHandler) DeleteUsersInQueue(ctx *gin.Context) {
-	userId := ctx.GetString("userId")
-	createdByID, err := uuid.Parse(userId)
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return
+	}
+	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails("Invalid user ID"))
 		return

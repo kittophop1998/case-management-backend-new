@@ -55,9 +55,12 @@ type Headers struct {
 }
 
 type IsilonConfig struct {
-	BaseURL  string `yaml:"base_url"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	BaseURL    string `yaml:"base_url"`
+	AccessKey  string `yaml:"access_key"`
+	SecretKey  string `yaml:"secret_key"`
+	BucketName string `yaml:"bucket_name"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
 }
 
 // allowed environments for config loading

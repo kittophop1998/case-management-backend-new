@@ -25,6 +25,7 @@ type HandlerDeps struct {
 	PermissionUC *usecase.PermissionUseCase
 	LogUC        *usecase.LogUseCase
 	CaseUC       *usecase.CaseUseCase
+	UpdateCaseUC *usecase.UpdateCaseUseCase
 	CustomerUC   *usecase.CustomerUseCase
 	DashboardUC  *usecase.DashboardUseCase
 	QueueUC      *usecase.QueueUsecase

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"case-management/infrastructure/auth"
+	"case-management/infrastructure/lib"
 	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
 	"case-management/utils"
@@ -114,11 +115,15 @@ func (a *AuthUseCase) GenerateToken(ttl time.Duration, metadata *auth.Metadata) 
 }
 
 func (a *AuthUseCase) Logout(ctx *gin.Context) error {
-	userIdStr := ctx.GetString("userId")
+	userIdRaw, exists := ctx.Get("userId")
+	if !exists {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		return nil
+	}
 	username := ctx.GetString("username")
 
 	var userID uuid.UUID
-	if id, err := uuid.Parse(userIdStr); err == nil {
+	if id, err := uuid.Parse(userIdRaw.(string)); err == nil {
 		userID = id
 	} else {
 		return err

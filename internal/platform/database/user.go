@@ -86,16 +86,10 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		Joins("LEFT JOIN sections as section ON section.id = users.section_id").
 		Joins("LEFT JOIN departments as department ON department.id = users.department_id")
 
-	if err := query.Find(&users).Error; err != nil {
-		return nil, err
-	}
-
+	// Filters
 	if filter.Keyword != "" {
 		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
-		query = query.Where(
-			repo.db.Where("users.name ILIKE ?", kw).
-				Or("users.username ILIKE ?", kw),
-		)
+		query = query.Where("users.name ILIKE ? OR users.username ILIKE ?", kw, kw)
 	}
 
 	if filter.IsActive != nil {
@@ -118,21 +112,23 @@ func (repo *UserPg) GetAll(ctx *gin.Context, offset int, limit int, filter model
 		query = query.Where("department.id = ?", filter.DepartmentID)
 	}
 
+	// Queue filter
 	if filter.QueueID != uuid.Nil {
+		query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
+
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
-			query = query.Where("qu.queue_id IS NULL")
-			query = query.Group("users.id")
+			query = query.Where("NOT EXISTS (SELECT 1 FROM queue_users qu WHERE qu.user_id = users.id AND qu.queue_id = ?)", filter.QueueID)
 		} else {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
 			query = query.Where("qu.queue_id = ?", filter.QueueID)
 		}
 	}
 
+	// Sorting
 	if filter.Sort != "" {
 		query = query.Order(filter.Sort)
 	}
 
+	// Pagination
 	if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		return nil, err
 	}
@@ -320,12 +316,11 @@ func (repo *UserPg) CountWithFilter(ctx *gin.Context, filter model.UserFilter) (
 	}
 
 	if filter.QueueID != uuid.Nil {
+		query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
+
 		if filter.IsNotInQueue != nil && *filter.IsNotInQueue {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
-			query = query.Where("qu.queue_id IS NULL")
-			query = query.Group("users.id")
+			query = query.Where("NOT EXISTS (SELECT 1 FROM queue_users qu WHERE qu.user_id = users.id AND qu.queue_id = ?)", filter.QueueID)
 		} else {
-			query = query.Joins("LEFT JOIN queue_users AS qu ON users.id = qu.user_id AND qu.queue_id = ?", filter.QueueID)
 			query = query.Where("qu.queue_id = ?", filter.QueueID)
 		}
 	}

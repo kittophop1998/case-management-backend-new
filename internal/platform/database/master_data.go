@@ -55,6 +55,12 @@ func (repo *MasterDataPg) FindAll(ctx *gin.Context) (map[string]interface{}, err
 	}
 	result["caseTypes"] = caseType
 
+	var caseStatus []model.CaseStatus
+	if err := repo.db.WithContext(ctx).Find(&caseStatus).Error; err != nil {
+		return nil, err
+	}
+	result["caseStatus"] = caseStatus
+
 	var product []model.Products
 	if err := repo.db.WithContext(ctx).Find(&product).Error; err != nil {
 		return nil, err

@@ -9,11 +9,12 @@ import (
 )
 
 type CaseRepository interface {
-	CreateCaseInquiry(ctx *gin.Context, c *model.Cases) (uuid.UUID, error)
 	GetAllCase(ctx *gin.Context, offset, limit int, filter model.CaseFilter, category string, currID uuid.UUID) ([]*model.Cases, int, error)
 	GetCaseByID(ctx *gin.Context, id uuid.UUID) (*model.Cases, error)
+	CreateCase(ctx *gin.Context, c *model.Cases) (uuid.UUID, error)
 	CreateCaseDispositionMains(ctx *gin.Context, data datatypes.JSON) error
 	CreateCaseDispositionSubs(ctx *gin.Context, data datatypes.JSON) error
+	UpdateCaseDetail(ctx *gin.Context, caseToSave *model.Cases) (uuid.UUID, error)
 	GetAllDisposition(ctx *gin.Context) ([]model.DispositionItem, error)
 	AddCaseNote(ctx *gin.Context, note *model.CaseNotes) (uuid.UUID, error)
 	AddInitialDescription(ctx *gin.Context, caseID uuid.UUID, newDescription string) error

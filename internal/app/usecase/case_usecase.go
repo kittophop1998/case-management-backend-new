@@ -150,7 +150,7 @@ func (uc *CaseUseCase) CreateCase(ctx *gin.Context, createdByID uuid.UUID, caseR
 		UpdatedBy:         createdByID,
 	}
 
-	caseId, err := uc.repo.CreateCaseInquiry(ctx, caseToSave)
+	caseId, err := uc.repo.CreateCase(ctx, caseToSave)
 	if err != nil {
 		return uuid.Nil, err
 	}

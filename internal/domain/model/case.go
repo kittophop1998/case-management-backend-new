@@ -159,6 +159,11 @@ type CreateCaseRequest struct {
 	CaseNote            datatypes.JSON `json:"caseNote"`
 }
 
+type ChangeCustomerInfo struct {
+	CurrentInfo string `json:"currentInfo"`
+	NewInfo     string `json:"newInfo"`
+}
+
 type CaseFilter struct {
 	Keyword  string     `form:"keyword" json:"keyword"`
 	StatusID *uuid.UUID `form:"statusId" json:"statusId"`

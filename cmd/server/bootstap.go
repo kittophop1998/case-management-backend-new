@@ -6,6 +6,7 @@ import (
 	"case-management/infrastructure/seed"
 	"case-management/internal/app/handler/http"
 	"case-management/internal/app/usecase"
+	updatecaseupdater "case-management/internal/app/usecase/update_case_updater"
 	"case-management/internal/platform/api"
 	"case-management/internal/platform/database"
 	"log"
@@ -63,6 +64,10 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	// Case repository
 	caseRepo := database.NewCasePg(db)
 	caseUsecase := usecase.NewCaseUseCase(caseRepo)
+	updaters := map[string]updatecaseupdater.CaseUpdater{
+		"ChangeCustomerInfo": updatecaseupdater.NewChangeCustomerInfoUpdater(caseRepo),
+	}
+	updateCaseUsecase := usecase.NewUpdateCaseUseCase(updaters)
 
 	// Customer repository
 	customerRepo := database.NewCustomerPg(db)
@@ -86,6 +91,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 		PermissionUC: permissionUsecase,
 		LogUC:        logUsecase,
 		CaseUC:       caseUsecase,
+		UpdateCaseUC: updateCaseUsecase,
 		CustomerUC:   customerUsecase,
 		DashboardUC:  dashboardUsecase,
 		QueueUC:      queueUsecase,

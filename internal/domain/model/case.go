@@ -165,7 +165,7 @@ type UpdateCaseRequest struct {
 	Priority              string                 `json:"priority,omitempty"`
 	ReasonCodeID          string                 `json:"reasonCode,omitempty"`
 	DueDate               string                 `json:"dueDate,omitempty"`
-	ReallocateToQueueTeam string                 `json:"allocateToQueueTeam,omitempty"`
+	ReallocateToQueueTeam string                 `json:"reallocateToQueueTeam,omitempty"`
 	Data                  map[string]interface{} `json:"data"`
 }
 

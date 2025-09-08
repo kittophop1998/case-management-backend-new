@@ -174,11 +174,17 @@ func (uc *CaseUseCase) UpdateCaseDetail(ctx context.Context, caseID uuid.UUID, i
 		return err
 	}
 
+	queueID, err := utils.ParseOptionalUUID(&input.ReallocateToQueueTeam)
+	if err != nil {
+		return err
+	}
+
 	caseToSave := &model.Cases{
 		ID:           caseID,
 		Priority:     input.Priority,
 		ReasonCodeID: ReasonCodeID,
 		DueDate:      dueDate,
+		QueueID:      queueID,
 	}
 	return uc.repo.UpdateCaseDetail(ctx, caseToSave)
 }

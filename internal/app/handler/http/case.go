@@ -12,101 +12,117 @@ import (
 )
 
 type CaseHandler struct {
-	UseCase usecase.CaseUseCase
+	UseCase          usecase.CaseUseCase
+	UpdateCaseByType usecase.UpdateCaseUseCase
 }
 
-func (h *CaseHandler) CreateCase(ctx *gin.Context) {
-	userIdRaw, exists := ctx.Get("userId")
+func (h *CaseHandler) CreateCase(c *gin.Context) {
+	userIdRaw, exists := c.Get("userId")
 	if !exists {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		lib.HandleError(c, lib.InternalServer.WithDetails("userId not found"))
 		return
 	}
 	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
 	caseReq := &model.CreateCaseRequest{}
-	if err := ctx.ShouldBindJSON(caseReq); err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	if err := c.ShouldBindJSON(caseReq); err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
+	ctx := c.Request.Context()
 	caseID, err := h.UseCase.CreateCase(ctx, createdByID, caseReq)
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"caseId": caseID})
+	lib.HandleResponse(c, http.StatusCreated, gin.H{"caseId": caseID})
 }
 
-func (h *CaseHandler) GetAllCases(ctx *gin.Context) {
-	userIdRaw, exists := ctx.Get("userId")
+func (h *CaseHandler) GetAllCases(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIdRaw, exists := c.Get("userId")
 	if !exists {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		lib.HandleError(c, lib.InternalServer.WithDetails("userId not found"))
 		return
 	}
 	currID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	p := utils.GetPagination(ctx)
-	category := ctx.Query("category")
+	p := utils.GetPagination(c)
+	category := c.Query("category")
 
-	keyword := ctx.Query("keyword")
-	statusID, err := uuid.Parse(ctx.Query("status"))
-	if err != nil && ctx.Query("status") != "" {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails("invalid status ID"))
-		return
+	keyword := c.Query("keyword")
+	var statusID *uuid.UUID
+	if s := c.Query("status"); s != "" {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			lib.HandleError(c, lib.BadRequest.WithDetails("invalid status ID"))
+			return
+		}
+		statusID = &id
 	}
-	priority := ctx.Query("priority")
-	queueID, err := uuid.Parse(ctx.Query("queue"))
-	if err != nil && ctx.Query("queue") != "" {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails("invalid queue ID"))
-		return
+
+	var queueID *uuid.UUID
+	if q := c.Query("queue"); q != "" {
+		id, err := uuid.Parse(q)
+		if err != nil {
+			lib.HandleError(c, lib.BadRequest.WithDetails("invalid queue ID"))
+			return
+		}
+		queueID = &id
 	}
 
 	filter := model.CaseFilter{
 		Keyword:  keyword,
-		StatusID: &statusID,
-		QueueID:  &queueID,
-		Priority: priority,
+		StatusID: statusID,
+		QueueID:  queueID,
+		Priority: c.Query("priority"),
 	}
 
 	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, category, currID)
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandlePaginatedResponse(ctx, p.Page, p.Limit, total, cases)
+	lib.HandlePaginatedResponse(c, p.Page, p.Limit, total, cases)
 }
 
-func (h *CaseHandler) GetCaseByID(ctx *gin.Context) {
-	id := ctx.Param("id")
+func (h *CaseHandler) GetCaseByID(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	id := c.Param("id")
 	caseID, err := uuid.Parse(id)
 	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	caseData, err := h.UseCase.GetCaseByID(ctx, caseID)
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusOK, caseData)
+	lib.HandleResponse(c, http.StatusOK, caseData)
 }
 
-func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
+func (h *CaseHandler) GetAllDisposition(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	mains, err := h.UseCase.GetAllDisposition(ctx)
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
@@ -114,39 +130,86 @@ func (h *CaseHandler) GetAllDisposition(ctx *gin.Context) {
 		mains = []model.DispositionItem{}
 	}
 
-	lib.HandleResponse(ctx, http.StatusOK, mains)
+	lib.HandleResponse(c, http.StatusOK, mains)
 }
 
-func (h *CaseHandler) AddCaseNote(ctx *gin.Context) {
-	userIdRaw, exists := ctx.Get("userId")
+func (h *CaseHandler) UpdateCaseByID(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	caseID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails("Invalid case ID"))
+		return
+	}
+
+	var req model.UpdateCaseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	if req.CaseTypeID == nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails("caseTypeId is required"))
+		return
+	}
+
+	caseTypeID, err := uuid.Parse(*req.CaseTypeID)
+	if err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails("Invalid case type ID"))
+		return
+	}
+
+	caseType, err := h.UseCase.GetCaseTypeByID(ctx, caseTypeID)
+	if err != nil {
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	if err := h.UseCase.UpdateCaseDetail(ctx, caseID, &req); err != nil {
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	if err := h.UpdateCaseByType.Execute(ctx, caseType.Name, caseID, req.Data); err != nil {
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(c, http.StatusOK, gin.H{"message": "Case updated successfully"})
+}
+
+func (h *CaseHandler) AddCaseNote(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIdRaw, exists := c.Get("userId")
 	if !exists {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails("userId not found"))
+		lib.HandleError(c, lib.InternalServer.WithDetails("userId not found"))
 		return
 	}
 	createdByID, err := uuid.Parse(userIdRaw.(string))
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	caseId := ctx.Param("id")
+	caseId := c.Param("id")
 	caseID, err := uuid.Parse(caseId)
 	if err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	noteReq := &model.CaseNoteRequest{}
-	if err := ctx.ShouldBindJSON(noteReq); err != nil {
-		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+	if err := c.ShouldBindJSON(noteReq); err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
 		return
 	}
 
 	noteID, err := h.UseCase.AddCaseNote(ctx, createdByID, caseID, noteReq)
 	if err != nil {
-		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusCreated, gin.H{"noteId": noteID})
+	lib.HandleResponse(c, http.StatusCreated, gin.H{"noteId": noteID})
 }

@@ -1,10 +1,11 @@
 package updatecaseupdater
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+
 	"github.com/google/uuid"
 )
 
 type CaseUpdater interface {
-	Update(ctx *gin.Context, caseID uuid.UUID, data map[string]interface{}) error
+	Update(ctx context.Context, caseID uuid.UUID, data map[string]interface{}) error
 }

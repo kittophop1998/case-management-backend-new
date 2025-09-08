@@ -1,11 +1,10 @@
 package updatecaseupdater
 
 import (
-	"case-management/internal/domain/model"
 	"case-management/internal/domain/repository"
+	"context"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -17,12 +16,14 @@ func NewChangeCustomerInfoUpdater(repo repository.CaseRepository) *ChangeCustome
 	return &ChangeCustomerInfoUpdater{repo: repo}
 }
 
-func (u *ChangeCustomerInfoUpdater) Update(ctx *gin.Context, caseID uuid.UUID, data map[string]interface{}) error {
-	changeCustomerInfo := model.ChangeCustomerInfo{
-		CurrentInfo: data["currentInfo"].(string),
-		NewInfo:     data["newInfo"].(string),
+func (u *ChangeCustomerInfoUpdater) Update(ctx context.Context, caseID uuid.UUID, data map[string]interface{}) error {
+	if data["currentInfo"] == nil {
+		return fmt.Errorf("currentInfo is required")
 	}
-	fmt.Println("ChangeCustomerInfoUpdater called with:", changeCustomerInfo)
+
+	if data["newInfo"] == nil {
+		return fmt.Errorf("newInfo is required")
+	}
 
 	return nil
 }

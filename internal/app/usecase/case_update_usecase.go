@@ -2,9 +2,9 @@ package usecase
 
 import (
 	updatecaseupdater "case-management/internal/app/usecase/update_case_updater"
+	"context"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ func NewUpdateCaseUseCase(updaters map[string]updatecaseupdater.CaseUpdater) *Up
 	return &UpdateCaseUseCase{Updaters: updaters}
 }
 
-func (uc UpdateCaseUseCase) Execute(ctx *gin.Context, caseType string, caseID uuid.UUID, data map[string]interface{}) error {
+func (uc UpdateCaseUseCase) Execute(ctx context.Context, caseType string, caseID uuid.UUID, data map[string]interface{}) error {
 	updater, ok := uc.Updaters[caseType]
 	if !ok {
 		return fmt.Errorf("unsupported case type: %s", caseType)

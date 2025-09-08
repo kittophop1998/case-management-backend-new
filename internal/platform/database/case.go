@@ -23,6 +23,7 @@ func NewCasePg(db *gorm.DB) *CasePg {
 
 func (c *CasePg) GetAllCase(ctx context.Context, offset, limit int, filter model.CaseFilter, category string, currID uuid.UUID) ([]*model.Cases, int, error) {
 	var cases []*model.Cases
+	var total int64
 
 	query := c.db.WithContext(ctx).Model(&model.Cases{}).
 		Preload("Status").
@@ -33,41 +34,71 @@ func (c *CasePg) GetAllCase(ctx context.Context, offset, limit int, filter model
 		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
 		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
 
+	// ---- category filter ----
 	if category != "" {
 		switch category {
 		case "myCase":
 			query = query.Where("assigned_to_user_id = ?", currID)
 		case "availableCase":
-			query = query.Where("assigned_to_user_id = ?", nil)
+			query = query.Where("assigned_to_user_id IS NULL")
 		case "inquiryLog":
 			query = query.Where("ct.name = ?", "Inquiry and disposition")
 		case "caseHistory":
 			query = query.Where("cs.name = ?", "closed")
-		default:
 		}
 	}
 
+	// ---- keyword ----
 	if filter.Keyword != "" {
-		query.Where("customer_name ILIKE ?", "%"+strings.TrimSpace(filter.Keyword)+"%")
+		query = query.Where("customer_name ILIKE ?", "%"+strings.TrimSpace(filter.Keyword)+"%")
 	}
 
-	if filter.Priority != "" {
-		query.Where("priority ILIKE ?", "%"+strings.TrimSpace(filter.Priority)+"%")
+	// ---- priority ----
+	if len(filter.Priority) > 0 {
+		query = query.Where("priority IN ?", filter.Priority)
 	}
 
-	if filter.StatusID != nil && *filter.StatusID != uuid.Nil {
-		query.Where("status_id=?", *filter.StatusID)
+	// ---- status ----
+	if len(filter.StatusID) > 0 {
+		query = query.Where("status_id IN ?", filter.StatusID)
 	}
 
+	// ---- queue ----
 	if filter.QueueID != nil && *filter.QueueID != uuid.Nil {
-		query.Where("queue_id=?", *filter.QueueID)
+		query = query.Where("queue_id = ?", *filter.QueueID)
 	}
 
-	if err := query.Offset(offset).Limit(limit).Order("created_at ASC").Find(&cases).Error; err != nil {
+	// ---- นับ total ก่อน ----
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	return cases, 10, nil
+	// ---- sorting ----
+	allowedSortFields := map[string]bool{
+		"created_at":    true,
+		"priority":      true,
+		"customer_name": true,
+	}
+
+	orderBy := "created_at ASC"
+	if filter.Sort != "" {
+		parts := strings.Fields(filter.Sort)
+
+		if len(parts) > 0 && allowedSortFields[parts[0]] {
+			direction := "ASC"
+			if len(parts) > 1 && strings.ToUpper(parts[1]) == "DESC" {
+				direction = "DESC"
+			}
+			orderBy = parts[0] + " " + direction
+		}
+	}
+
+	// ---- ดึง data ----
+	if err := query.Offset(offset).Limit(limit).Order(orderBy).Find(&cases).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return cases, int(total), nil
 }
 
 func (c *CasePg) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Cases, error) {
@@ -272,6 +303,14 @@ func (r *CasePg) GenCaseCode(ctx context.Context) (string, error) {
 	// สร้างรหัสเคสใหม่ ในรูปแบบ CASE_001, CASE_002, ...
 	newCode := fmt.Sprintf("CASE_%03d", newNumber)
 	return newCode, nil
+}
+
+func (r *CasePg) GetCaseTypeByID(ctx context.Context, id uuid.UUID) (*model.CaseTypes, error) {
+	var caseType model.CaseTypes
+	if err := r.db.WithContext(ctx).First(&caseType, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &caseType, nil
 }
 
 // func (c *CasePg) CountWithFilter(ctx context.Context, filter model.CaseFilter) (int, error) {

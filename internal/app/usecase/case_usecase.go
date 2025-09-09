@@ -81,7 +81,6 @@ func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Ca
 
 func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
-	caseTypeMap, _ := uc.repo.LoadCaseType(ctx)
 
 	var caseTypeID uuid.UUID
 	if caseReq.CaseTypeID != "" {
@@ -117,11 +116,6 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 		return uuid.Nil, err
 	}
 
-	priority := caseReq.Priority
-	if caseTypeID == caseTypeMap["Inquiry and disposition"] {
-		priority = "Normal"
-	}
-
 	dueDate, err := utils.ParseOptionalDate(caseReq.DueDate, "2006-01-02")
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("invalid dueDate format: %v", err)
@@ -146,7 +140,7 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 		ReasonCodeID:      reasonCodeID,
 		AssignedToUserID:  &createdByID,
 		ProductID:         productID,
-		Priority:          priority,
+		Priority:          caseReq.Priority,
 		StatusID:          statusMap["created"],
 		StartDate:         time.Now(),
 		EndDate:           time.Now().Add(72 * time.Hour),

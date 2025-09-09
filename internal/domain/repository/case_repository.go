@@ -16,7 +16,7 @@ type CaseRepository interface {
 	CreateCaseDispositionSubs(ctx context.Context, data datatypes.JSON) error
 	UpdateCaseDetail(ctx context.Context, caseToSave *model.Cases) error
 	GetAllDisposition(ctx context.Context) ([]model.DispositionItem, error)
-	GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]model.CaseNotes, error)
+	GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]*model.CaseNotes, error)
 	AddCaseNote(ctx context.Context, note *model.CaseNotes) (uuid.UUID, error)
 	AddInitialDescription(ctx context.Context, caseID uuid.UUID, newDescription string) error
 	GenCaseCode(ctx context.Context) (string, error)

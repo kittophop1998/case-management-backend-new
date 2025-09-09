@@ -60,9 +60,17 @@ type CaseDispositionSub struct {
 type CaseNotes struct {
 	ID        uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
 	CaseId    uuid.UUID `json:"case_id" gorm:"type:uuid"`
-	UserId    uuid.UUID `json:"user_id" gorm:"type:uuid"`
 	Content   string    `json:"content" gorm:"type:text"`
+	CreatedBy uuid.UUID `json:"created_by" gorm:"type:uuid"`
+	Creator   User      `gorm:"foreignKey:CreatedBy;references:ID" json:"creator"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type CaseNotesResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Content   string    `json:"content"`
+	CreatedBy string    `json:"createdBy"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type VerifyQuestionHistory struct {

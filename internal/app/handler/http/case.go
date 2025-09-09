@@ -206,7 +206,7 @@ func (h *CaseHandler) AddCaseNote(c *gin.Context) {
 func (h *CaseHandler) GetCaseNotes(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	caseIdRaw := c.Param("caseId")
+	caseIdRaw := c.Param("id")
 	caseID, err := uuid.Parse(caseIdRaw)
 	if err != nil {
 		lib.HandleError(c, lib.BadRequest.WithDetails("Invalid case ID"))

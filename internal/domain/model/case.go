@@ -32,8 +32,8 @@ type Cases struct {
 	ProductID         *uuid.UUID  `gorm:"type:uuid" json:"productId"`
 	Product           *Products   `gorm:"foreignKey:ProductID;references:ID" json:"product"`
 	Channel           *string     `json:"channel"`
-	ReasonCodeID      *uuid.UUID  `json:"reasonCode"`
-	ReasonCode        *ReasonCode `gorm:"foreignKey:ReasonCodeID;references:ID" json:"reasonCodeDetail"`
+	ReasonCodeID      *uuid.UUID  `gorm:"type:uuid" json:"reasonCodeId"`
+	ReasonCode        *ReasonCode `gorm:"foreignKey:ReasonCodeID;references:ID" json:"reasonCode"`
 	VerifyStatus      *string     `json:"verifyStatus"`
 	Description       string      `json:"description"`
 	CreatedBy         uuid.UUID   `gorm:"type:uuid" json:"createdBy"`
@@ -77,7 +77,7 @@ type VerifyQuestionHistory struct {
 }
 
 type ReasonCode struct {
-	ID                uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID                uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Code              string    `json:"code"`
 	DescriptionEn     string    `json:"description_en"`
 	DescriptionTh     string    `json:"description_th"`

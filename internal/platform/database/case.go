@@ -105,6 +105,7 @@ func (c *CasePg) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Cases, e
 	var cases model.Cases
 	if err := c.db.WithContext(ctx).
 		Preload("Status").
+		Preload("ReasonCode").
 		Preload("CaseType").
 		Preload("Queue").
 		Preload("AssignedToUser.Center").

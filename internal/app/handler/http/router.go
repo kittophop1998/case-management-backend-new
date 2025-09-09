@@ -60,6 +60,7 @@ func SetupRoutes(
 			caseManagementRoutes.GET("", H.Case.GetAllCases)
 			caseManagementRoutes.GET("/:id", H.Case.GetCaseByID)
 			caseManagementRoutes.GET("/disposition", H.Case.GetAllDisposition)
+			caseManagementRoutes.GET("/:caseId/notes", H.Case.GetCaseNotes)
 			caseManagementRoutes.POST("/:caseId/note", H.Case.AddCaseNote)
 			caseManagementRoutes.PUT("/:id", H.Case.UpdateCaseByID)
 		}

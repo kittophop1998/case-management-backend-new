@@ -184,6 +184,10 @@ func (uc *CaseUseCase) UpdateCaseDetail(ctx context.Context, caseID uuid.UUID, i
 	return uc.repo.UpdateCaseDetail(ctx, caseToSave)
 }
 
+func (uc *CaseUseCase) GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]model.CaseNotes, error) {
+	return uc.repo.GetCaseNotes(ctx, caseID)
+}
+
 func (uc *CaseUseCase) AddCaseNote(ctx context.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
 	note := &model.CaseNotes{
 		CaseId:  caseID,

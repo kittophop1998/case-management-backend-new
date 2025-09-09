@@ -274,6 +274,19 @@ func (r *CasePg) LoadCaseType(ctx context.Context) (map[string]uuid.UUID, error)
 	return typeMap, nil
 }
 
+func (c *CasePg) GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]model.CaseNotes, error) {
+	var notes []model.CaseNotes
+	if err := c.db.WithContext(ctx).
+		Preload("User").
+		Where("case_id = ?", caseID).
+		Order("created_at ASC").
+		Find(&notes).Error; err != nil {
+		return nil, err
+	}
+
+	return notes, nil
+}
+
 func (c *CasePg) AddCaseNote(ctx context.Context, note *model.CaseNotes) (uuid.UUID, error) {
 	if err := c.db.WithContext(ctx).Create(note).Error; err != nil {
 		return uuid.Nil, err

@@ -65,7 +65,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	caseRepo := database.NewCasePg(db)
 	caseUsecase := usecase.NewCaseUseCase(caseRepo)
 	updaters := map[string]updatecaseupdater.CaseUpdater{
-		"ChangeCustomerInfo": updatecaseupdater.NewChangeCustomerInfoUpdater(caseRepo),
+		"Change Info": updatecaseupdater.NewChangeCustomerInfoUpdater(caseRepo),
 	}
 	updateCaseUsecase := usecase.NewUpdateCaseUseCase(updaters)
 

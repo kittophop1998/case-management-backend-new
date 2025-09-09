@@ -21,4 +21,5 @@ type CaseRepository interface {
 	GenCaseCode(ctx context.Context) (string, error)
 	LoadCaseStatus(ctx context.Context) (map[string]uuid.UUID, error)
 	LoadCaseType(ctx context.Context) (map[string]uuid.UUID, error)
+	GetCaseTypeByID(ctx context.Context, id uuid.UUID) (*model.CaseTypes, error)
 }

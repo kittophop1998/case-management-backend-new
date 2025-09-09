@@ -145,7 +145,7 @@ type CreateCaseRequest struct {
 	CustomerName        string         `json:"customerName"`
 	CaseTypeID          string         `json:"caseTypeId"`
 	Channel             *string        `json:"channel"`
-	Priority            string         `json:"priority"`
+	Priority            string         `json:"priority" binding:"required,oneof=High Normal"`
 	ReasonCode          *string        `json:"reasonCode"`
 	DueDate             *string        `json:"dueDate"`
 	DispositionMainID   *string        `json:"dispositionMainId"`
@@ -162,7 +162,7 @@ type CreateCaseRequest struct {
 
 type UpdateCaseRequest struct {
 	CaseTypeID            *string                `json:"caseTypeId,omitempty"`
-	Priority              string                 `json:"priority,omitempty"`
+	Priority              string                 `json:"priority,omitempty" binding:"required,oneof=High Normal"`
 	ReasonCodeID          string                 `json:"reasonCode,omitempty"`
 	DueDate               string                 `json:"dueDate,omitempty"`
 	ReallocateToQueueTeam string                 `json:"reallocateToQueueTeam,omitempty"`
@@ -170,10 +170,19 @@ type UpdateCaseRequest struct {
 }
 
 type CaseFilter struct {
-	Keyword  string     `form:"keyword" json:"keyword"`
-	StatusID *uuid.UUID `form:"statusId" json:"statusId"`
-	QueueID  *uuid.UUID `form:"queueId" json:"queueId"`
-	Priority string     `form:"priority" json:"priority" binding:"omitempty,oneof=High,Normal"`
+	Keyword  string      `form:"keyword" json:"keyword"`
+	StatusID []uuid.UUID `form:"statusId" json:"statusId"`
+	QueueID  *uuid.UUID  `form:"queueId" json:"queueId"`
+	Priority []string    `form:"priority" json:"priority" binding:"omitempty,oneof=High,Normal"`
+	Sort     string      `form:"sort" json:"sort"`
+}
+
+type CaseQuery struct {
+	Category string      `form:"category"`
+	Keyword  string      `form:"keyword"`
+	Priority []string    `form:"priority"`
+	StatusID []uuid.UUID `form:"statusID"`
+	QueueID  *uuid.UUID  `form:"queue"`
 }
 
 type CreateUpdateUserRequest struct {

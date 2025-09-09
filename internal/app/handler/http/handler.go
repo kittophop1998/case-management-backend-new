@@ -40,7 +40,7 @@ func InitHandlers(deps HandlerDeps) {
 		MasterData: &MasterDataHandler{UseCase: *deps.MasterDataUC},
 		Permission: &PermissionHandler{UseCase: *deps.PermissionUC},
 		Log:        &LogHandler{UseCase: *deps.LogUC},
-		Case:       &CaseHandler{UseCase: *deps.CaseUC},
+		Case:       &CaseHandler{UseCase: *deps.CaseUC, UpdateCaseByType: *deps.UpdateCaseUC},
 		Customer:   &CustomerHandler{UseCase: *deps.CustomerUC},
 		Dashboard:  &DashboardHandler{UseCase: *deps.DashboardUC, Config: deps.Config},
 		Queue:      &QueueHandler{UserCase: *deps.QueueUC},

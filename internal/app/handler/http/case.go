@@ -59,32 +59,26 @@ func (h *CaseHandler) GetAllCases(c *gin.Context) {
 	}
 
 	p := utils.GetPagination(c)
-	category := c.Query("category")
-	keyword := c.Query("keyword")
-	priority := c.Query("priority")
 
-	statusID, err := utils.ParseUUIDParam(c, "status")
-	if err != nil {
-		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
+	var q model.CaseQuery
+	if err := c.ShouldBindQuery(&q); err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails("invalid query params"))
 		return
 	}
 
-	queueID, err := utils.ParseUUIDParam(c, "queue")
-	if err != nil {
-		lib.HandleError(c, lib.BadRequest.WithDetails(err.Error()))
-		return
-	}
+	sort := c.DefaultQuery("sort", "created_at")
 
 	// compose filter
 	filter := model.CaseFilter{
-		Keyword:  keyword,
-		StatusID: statusID,
-		QueueID:  queueID,
-		Priority: priority,
+		Keyword:  q.Keyword,
+		StatusID: q.StatusID,
+		QueueID:  q.QueueID,
+		Priority: q.Priority,
+		Sort:     sort,
 	}
 
 	// call usecase
-	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, category, currentUserID)
+	cases, total, err := h.UseCase.GetAllCases(ctx, p.Page, p.Limit, filter, q.Category, currentUserID)
 	if err != nil {
 		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -165,7 +159,7 @@ func (h *CaseHandler) UpdateCaseByID(c *gin.Context) {
 		return
 	}
 
-	if err := h.UpdateCaseByType.Execute(ctx, caseType.Name, caseID, req.Data); err != nil {
+	if err := h.UpdateCaseByType.Execute(ctx, caseType.Group, caseID, req.Data); err != nil {
 		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}

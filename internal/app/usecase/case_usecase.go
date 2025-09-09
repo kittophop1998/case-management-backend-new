@@ -212,18 +212,10 @@ func (uc *CaseUseCase) GetAllDisposition(ctx context.Context) ([]model.Dispositi
 }
 
 func (uc *CaseUseCase) GetCaseTypeByID(ctx context.Context, caseTypeID uuid.UUID) (model.CaseTypes, error) {
-	caseTypes, err := uc.repo.LoadCaseType(ctx)
+	caseType, err := uc.repo.GetCaseTypeByID(ctx, caseTypeID)
 	if err != nil {
 		return model.CaseTypes{}, err
 	}
 
-	var caseTypeName string
-	for name, id := range caseTypes {
-		if id == caseTypeID {
-			caseTypeName = name
-			break
-		}
-	}
-
-	return model.CaseTypes{Name: caseTypeName}, nil
+	return *caseType, nil
 }

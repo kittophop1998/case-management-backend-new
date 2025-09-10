@@ -18,7 +18,7 @@ type Cases struct {
 	CustomerID        string      `gorm:"column:customer_id" json:"customerId"`
 	AeonID            string      `gorm:"column:aeon_id" json:"aeonId"`
 	CustomerName      string      `gorm:"column:customer_name" json:"customerName"`
-	AssignedToUserID  *uuid.UUID  `gorm:"column:assigned_to_user_id;type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
+	AssignedToUserID  *uuid.UUID  `gorm:"column:assigned_to_user_id;type:uuid" json:"assignedToUserId"`
 	AssignedToUser    *User       `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
 	StatusID          uuid.UUID   `gorm:"column:status_id" json:"statusId"`
 	Status            CaseStatus  `gorm:"foreignKey:StatusID;references:ID" json:"status"`
@@ -204,11 +204,11 @@ type CaseFilter struct {
 }
 
 type CaseQuery struct {
-	Category string      `form:"category"`
-	Keyword  string      `form:"keyword"`
-	Priority []string    `form:"priority"`
-	StatusID []uuid.UUID `form:"statusID"`
-	QueueID  *uuid.UUID  `form:"queue"`
+	Category string     `form:"category"`
+	Keyword  string     `form:"keyword"`
+	Priority []string   `form:"priority"`
+	StatusID []string   `form:"statusId"`
+	QueueID  *uuid.UUID `form:"queue"`
 }
 
 type CreateUpdateUserRequest struct {

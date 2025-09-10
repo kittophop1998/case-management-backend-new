@@ -29,3 +29,9 @@ type CustomerNoteResponse struct {
 	CreatedBy   string `json:"createdBy"`
 	CreatedDate string `json:"createdDate"`
 }
+
+// ##### Customer Note Request #####
+type CustomerNoteFilter struct {
+	NoteTypeID *uuid.UUID `form:"noteTypeId"`
+	Keyword    string     `form:"keyword"`
+}

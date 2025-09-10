@@ -6,7 +6,6 @@ import (
 	"case-management/utils"
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -52,10 +51,39 @@ func (uc *CaseUseCase) GetAllCases(ctx context.Context, page, limit int, filter 
 
 }
 
-func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.CaseDetailResponse, error) {
-	caseData, err := uc.repo.GetCaseByID(ctx, id)
+func (uc *CaseUseCase) GetCaseByID(ctx context.Context, caseID uuid.UUID) (*model.CaseDetailResponse, error) {
+	caseData, err := uc.repo.GetCaseByID(ctx, caseID)
 	if err != nil {
 		return nil, err
+	}
+
+	// ##### Inquiry Case #####
+	dispositionMains, err := uc.repo.GetCaseDispositionMains(ctx, caseID)
+	if err != nil {
+		return nil, err
+	}
+	dispositionSubs, err := uc.repo.GetCaseDispositionSubs(ctx, caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	// disposition :=
+	fmt.Println(dispositionMains)
+	fmt.Println(dispositionSubs)
+
+	subMap := make(map[uuid.UUID][]string)
+	for _, sub := range dispositionSubs {
+		subMap[sub.Sub.MainID] = append(subMap[sub.Sub.MainID], sub.Sub.NameTH) // หรือ NameEN
+	}
+
+	// สร้าง response โดยดึง main + subs
+	var dispositions []*model.CaseDispositionDetailResponse
+	for _, main := range dispositionMains {
+		resp := &model.CaseDispositionDetailResponse{
+			Main: main.Main.NameTH, // หรือ NameEN
+			Subs: subMap[main.DispositionMainId],
+		}
+		dispositions = append(dispositions, resp)
 	}
 
 	caseDetail := &model.CaseDetailResponse{
@@ -70,6 +98,7 @@ func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Ca
 		Priority:            caseData.Priority,
 		ReasonCode:          utils.UUIDPtrToStringPtr(caseData.ReasonCodeID),
 		AllocateToQueueTeam: utils.UUIDPtrToStringPtr(caseData.QueueID),
+		Dispositions:        dispositions,
 		CaseDescription:     caseData.Description,
 		Status:              caseData.Status.Name,
 		CurrentQueue:        caseData.Queue.Name,
@@ -83,13 +112,9 @@ func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Ca
 func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
 
-	var caseTypeID uuid.UUID
-	if caseReq.CaseTypeID != "" {
-		id, err := utils.ParseUUID(caseReq.CaseTypeID)
-		if err != nil {
-			return uuid.Nil, err
-		}
-		caseTypeID = id
+	caseTypeID, err := utils.ParseUUID(caseReq.CaseTypeID)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid caseTypeId format: %v", err)
 	}
 
 	queueID, err := utils.ParseOptionalUUID(caseReq.AllocateToQueueTeam)
@@ -124,7 +149,7 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 
 	code, err := uc.repo.GenCaseCode(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return uuid.Nil, err
 	}
 
 	caseToSave := &model.Cases{
@@ -152,6 +177,51 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 
 	caseId, err := uc.repo.CreateCase(ctx, caseToSave)
 	if err != nil {
+		return uuid.Nil, err
+	}
+
+	// ##### Flow add case note #####
+	content := &model.CaseNoteRequest{
+		Content: caseReq.CaseNote[0],
+	}
+	uc.AddCaseNote(ctx, createdByID, caseId, content)
+
+	// ##### Flow add disposition by case #####
+	dispositionMain := []*model.CaseDispositionMain{}
+	for _, v := range caseReq.DispositionMains {
+		dispositionMainID, err := utils.ParseUUID(v)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid dispositionMainID format: %v", err)
+		}
+		dispositionMain = append(dispositionMain, &model.CaseDispositionMain{
+			CaseId:            caseId,
+			DispositionMainId: dispositionMainID,
+			CreatedBy:         createdByID,
+			CreatedAt:         time.Now(),
+			UpdatedBy:         createdByID,
+			UpdatedAt:         time.Now(),
+		})
+	}
+	if err := uc.repo.CreateCaseDispositionMains(ctx, dispositionMain); err != nil {
+		return uuid.Nil, err
+	}
+
+	dispositionSub := []*model.CaseDispositionSub{}
+	for _, v := range caseReq.DispositionSubs {
+		dispositionSubID, err := utils.ParseUUID(v)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid dispositionSubID format: %v", err)
+		}
+		dispositionSub = append(dispositionSub, &model.CaseDispositionSub{
+			CaseId:           caseId,
+			DispositionSubId: dispositionSubID,
+			CreatedBy:        createdByID,
+			CreatedAt:        time.Now(),
+			UpdatedBy:        createdByID,
+			UpdatedAt:        time.Now(),
+		})
+	}
+	if err := uc.repo.CreateCaseDispositionSubs(ctx, dispositionSub); err != nil {
 		return uuid.Nil, err
 	}
 
@@ -211,14 +281,6 @@ func (uc *CaseUseCase) AddCaseNote(ctx context.Context, createdByID uuid.UUID, c
 	}
 
 	return uc.repo.AddCaseNote(ctx, note)
-}
-
-func (uc *CaseUseCase) AddInitialDescription(c context.Context, caseID string, newDescription string) error {
-	caseUUID, err := uuid.Parse(caseID)
-	if err != nil {
-		return err
-	}
-	return uc.repo.AddInitialDescription(c, caseUUID, newDescription)
 }
 
 func (uc *CaseUseCase) GetAllDisposition(ctx context.Context) ([]model.DispositionItem, error) {

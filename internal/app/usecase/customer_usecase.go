@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CustomerUseCase struct {
@@ -20,11 +21,11 @@ func (uc *CustomerUseCase) CreateCustomerNote(ctx *gin.Context, note *model.Cust
 	return uc.CustomerRepo.CreateCustomerNote(ctx, note)
 }
 
-func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, customerID string, page, limit int) ([]model.CustomerNoteResponse, int, error) {
+func (uc *CustomerUseCase) GetAllCustomerNotes(ctx *gin.Context, page, limit int, customerID uuid.UUID, filter model.CustomerNoteFilter) ([]model.CustomerNoteResponse, int, error) {
 	loc := time.FixedZone("Asia/Bangkok", 7*60*60) // +7 ชั่วโมง
 	offset := (page - 1) * limit
 
-	notes, total, err := uc.CustomerRepo.GetAllCustomerNotes(ctx, customerID, limit, offset)
+	notes, total, err := uc.CustomerRepo.GetAllCustomerNotes(ctx, limit, offset, customerID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -47,6 +48,6 @@ func (uc *CustomerUseCase) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, e
 	return uc.CustomerRepo.GetNoteTypes(ctx)
 }
 
-func (uc *CustomerUseCase) CountNotes(ctx *gin.Context, customerID string) (int, error) {
+func (uc *CustomerUseCase) CountNotes(ctx *gin.Context, customerID uuid.UUID) (int, error) {
 	return uc.CustomerRepo.CountNotes(ctx, customerID)
 }

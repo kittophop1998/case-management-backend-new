@@ -3,13 +3,11 @@ package database
 import (
 	"case-management/internal/domain/model"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -29,8 +27,8 @@ func (c *CasePg) GetAllCase(ctx context.Context, offset, limit int, filter model
 		Preload("Status").
 		Preload("CaseType").
 		Preload("Queue").
-		Preload("AssignedToUser.Center").
 		Preload("Creator.Center").
+		Preload("AssignedToUser.Center").
 		Joins("LEFT JOIN cases_types as ct ON ct.id = cases.case_type_id").
 		Joins("LEFT JOIN cases_status as cs ON cs.id = cases.status_id")
 
@@ -73,28 +71,8 @@ func (c *CasePg) GetAllCase(ctx context.Context, offset, limit int, filter model
 		return nil, 0, err
 	}
 
-	// ---- sorting ----
-	allowedSortFields := map[string]bool{
-		"created_at":    true,
-		"priority":      true,
-		"customer_name": true,
-	}
-
-	orderBy := "created_at ASC"
-	if filter.Sort != "" {
-		parts := strings.Fields(filter.Sort)
-
-		if len(parts) > 0 && allowedSortFields[parts[0]] {
-			direction := "ASC"
-			if len(parts) > 1 && strings.ToUpper(parts[1]) == "DESC" {
-				direction = "DESC"
-			}
-			orderBy = parts[0] + " " + direction
-		}
-	}
-
 	// ---- ดึง data ----
-	if err := query.Offset(offset).Limit(limit).Order(orderBy).Find(&cases).Error; err != nil {
+	if err := query.Offset(offset).Limit(limit).Order(filter.Sort).Find(&cases).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -131,34 +109,44 @@ func (c *CasePg) UpdateCaseDetail(ctx context.Context, caseToSave *model.Cases) 
 	return nil
 }
 
-func (c *CasePg) CreateCaseDispositionMains(ctx context.Context, data datatypes.JSON) error {
-	var dispositions []model.CaseDispositionMain
-	if err := json.Unmarshal(data, &dispositions); err != nil {
+func (c *CasePg) CreateCaseDispositionMains(ctx context.Context, input []*model.CaseDispositionMain) error {
+	if err := c.db.WithContext(ctx).Create(input).Error; err != nil {
 		return err
-	}
-
-	for _, disposition := range dispositions {
-		if err := c.db.WithContext(ctx).Create(&disposition).Error; err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (c *CasePg) CreateCaseDispositionSubs(ctx context.Context, data datatypes.JSON) error {
-	var dispositions []model.CaseDispositionSub
-	if err := json.Unmarshal(data, &dispositions); err != nil {
+func (c *CasePg) CreateCaseDispositionSubs(ctx context.Context, input []*model.CaseDispositionSub) error {
+	if err := c.db.WithContext(ctx).Create(input).Error; err != nil {
 		return err
 	}
 
-	for _, disposition := range dispositions {
-		if err := c.db.WithContext(ctx).Create(&disposition).Error; err != nil {
-			return err
-		}
+	return nil
+}
+
+func (c *CasePg) GetCaseDispositionMains(ctx context.Context, caseID uuid.UUID) ([]*model.CaseDispositionMain, error) {
+	var mains []*model.CaseDispositionMain
+	if err := c.db.WithContext(ctx).
+		Preload("Main").
+		Where("case_id = ?", caseID).
+		Find(&mains).Error; err != nil {
+		return nil, err
 	}
 
-	return nil
+	return mains, nil
+}
+
+func (c *CasePg) GetCaseDispositionSubs(ctx context.Context, caseID uuid.UUID) ([]*model.CaseDispositionSub, error) {
+	var subs []*model.CaseDispositionSub
+	if err := c.db.WithContext(ctx).
+		Preload("Sub").
+		Where("case_id = ?", caseID).
+		Find(&subs).Error; err != nil {
+		return nil, err
+	}
+
+	return subs, nil
 }
 
 func (c *CasePg) CreateNoteType(ctx context.Context, note model.NoteTypes) (*model.NoteTypes, error) {
@@ -166,42 +154,6 @@ func (c *CasePg) CreateNoteType(ctx context.Context, note model.NoteTypes) (*mod
 		return nil, err
 	}
 	return &note, nil
-}
-
-func (c *CasePg) AddInitialDescription(ctx context.Context, caseID uuid.UUID, newDescription string) error {
-	var caseRecord struct {
-		InitialDescriptions datatypes.JSON `gorm:"type:jsonb"`
-	}
-
-	err := c.db.WithContext(ctx).
-		Model(&model.Cases{}).
-		Select("initial_descriptions").
-		Where("id = ?", caseID).
-		Take(&caseRecord).Error
-	if err != nil {
-		return err
-	}
-
-	var descriptions []string
-	if len(caseRecord.InitialDescriptions) > 0 {
-		if err := json.Unmarshal(caseRecord.InitialDescriptions, &descriptions); err != nil {
-			descriptions = []string{}
-		}
-	} else {
-		descriptions = []string{}
-	}
-
-	descriptions = append(descriptions, newDescription)
-
-	updatedJSON, err := json.Marshal(descriptions)
-	if err != nil {
-		return err
-	}
-
-	return c.db.WithContext(ctx).
-		Model(&model.Cases{}).
-		Where("id = ?", caseID).
-		Update("initial_descriptions", datatypes.JSON(updatedJSON)).Error
 }
 
 func (c *CasePg) GetNoteTypeByID(ctx context.Context, noteTypeID uuid.UUID) (*model.NoteTypes, error) {
@@ -326,41 +278,3 @@ func (r *CasePg) GetCaseTypeByID(ctx context.Context, id uuid.UUID) (*model.Case
 	}
 	return &caseType, nil
 }
-
-// func (c *CasePg) CountWithFilter(ctx context.Context, filter model.CaseFilter) (int, error) {
-// 	var count int64
-// 	query := c.db.WithContext(ctx).Model(&model.Cases{})
-
-// 	if filter.Keyword != "" {
-// 		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"
-// 		query = query.Where(
-// 			c.db.Where("title ILIKE ?", kw).
-// 				Or("customer_id ILIKE ?", kw).
-// 				Or("created_by ILIKE ?", kw).
-// 				Or("CAST(sla_date AS TEXT) ILIKE ?", kw).
-// 				Or("CAST(created_at AS TEXT) ILIKE ?", kw),
-// 		)
-// 	}
-
-// 	if filter.StatusID != nil {
-// 		query = query.Where("status_id = ?", *filter.StatusID)
-// 	}
-
-// 	if filter.PriorityID != nil {
-// 		query = query.Where("priority_id = ?", *filter.PriorityID)
-// 	}
-
-// 	if filter.SLADateFrom != nil {
-// 		query = query.Where("sla_date >= ?", *filter.SLADateFrom)
-// 	}
-
-// 	if filter.SLADateTo != nil {
-// 		query = query.Where("sla_date <= ?", *filter.SLADateTo)
-// 	}
-
-// 	if err := query.Count(&count).Error; err != nil {
-// 		return 0, err
-// 	}
-
-// 	return int(count), nil
-// }

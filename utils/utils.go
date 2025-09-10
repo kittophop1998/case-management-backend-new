@@ -14,34 +14,29 @@ import (
 )
 
 //
-// ====== String Helpers ======
+// ====== String & Bool Helpers ======
 //
 
+// NormalizeUserInput ทำให้ username/email เป็น lower-case
 func NormalizeUserInput(user *model.CreateUpdateUserRequest) {
 	user.Username = strings.ToLower(user.Username)
 	user.Email = strings.ToLower(user.Email)
 }
 
-func StringPtr(s string) *string {
-	return &s
-}
-
-//
-// ====== Bool Helpers ======
-//
-
-func Bool(v bool) *bool {
-	return &v
-}
+// Ptr helpers
+func StringPtr(s string) *string { return &s }
+func BoolPtr(v bool) *bool       { return &v }
 
 //
 // ====== UUID Helpers ======
 //
 
+// ParseUUID แปลง string → uuid.UUID
 func ParseUUID(s string) (uuid.UUID, error) {
 	return uuid.Parse(s)
 }
 
+// ParseOptionalUUID แปลง *string → *uuid.UUID (nil ถ้า string ว่างหรือ nil)
 func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
 	if s == nil || *s == "" {
 		return nil, nil
@@ -53,27 +48,32 @@ func ParseOptionalUUID(s *string) (*uuid.UUID, error) {
 	return &id, nil
 }
 
-// แปลง query string -> *uuid.UUID
-func ParseUUIDParam(c *gin.Context, param string) (*uuid.UUID, error) {
-	val := c.Query(param)
+// ParseUUIDQueryParam แปลง query param → *uuid.UUID หรือ uuid.UUID (optional/required)
+func ParseUUIDQueryParam(c *gin.Context, param string, required bool) (*uuid.UUID, error) {
+	val := strings.TrimSpace(c.Query(param))
 	if val == "" {
+		if required {
+			return nil, fmt.Errorf("%s is required", param)
+		}
 		return nil, nil
 	}
-	return ParseOptionalUUID(&val)
+	id, err := uuid.Parse(val)
+	if err != nil {
+		return nil, fmt.Errorf("invalid %s format: %w", param, err)
+	}
+	return &id, nil
 }
 
+// UUIDPtrToStringPtr แปลง *uuid.UUID → *string
 func UUIDPtrToStringPtr(u *uuid.UUID) *string {
 	if u == nil {
 		return nil
 	}
-	str := u.String()
-	return &str
+	s := u.String()
+	return &s
 }
 
-//
 // ====== Random Helpers ======
-//
-
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func RandStringRunes(n int) (string, error) {
@@ -88,10 +88,7 @@ func RandStringRunes(n int) (string, error) {
 	return string(b), nil
 }
 
-//
 // ====== Date Helpers ======
-//
-
 func FormatDate(t *time.Time, layout string) string {
 	if t == nil {
 		return ""
@@ -110,18 +107,12 @@ func ParseOptionalDate(dateStr *string, layout string) (*time.Time, error) {
 	return &parsed, nil
 }
 
-//
 // ====== Reflection Helpers ======
-//
-
 func IsEmpty(v any) bool {
 	if v == nil {
 		return true
 	}
-
 	val := reflect.ValueOf(v)
-
-	// Dereference pointers & interfaces
 	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
 		if val.IsNil() {
 			return true
@@ -135,17 +126,13 @@ func IsEmpty(v any) bool {
 	case reflect.Slice, reflect.Array, reflect.Map:
 		return val.Len() == 0
 	case reflect.Struct:
-		// เช็ค struct ว่าง (all zero values)
 		return reflect.DeepEqual(val.Interface(), reflect.Zero(val.Type()).Interface())
 	default:
 		return false
 	}
 }
 
-//
 // ====== Domain Specific ======
-//
-
 func UserNameCenter(user model.User) string {
-	return user.Name + " - " + user.Center.Name
+	return fmt.Sprintf("%s - %s", user.Name, user.Center.Name)
 }

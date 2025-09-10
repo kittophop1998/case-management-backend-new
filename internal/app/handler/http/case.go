@@ -202,3 +202,22 @@ func (h *CaseHandler) AddCaseNote(c *gin.Context) {
 
 	lib.HandleResponse(c, http.StatusCreated, gin.H{"noteId": noteID})
 }
+
+func (h *CaseHandler) GetCaseNotes(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	caseIdRaw := c.Param("id")
+	caseID, err := uuid.Parse(caseIdRaw)
+	if err != nil {
+		lib.HandleError(c, lib.BadRequest.WithDetails("Invalid case ID"))
+		return
+	}
+
+	notes, err := h.UseCase.GetCaseNotes(ctx, caseID)
+	if err != nil {
+		lib.HandleError(c, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(c, http.StatusOK, notes)
+}

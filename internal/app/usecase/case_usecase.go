@@ -61,6 +61,7 @@ func (uc *CaseUseCase) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Ca
 	caseDetail := &model.CaseDetailResponse{
 		Code:                caseData.Code,
 		CaseType:            caseData.CaseType.Name,
+		CaseTypeID:          caseData.CaseType.ID.String(),
 		CaseGroup:           caseData.CaseType.Group,
 		CaseID:              caseData.ID.String(),
 		CreatedBy:           utils.UserNameCenter(caseData.Creator),
@@ -183,11 +184,30 @@ func (uc *CaseUseCase) UpdateCaseDetail(ctx context.Context, caseID uuid.UUID, i
 	return uc.repo.UpdateCaseDetail(ctx, caseToSave)
 }
 
+func (uc *CaseUseCase) GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]*model.CaseNotesResponse, error) {
+	notes, err := uc.repo.GetCaseNotes(ctx, caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []*model.CaseNotesResponse
+	for _, note := range notes {
+		responses = append(responses, &model.CaseNotesResponse{
+			ID:        note.ID,
+			Content:   note.Content,
+			CreatedBy: utils.UserNameCenter(note.Creator),
+			CreatedAt: note.CreatedAt,
+		})
+	}
+
+	return responses, nil
+}
+
 func (uc *CaseUseCase) AddCaseNote(ctx context.Context, createdByID uuid.UUID, caseID uuid.UUID, input *model.CaseNoteRequest) (uuid.UUID, error) {
 	note := &model.CaseNotes{
-		CaseId:  caseID,
-		UserId:  createdByID,
-		Content: input.Content,
+		CaseId:    caseID,
+		CreatedBy: createdByID,
+		Content:   input.Content,
 	}
 
 	return uc.repo.AddCaseNote(ctx, note)

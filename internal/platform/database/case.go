@@ -105,6 +105,7 @@ func (c *CasePg) GetCaseByID(ctx context.Context, id uuid.UUID) (*model.Cases, e
 	var cases model.Cases
 	if err := c.db.WithContext(ctx).
 		Preload("Status").
+		Preload("ReasonCode").
 		Preload("CaseType").
 		Preload("Queue").
 		Preload("AssignedToUser.Center").
@@ -271,6 +272,19 @@ func (r *CasePg) LoadCaseType(ctx context.Context) (map[string]uuid.UUID, error)
 	}
 
 	return typeMap, nil
+}
+
+func (c *CasePg) GetCaseNotes(ctx context.Context, caseID uuid.UUID) ([]*model.CaseNotes, error) {
+	var notes []*model.CaseNotes
+	if err := c.db.WithContext(ctx).
+		Preload("Creator.Center").
+		Where("case_id = ?", caseID).
+		Order("created_at ASC").
+		Find(&notes).Error; err != nil {
+		return nil, err
+	}
+
+	return notes, nil
 }
 
 func (c *CasePg) AddCaseNote(ctx context.Context, note *model.CaseNotes) (uuid.UUID, error) {

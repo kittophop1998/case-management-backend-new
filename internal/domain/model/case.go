@@ -32,8 +32,8 @@ type Cases struct {
 	ProductID         *uuid.UUID  `gorm:"type:uuid" json:"productId"`
 	Product           *Products   `gorm:"foreignKey:ProductID;references:ID" json:"product"`
 	Channel           *string     `json:"channel"`
-	ReasonCodeID      *uuid.UUID  `json:"reasonCode"`
-	ReasonCode        *ReasonCode `gorm:"foreignKey:ReasonCodeID;references:ID" json:"reasonCodeDetail"`
+	ReasonCodeID      *uuid.UUID  `gorm:"type:uuid" json:"reasonCodeId"`
+	ReasonCode        *ReasonCode `gorm:"foreignKey:ReasonCodeID;references:ID" json:"reasonCode"`
 	VerifyStatus      *string     `json:"verifyStatus"`
 	Description       string      `json:"description"`
 	CreatedBy         uuid.UUID   `gorm:"type:uuid" json:"createdBy"`
@@ -60,9 +60,17 @@ type CaseDispositionSub struct {
 type CaseNotes struct {
 	ID        uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
 	CaseId    uuid.UUID `json:"case_id" gorm:"type:uuid"`
-	UserId    uuid.UUID `json:"user_id" gorm:"type:uuid"`
 	Content   string    `json:"content" gorm:"type:text"`
+	CreatedBy uuid.UUID `json:"created_by" gorm:"type:uuid"`
+	Creator   User      `gorm:"foreignKey:CreatedBy;references:ID" json:"creator"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type CaseNotesResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Content   string    `json:"content"`
+	CreatedBy string    `json:"createdBy"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type VerifyQuestionHistory struct {
@@ -77,7 +85,7 @@ type VerifyQuestionHistory struct {
 }
 
 type ReasonCode struct {
-	ID                uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID                uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Code              string    `json:"code"`
 	DescriptionEn     string    `json:"description_en"`
 	DescriptionTh     string    `json:"description_th"`
@@ -116,6 +124,7 @@ type CaseResponse struct {
 type CaseDetailResponse struct {
 	Code                string  `json:"code"`
 	CaseType            string  `json:"caseType"`
+	CaseTypeID          string  `json:"caseTypeId"`
 	CaseGroup           string  `json:"caseGroup"`
 	CaseID              string  `json:"caseId"`
 	CreatedBy           string  `json:"createdBy"`

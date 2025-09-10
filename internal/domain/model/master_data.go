@@ -38,11 +38,6 @@ type Department struct {
 	Name string    `gorm:"type:varchar(100)" json:"name"`
 }
 
-type AddInitialDescriptionRequest struct {
-	CaseID      string `json:"case_id" binding:"required,uuid"`
-	Description string `json:"description" binding:"required"`
-}
-
 type Products struct {
 	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name string    `gorm:"type:varchar(100);not null" json:"name"`

@@ -4,57 +4,68 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
 type Cases struct {
 	ID                uuid.UUID   `gorm:"primaryKey;default:uuid_generate_v4()" json:"id"`
-	Code              string      `json:"code" gorm:"type:varchar(100);uniqueIndex"`
-	CaseTitle         string      `json:"caseTitle"`
-	CaseTypeID        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"caseTypeId"`
+	Code              string      `gorm:"column:code;type:varchar(100);uniqueIndex" json:"code"`
+	CaseTitle         string      `gorm:"column:case_title" json:"caseTitle"`
+	CaseTypeID        uuid.UUID   `gorm:"column:case_type_id;type:uuid;default:uuid_generate_v4()" json:"caseTypeId"`
 	CaseType          CaseTypes   `gorm:"foreignKey:CaseTypeID;references:ID"`
-	QueueID           *uuid.UUID  `json:"queueId" gorm:"type:uuid"`
-	Queue             Queues      `json:"queue"`
-	Priority          string      `json:"priority"`
-	CustomerID        string      `json:"customerId"`
-	AeonID            string      `json:"aeonId"`
-	CustomerName      string      `json:"customerName"`
-	AssignedToUserID  *uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
+	QueueID           *uuid.UUID  `gorm:"column:queue_id;type:uuid" json:"queueId"`
+	Queue             Queues      `gorm:"foreignKey:QueueID;references:ID"`
+	Priority          string      `gorm:"column:priority" json:"priority"`
+	CustomerID        string      `gorm:"column:customer_id" json:"customerId"`
+	AeonID            string      `gorm:"column:aeon_id" json:"aeonId"`
+	CustomerName      string      `gorm:"column:customer_name" json:"customerName"`
+	AssignedToUserID  *uuid.UUID  `gorm:"column:assigned_to_user_id;type:uuid;default:uuid_generate_v4()" json:"assignedToUserId"`
 	AssignedToUser    *User       `gorm:"foreignKey:AssignedToUserID;references:ID" json:"assignedToUser"`
-	StatusID          uuid.UUID   `json:"statusId"`
-	Status            CaseStatus  `gorm:"foreignKey:StatusID;references:ID"`
-	DispositionMainID *uuid.UUID  `gorm:"type:uuid" json:"dispositionMainId"`
-	DispositionSubID  *uuid.UUID  `gorm:"type:uuid" json:"dispositionSubId"`
-	StartDate         time.Time   `gorm:"type:date" json:"startDate"`
-	DueDate           *time.Time  `gorm:"type:date" json:"dueDate"`
-	ClosedDate        time.Time   `gorm:"type:date" json:"closedDate"`
-	EndDate           time.Time   `gorm:"type:date" json:"endDate"`
-	ProductID         *uuid.UUID  `gorm:"type:uuid" json:"productId"`
+	StatusID          uuid.UUID   `gorm:"column:status_id" json:"statusId"`
+	Status            CaseStatus  `gorm:"foreignKey:StatusID;references:ID" json:"status"`
+	DispositionMainID *uuid.UUID  `gorm:"column:disposition_main_id;type:uuid" json:"dispositionMainId"`
+	DispositionSubID  *uuid.UUID  `gorm:"column:disposition_sub_id;type:uuid" json:"dispositionSubId"`
+	StartDate         time.Time   `gorm:"column:start_date;type:date" json:"startDate"`
+	DueDate           *time.Time  `gorm:"column:duedate;type:date" json:"dueDate"`
+	ClosedDate        time.Time   `gorm:"column:close_date;type:date" json:"closedDate"`
+	EndDate           time.Time   `gorm:"column:end_date;type:date" json:"endDate"`
+	ProductID         *uuid.UUID  `gorm:"column:product_id;type:uuid" json:"productId"`
 	Product           *Products   `gorm:"foreignKey:ProductID;references:ID" json:"product"`
 	Channel           *string     `json:"channel"`
-	ReasonCodeID      *uuid.UUID  `gorm:"type:uuid" json:"reasonCodeId"`
+	ReasonCodeID      *uuid.UUID  `gorm:"column:reason_code_id;type:uuid" json:"reasonCodeId"`
 	ReasonCode        *ReasonCode `gorm:"foreignKey:ReasonCodeID;references:ID" json:"reasonCode"`
-	VerifyStatus      *string     `json:"verifyStatus"`
-	Description       string      `json:"description"`
-	CreatedBy         uuid.UUID   `gorm:"type:uuid" json:"createdBy"`
+	VerifyStatus      *string     `gorm:"column:verify_status" json:"verifyStatus"`
+	Description       string      `gorm:"column:description" json:"description"`
+	CreatedBy         uuid.UUID   `gorm:"column:created_by;type:uuid" json:"createdBy"`
 	Creator           User        `gorm:"foreignKey:CreatedBy;references:ID" json:"creator"`
-	CreatedAt         time.Time   `gorm:"type:timestamp" json:"createdAt"`
-	UpdatedBy         uuid.UUID   `gorm:"type:uuid" json:"updatedBy"`
-	UpdatedAt         time.Time   `gorm:"type:timestamp" json:"updatedAt"`
-	DeletedBy         uuid.UUID   `gorm:"type:uuid" json:"deletedBy"`
-	DeletedAt         time.Time   `gorm:"type:timestamp" json:"deletedAt"`
+	CreatedAt         time.Time   `gorm:"column:created_at;type:timestamp" json:"createdAt"`
+	UpdatedBy         uuid.UUID   `gorm:"column:updated_by;type:uuid" json:"updatedBy"`
+	UpdatedAt         time.Time   `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
+	DeletedBy         uuid.UUID   `gorm:"column:deleted_by;type:uuid" json:"deletedBy"`
+	DeletedAt         time.Time   `gorm:"column:deleted_at;type:timestamp" json:"deletedAt"`
 }
 
 type CaseDispositionMain struct {
-	Model
-	CaseId            uuid.UUID `json:"caseId" gorm:"type:uuid"`
-	DispositionMainId uuid.UUID `json:"dispositionMainId" gorm:"type:uuid"`
+	CaseId            uuid.UUID       `json:"caseId" gorm:"type:uuid"`
+	DispositionMainId uuid.UUID       `json:"dispositionMainId" gorm:"type:uuid"`
+	Main              DispositionMain `gorm:"foreignKey:DispositionMainId;references:ID"`
+	CreatedBy         uuid.UUID       `gorm:"column:created_by;type:uuid" json:"createdBy"`
+	CreatedAt         time.Time       `gorm:"column:created_at;type:timestamp" json:"createdAt"`
+	UpdatedBy         uuid.UUID       `gorm:"column:updated_by;type:uuid" json:"updatedBy"`
+	UpdatedAt         time.Time       `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
+	DeletedBy         uuid.UUID       `gorm:"column:deleted_by;type:uuid" json:"deletedBy"`
+	DeletedAt         time.Time       `gorm:"column:deleted_at;type:timestamp" json:"deletedAt"`
 }
 
 type CaseDispositionSub struct {
-	Model
-	CaseId           uuid.UUID `json:"caseId" gorm:"type:uuid"`
-	DispositionSubId uuid.UUID `json:"dispositionSubId" gorm:"type:uuid"`
+	CaseId           uuid.UUID      `json:"caseId" gorm:"type:uuid"`
+	DispositionSubId uuid.UUID      `json:"dispositionSubId" gorm:"type:uuid"`
+	Sub              DispositionSub `gorm:"foreignKey:DispositionSubId;references:ID"`
+	CreatedBy        uuid.UUID      `gorm:"column:created_by;type:uuid" json:"createdBy"`
+	CreatedAt        time.Time      `gorm:"column:created_at;type:timestamp" json:"createdAt"`
+	UpdatedBy        uuid.UUID      `gorm:"column:updated_by;type:uuid" json:"updatedBy"`
+	UpdatedAt        time.Time      `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
+	DeletedBy        uuid.UUID      `gorm:"column:deleted_by;type:uuid" json:"deletedBy"`
+	DeletedAt        time.Time      `gorm:"column:deleted_at;type:timestamp" json:"deletedAt"`
 }
 
 type CaseNotes struct {
@@ -122,22 +133,28 @@ type CaseResponse struct {
 }
 
 type CaseDetailResponse struct {
-	Code                string  `json:"code"`
-	CaseType            string  `json:"caseType"`
-	CaseTypeID          string  `json:"caseTypeId"`
-	CaseGroup           string  `json:"caseGroup"`
-	CaseID              string  `json:"caseId"`
-	CreatedBy           string  `json:"createdBy"`
-	CreatedDate         string  `json:"createdDate"`
-	VerifyStatus        *string `json:"verifyStatus"`
-	Channel             *string `json:"channel"`
-	Priority            string  `json:"priority"`
-	ReasonCode          *string `json:"reasonCode"`
-	DueDate             string  `json:"dueDate"`
-	Status              string  `json:"status"`
-	CurrentQueue        string  `json:"currentQueue"`
-	CaseDescription     string  `json:"caseDescription"`
-	AllocateToQueueTeam *string `json:"allocateToQueueTeam"`
+	Code                string                           `json:"code"`
+	CaseType            string                           `json:"caseType"`
+	CaseTypeID          string                           `json:"caseTypeId"`
+	CaseGroup           string                           `json:"caseGroup"`
+	CaseID              string                           `json:"caseId"`
+	CreatedBy           string                           `json:"createdBy"`
+	CreatedDate         string                           `json:"createdDate"`
+	VerifyStatus        *string                          `json:"verifyStatus"`
+	Channel             *string                          `json:"channel"`
+	Priority            string                           `json:"priority"`
+	ReasonCode          *string                          `json:"reasonCode"`
+	DueDate             string                           `json:"dueDate"`
+	Status              string                           `json:"status"`
+	CurrentQueue        string                           `json:"currentQueue"`
+	CaseDescription     string                           `json:"caseDescription"`
+	AllocateToQueueTeam *string                          `json:"allocateToQueueTeam"`
+	Dispositions        []*CaseDispositionDetailResponse `json:"dispositions"`
+}
+
+type CaseDispositionDetailResponse struct {
+	Main string   `json:"main"`
+	Subs []string `json:"subs"`
 }
 
 type ReasonCodeResponse struct {
@@ -150,23 +167,23 @@ type ReasonCodeResponse struct {
 
 // ##### Case Management Request #####
 type CreateCaseRequest struct {
-	CustomerID          string         `json:"customerId"`
-	CustomerName        string         `json:"customerName"`
-	CaseTypeID          string         `json:"caseTypeId"`
-	Channel             *string        `json:"channel"`
-	Priority            string         `json:"priority" binding:"required,oneof=High Normal"`
-	ReasonCode          *string        `json:"reasonCode"`
-	DueDate             *string        `json:"dueDate"`
-	DispositionMainID   *string        `json:"dispositionMainId"`
-	DispositionMains    datatypes.JSON `json:"dispositionMains"`
-	DispositionSubID    *string        `json:"dispositionSubId"`
-	DispositionSubs     datatypes.JSON `json:"dispositionSubs"`
-	VerifyStatus        *string        `json:"verifyStatus"`
-	ProductID           *string        `json:"productId"`
-	AllocateToQueueTeam *string        `json:"allocateToQueueTeam"`
-	QueueID             *string        `json:"queueId"`
-	CaseDescription     string         `json:"caseDescription"`
-	CaseNote            datatypes.JSON `json:"caseNote"`
+	CustomerID          string   `json:"customerId"`
+	CustomerName        string   `json:"customerName"`
+	CaseTypeID          string   `json:"caseTypeId"`
+	Channel             *string  `json:"channel"`
+	Priority            string   `json:"priority" binding:"required,oneof=High Normal"`
+	ReasonCode          *string  `json:"reasonCode"`
+	DueDate             *string  `json:"dueDate"`
+	DispositionMainID   *string  `json:"dispositionMainId"`
+	DispositionMains    []string `json:"dispositionMains"`
+	DispositionSubID    *string  `json:"dispositionSubId"`
+	DispositionSubs     []string `json:"dispositionSubs"`
+	VerifyStatus        *string  `json:"verifyStatus"`
+	ProductID           *string  `json:"productId"`
+	AllocateToQueueTeam *string  `json:"allocateToQueueTeam"`
+	QueueID             *string  `json:"queueId"`
+	CaseDescription     string   `json:"caseDescription"`
+	CaseNote            []string `json:"caseNote"`
 }
 
 type UpdateCaseRequest struct {

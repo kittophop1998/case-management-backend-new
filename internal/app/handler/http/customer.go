@@ -46,8 +46,26 @@ func (h *CustomerHandler) CreateCustomerNote(ctx *gin.Context) {
 func (h *CustomerHandler) GetAllCustomerNotes(ctx *gin.Context) {
 	p := utils.GetPagination(ctx)
 
-	customerID := ctx.Param("customerId")
-	notes, total, err := h.UseCase.GetAllCustomerNotes(ctx, customerID, p.Page, p.Limit)
+	customerID, err := utils.ParseUUIDQueryParam(ctx, "customerId", true)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	custNoteTypeID, err := utils.ParseUUIDQueryParam(ctx, "noteTypeId", false)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails("invalid noteTypeId"))
+		return
+	}
+
+	keyword := ctx.Query("keyword")
+
+	filter := model.CustomerNoteFilter{
+		NoteTypeID: custNoteTypeID,
+		Keyword:    keyword,
+	}
+
+	notes, total, err := h.UseCase.GetAllCustomerNotes(ctx, p.Page, p.Limit, *customerID, filter)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
@@ -67,11 +85,17 @@ func (h *CustomerHandler) GetNoteTypes(ctx *gin.Context) {
 }
 
 func (h *CustomerHandler) CountNotes(ctx *gin.Context) {
-	customerID := ctx.Param("customerId")
-	count, err := h.UseCase.CountNotes(ctx, customerID)
+	customerID, err := utils.ParseUUIDQueryParam(ctx, "customerId", true)
 	if err != nil {
 		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
 		return
 	}
+
+	count, err := h.UseCase.CountNotes(ctx, *customerID)
+	if err != nil {
+		lib.HandleError(ctx, lib.InternalServer.WithDetails(err.Error()))
+		return
+	}
+
 	lib.HandleResponse(ctx, http.StatusOK, gin.H{"count": count})
 }

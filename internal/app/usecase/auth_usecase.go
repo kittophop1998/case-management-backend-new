@@ -70,7 +70,7 @@ func (a *AuthUseCase) Login(ctx *gin.Context, req model.LoginRequest) (*model.Lo
 		CreatedAt:     time.Now(),
 		Username:      user.Username,
 		LogonDatetime: time.Now(),
-		LoginSuccess:  utils.Bool(true),
+		LoginSuccess:  utils.BoolPtr(true),
 	}
 
 	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {
@@ -136,7 +136,7 @@ func (a *AuthUseCase) Logout(ctx *gin.Context) error {
 		CreatedAt:     time.Now(),
 		Username:      username,
 		LogonDatetime: time.Now(),
-		LoginSuccess:  utils.Bool(true),
+		LoginSuccess:  utils.BoolPtr(true),
 	}
 
 	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {
@@ -177,7 +177,7 @@ func (a *AuthUseCase) loginLocal(ctx *gin.Context, user *model.User) (*model.Log
 		CreatedAt:     time.Now(),
 		Username:      user.Username,
 		LogonDatetime: time.Now(),
-		LoginSuccess:  utils.Bool(true),
+		LoginSuccess:  utils.BoolPtr(true),
 	}
 
 	if err := a.logUsecase.SaveLoginEvent(ctx, logs); err != nil {

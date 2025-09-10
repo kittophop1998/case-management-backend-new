@@ -2,8 +2,10 @@ package database
 
 import (
 	"case-management/internal/domain/model"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,15 +24,21 @@ func (c *CustomerPg) CreateCustomerNote(ctx *gin.Context, note *model.CustomerNo
 	return nil
 }
 
-func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, customerID string, limit, offset int) ([]*model.CustomerNote, int, error) {
+func (c *CustomerPg) GetAllCustomerNotes(ctx *gin.Context, limit, offset int, customerID uuid.UUID, filter model.CustomerNoteFilter) ([]*model.CustomerNote, int, error) {
 	var notes []*model.CustomerNote
-	if err := c.db.WithContext(ctx).
-		Preload("NoteType").
-		Where("customer_id = ?", customerID).
-		Limit(limit).
-		Offset(offset).
-		Order("created_at DESC").
-		Find(&notes).Error; err != nil {
+
+	query := c.db.WithContext(ctx).Preload("NoteType").Where("customer_id = ?", customerID)
+
+	if filter.NoteTypeID != nil {
+		query = query.Where("note_type_id = ?", filter.NoteTypeID)
+	}
+
+	if filter.Keyword != "" {
+		likePattern := "%" + strings.ToLower(filter.Keyword) + "%"
+		query = query.Where("LOWER(note) LIKE ?", likePattern)
+	}
+
+	if err := query.Limit(limit).Offset(offset).Order("created_at DESC").Find(&notes).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -50,7 +58,7 @@ func (c *CustomerPg) GetNoteTypes(ctx *gin.Context) ([]*model.NoteTypes, error) 
 	return noteTypes, nil
 }
 
-func (c *CustomerPg) CountNotes(ctx *gin.Context, customerID string) (int, error) {
+func (c *CustomerPg) CountNotes(ctx *gin.Context, customerID uuid.UUID) (int, error) {
 	var count int64
 	if err := c.db.WithContext(ctx).Model(&model.CustomerNote{}).Where("customer_id = ?", customerID).Count(&count).Error; err != nil {
 		return 0, err

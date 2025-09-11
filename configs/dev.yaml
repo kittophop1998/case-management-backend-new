@@ -5,7 +5,7 @@ app:
 
 # Server Configuration
 server:
-  port: 8000
+  port: 8080
   gin_mode: "debug"  # Mode: "debug", "release"
   log_level: "info"  # Logging level: "debug", "info", "warn", "error"
 

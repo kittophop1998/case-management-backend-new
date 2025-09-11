@@ -29,7 +29,11 @@ services:
 
 # Connector API
 connector_api:
-  base_url: "https://connectorapi.aeonth-sit.com"
+  base_url: "https://connectorapi-sit.aeonth.com"
+
+# TD API
+td_api:
+  base_url: "https://cdp.in.treasuredata.com/cdp/lookup/collect/segments"
 
 # Header
 headers:

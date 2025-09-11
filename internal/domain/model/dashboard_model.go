@@ -1,5 +1,11 @@
 package model
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type GetCustInfoResponse struct {
 	NationalID      string `json:"national_id"`
 	CustomerNameEng string `json:"customer_name_eng"`
@@ -45,24 +51,52 @@ type GetCustSegmentResponse struct {
 }
 
 type GetCustSuggestionResponse struct {
-	SuggestCards      []string                             `json:"suggestCards"`
-	SuggestPromotions []GetCustSuggestionPromotionResponse `json:"suggestPromotions"`
+	SuggestCards      []string                             `json:"suggest_casds"`
+	IsSuggested       bool                                 `json:"is_suggested"`
+	SuggestPromotions []GetCustSuggestionPromotionResponse `json:"suggest_promotions"`
 }
 
 type GetCustSuggestionPromotionResponse struct {
-	PromotionCode            string   `json:"promotionCode"`
-	PromotionName            string   `json:"promotionName"`
-	PromotionDetails         string   `json:"promotionDetails"`
+	PromotionCode            string   `json:"promotion_code"`
+	PromotionName            string   `json:"promotion_name"`
+	PromotionDetails         string   `json:"promotion_details"`
 	Action                   string   `json:"action"`
-	PromotionResultTimestamp string   `json:"promotionResultTimestamp"`
+	PromotionResultTimestamp string   `json:"promotion_result_timestamp"`
 	Period                   string   `json:"period"`
-	EligibleCard             []string `json:"eligibleCard"`
+	EligibleCard             []string `json:"eligible_card"`
 }
 
 type ConnectorCustomerInfoRequest struct {
-	AEONID      string `json:"AEONID,omitempty"`
-	IDCardNo    string `json:"IDCardNo,omitempty"`
-	AgreementNo string `json:"AgreementNo,omitempty"`
-	UserRef     string `json:"UserRef,omitempty"`
-	Mode        string `json:"mode"`
+	AeonID  string `json:"AEONID,omitempty"`
+	CustID  string `json:"CustID,omitempty"`
+	UserRef string `json:"UserRef,omitempty"`
+	Mode    string `json:"mode"`
+}
+
+type SuggestedActionLog struct {
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
+	CustID        string    `gorm:"type:uuid;not null"`
+	Action        string    `gorm:"type:varchar(200);not null"`
+	CreatedAt     time.Time `gorm:"not null"`
+	CreatedBy     uuid.UUID `gorm:"type:uuid;not null"`
+	CreatedByUser User      `gorm:"foreignKey:CreatedBy;references:ID"`
+}
+
+type SuggestedCardLog struct {
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	CustID      uuid.UUID `gorm:"type:uuid;not null"`
+	SuggestCard string    `gorm:"type:varchar(50);not null"`
+	CreatedAt   time.Time `gorm:"not null"`
+	CreatedBy   uuid.UUID `gorm:"type:uuid;not null"`
+}
+
+type SuggestedPromotionLog struct {
+	ID            uuid.UUID  `gorm:"type:uuid;primaryKey"`
+	CustID        uuid.UUID  `gorm:"type:uuid;not null"`
+	PromotionCode string     `gorm:"type:varchar(40);not null"`
+	Action        string     `gorm:"type:varchar(30)"`
+	CreatedAt     time.Time  `gorm:"not null"`
+	CreatedBy     uuid.UUID  `gorm:"type:uuid;not null"`
+	UpdatedAt     *time.Time `gorm:"default:null"`
+	UpdatedBy     *uuid.UUID `gorm:"type:uuid"`
 }

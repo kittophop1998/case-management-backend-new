@@ -91,8 +91,8 @@ func HandleErrorContext(ctx context.Context, err error) *ApiErrorResponse {
 	if errors.As(err, &apiError) {
 		return &ApiErrorResponse{
 			Error: ErrorDetail{
-				TimeStamp:  timestampNow(),
-				Path:       ctx.Value("path").(string),
+				TimeStamp: timestampNow(),
+				// Path:       ctx.Value("path").(string),
 				StatusCode: apiError.StatusCode,
 				Code:       apiError.Code,
 				Message:    apiError.Message,
@@ -104,8 +104,8 @@ func HandleErrorContext(ctx context.Context, err error) *ApiErrorResponse {
 	// fallback
 	return &ApiErrorResponse{
 		Error: ErrorDetail{
-			TimeStamp:  timestampNow(),
-			Path:       ctx.Value("path").(string),
+			TimeStamp: timestampNow(),
+			// Path:       ctx.Value("path").(string),
 			StatusCode: http.StatusText(http.StatusInternalServerError),
 			Code:       http.StatusInternalServerError,
 			Message:    MessageError{"เกิดข้อผิดพลาดที่ไม่คาดคิด", "Unexpected Error"},

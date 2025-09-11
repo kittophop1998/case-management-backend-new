@@ -4,7 +4,6 @@ import (
 	"case-management/infrastructure/config"
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
-	"case-management/internal/domain/model"
 	"case-management/utils"
 	"context"
 	"fmt"
@@ -19,13 +18,55 @@ type DashboardHandler struct {
 	Config  *config.Config
 }
 
+// func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
+// 	log.Println("[Handler] => Entering GetCustInfo")
+
+// 	Id := ctx.Param("id")
+// 	if Id == "" {
+// 		lib.HandleError(ctx, fmt.Errorf("missing aeon_id parameter"))
+// 		return
+// 	}
+
+// 	var req model.ConnectorCustomerInfoRequest
+// 	if err := ctx.ShouldBindJSON(&req); err != nil {
+// 		log.Println("[Handler] => Failed to bind JSON:", err)
+// 		lib.HandleError(ctx, fmt.Errorf("invalid request body: %w", err))
+// 		return
+// 	}
+
+// 	cfg, err := config.Load("sit")
+// 	if err != nil {
+// 		lib.HandleError(ctx, fmt.Errorf("internal server error"))
+// 		return
+// 	}
+
+// 	// เตรียม context.Context พร้อมค่าต่างๆ
+// 	c := ctx.Request.Context()
+// 	c = context.WithValue(c, utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+// 	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+// 	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+// 	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+
+// 	reqID := ctx.GetHeader("X-Request-ID")
+// 	if reqID != "" {
+// 		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+// 	}
+
+// 	resp, err := h.UseCase.CustInfo(c, ctx, req)
+// 	if err != nil {
+// 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+// 		return
+// 	}
+
+// 	lib.HandleResponse(ctx, http.StatusOK, resp)
+// }
+
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 	log.Println("[Handler] => Entering GetCustInfo")
 
-	var req model.ConnectorCustomerInfoRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		log.Println("[Handler] => Failed to bind JSON:", err)
-		lib.HandleError(ctx, fmt.Errorf("invalid request body: %w", err))
+	id := ctx.Param("id")
+	if id == "" {
+		lib.HandleError(ctx, fmt.Errorf("missing customer id parameter"))
 		return
 	}
 
@@ -47,7 +88,8 @@ func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
 		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
 	}
 
-	resp, err := h.UseCase.CustInfo(c, ctx, req)
+	// Pass id ไปที่ UseCase แทน struct
+	resp, err := h.UseCase.CustInfo(c, ctx, id)
 	if err != nil {
 		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
 		return

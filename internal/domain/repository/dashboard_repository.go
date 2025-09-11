@@ -7,4 +7,5 @@ import (
 
 type DashboardRepository interface {
 	SaveApiLog(ctx context.Context, log *model.ApiLogs) error
+	GetCustIDByAeonID(ctx context.Context, inputID string) (string, error)
 }

@@ -89,7 +89,9 @@ func NewDashboardAPIProxyClient(cfg *config.Config) *DashboardAPIProxyClient {
 func (c *DashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, reqData model.ConnectorCustomerInfoRequest) (*model.GetCustInfoResponse, http.Header, error) {
 	url := fmt.Sprintf("%s/Api/Common/GetCustomerInfo", c.BaseURL)
 
-	reqBody, err := json.Marshal(reqData)
+	payload := reqData
+
+	reqBody, err := json.Marshal(payload)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot marshal request body: %w", err)
 	}
@@ -99,6 +101,8 @@ func (c *DashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, reqData mo
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
+	log.Println("Payload : ", payload)
+
 	req.Header.Set("Content-Type", "application/json")
 
 	// ใช้ SetHeadersFormContext เพื่อเซ็ต header จาก gin.Context
@@ -107,7 +111,7 @@ func (c *DashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, reqData mo
 		utils.CtxKeyApiLang,
 		utils.CtxKeyChannel,
 		utils.CtxKeyDeviceOS,
-		utils.CtxKeyRequestID, // เพิ่ม RequestID ไปด้วยถ้าจำเป็น
+		utils.CtxKeyRequestID,
 	})
 
 	log.Println("[API Client] => Request Headers:")

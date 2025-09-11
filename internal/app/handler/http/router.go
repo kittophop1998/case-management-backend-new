@@ -77,7 +77,7 @@ func SetupRoutes(
 		dashboardRoutes := apiV1.Group("/dashboard")
 		dashboardRoutes.Use(handler.ValidateToken())
 		{
-			dashboardRoutes.GET("/custinfo", H.Dashboard.GetCustInfo)
+			dashboardRoutes.GET("/custinfo/:id", H.Dashboard.GetCustInfo)
 			dashboardRoutes.GET("/custprofile", H.Dashboard.GetCustProfile)
 			dashboardRoutes.GET("/custsegment", H.Dashboard.GetCustSegment)
 			dashboardRoutes.GET("/custsuggestion", H.Dashboard.GetCustSuggestion)

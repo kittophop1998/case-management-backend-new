@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -135,4 +136,16 @@ func IsEmpty(v any) bool {
 // ====== Domain Specific ======
 func UserNameCenter(user model.User) string {
 	return fmt.Sprintf("%s - %s", user.Name, user.Center.Name)
+}
+
+//
+// ====== Flatten Header ======
+//
+
+func FlattenHeader(header http.Header) map[string]string {
+	flat := make(map[string]string)
+	for k, v := range header {
+		flat[k] = strings.Join(v, ", ")
+	}
+	return flat
 }

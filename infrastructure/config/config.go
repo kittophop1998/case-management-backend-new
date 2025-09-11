@@ -14,9 +14,10 @@ type Config struct {
 	Server             ServerConfig       `yaml:"server"`
 	Database           DatabaseConfig     `yaml:"database"`
 	Services           ServicesConfig     `yaml:"services"`
-	ConnectorAPIConfig ConnectorAPIConfig `json:"connector_api"`
-	Headers            Headers            `json:"headers"`
+	ConnectorAPIConfig ConnectorAPIConfig `yaml:"connector_api"`
+	Headers            Headers            `yaml:"headers"`
 	Isilon             IsilonConfig       `yaml:"isilon"`
+	TDAPIConfig        TDAPIConfig        `yaml:"td_api"`
 }
 
 type AppConfig struct {
@@ -44,6 +45,10 @@ type ServicesConfig struct {
 }
 
 type ConnectorAPIConfig struct {
+	BaseURL string `yaml:"base_url"`
+}
+
+type TDAPIConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 

@@ -13,7 +13,7 @@ import (
 func SetupRoutes(
 	router *gin.Engine,
 ) {
-	router.GET("/health", func(ctx *gin.Context) {
+	router.GET("/healthz", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"status": "ok"})
 	})
 
@@ -77,10 +77,10 @@ func SetupRoutes(
 		dashboardRoutes := apiV1.Group("/dashboard")
 		dashboardRoutes.Use(handler.ValidateToken())
 		{
-			dashboardRoutes.GET("/custinfo/:aeon_id", H.Dashboard.GetCustInfo)
-			dashboardRoutes.GET("/custprofile/:id", H.Dashboard.GetCustProfile)
-			dashboardRoutes.GET("/custsegment/:id", H.Dashboard.GetCustSegment)
-			dashboardRoutes.GET("/custsuggestion/:id", H.Dashboard.GetCustSuggestion)
+			dashboardRoutes.GET("/custinfo", H.Dashboard.GetCustInfo)
+			dashboardRoutes.GET("/custprofile", H.Dashboard.GetCustProfile)
+			dashboardRoutes.GET("/custsegment", H.Dashboard.GetCustSegment)
+			dashboardRoutes.GET("/custsuggestion", H.Dashboard.GetCustSuggestion)
 		}
 
 		queueRoutes := apiV1.Group("/queues")

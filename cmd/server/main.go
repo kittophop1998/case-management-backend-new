@@ -33,6 +33,12 @@ import (
 func main() {
 	_ = godotenv.Load()
 	env := os.Getenv("ENV_NAME")
+	log.Println("Environment: " + env)
+
+	if env == "" {
+		env = "sit"
+	}
+
 	cfg, err := config.Load(env)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to load configuration: %v", err)

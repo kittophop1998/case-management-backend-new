@@ -5,6 +5,10 @@ import (
 	"case-management/infrastructure/lib"
 	"case-management/internal/app/usecase"
 	"case-management/internal/domain/model"
+	"case-management/utils"
+	"context"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,115 +20,146 @@ type DashboardHandler struct {
 }
 
 func (h *DashboardHandler) GetCustInfo(ctx *gin.Context) {
-	id := ctx.Param("aeon_id")
+	log.Println("[Handler] => Entering GetCustInfo")
 
-	// reqID := ctx.GetHeader("X-Request-ID")
-
-	// c := context.WithValue(ctx.Request.Context(), utils.CtxKeyApisKey, h.Config.Headers.ApiKey)
-	// c = context.WithValue(c, utils.CtxKeyApiLang, h.Config.Headers.ApiLanguage)
-	// c = context.WithValue(c, utils.CtxKeyDeviceOS, h.Config.Headers.ApiDeviceOS)
-	// c = context.WithValue(c, utils.CtxKeyChannel, h.Config.Headers.ApiChannel)
-	// c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
-
-	// _, err := h.UseCase.CustInfo(c, id)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
-
-	// lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
-
-	// lib.HandleResponse(ctx, http.StatusOK, mock)
-
-	//TODO: Remove this mock when API is ready
-	if id == "1234" {
-		mock := &model.GetCustInfoResponse{
-			NationalID:      "1234",
-			CustomerNameEng: "Jane Doe",
-			CustomerNameTH:  "เจน โด",
-			MobileNO:        "0812345678",
-			MailToAddress:   "123/45 หมู่บ้านสุขสันต์ ถ.สุขสวัสดิ์ แขวงบางปะกอก เขตราษฎร์บูรณะ กทม. 10140",
-			MailTo:          "Jane Doe",
-		}
-		lib.HandleResponse(ctx, http.StatusOK, mock)
+	var req model.ConnectorCustomerInfoRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		log.Println("[Handler] => Failed to bind JSON:", err)
+		lib.HandleError(ctx, fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
-	lib.HandleError(ctx, lib.NotFound.WithDetails("Customer not found"))
+	cfg, err := config.Load("sit")
+	if err != nil {
+		lib.HandleError(ctx, fmt.Errorf("internal server error"))
+		return
+	}
+
+	// เตรียม context.Context พร้อมค่าต่างๆ
+	c := ctx.Request.Context()
+	c = context.WithValue(c, utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+
+	reqID := ctx.GetHeader("X-Request-ID")
+	if reqID != "" {
+		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+	}
+
+	resp, err := h.UseCase.CustInfo(c, ctx, req)
+	if err != nil {
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }
 
 func (h *DashboardHandler) GetCustProfile(ctx *gin.Context) {
-	// id := ctx.Param("id")
-	// customer, err := h.UseCase.CustProfile(ctx, id)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
+	log.Println("[Handler] => Entering GetCustProfile")
 
-	customerMock := &model.GetCustProfileResponse{
-		LastCardApplyDate:             "25 Aug 2023",
-		CustomerSentiment:             "",
-		PhoneNoLastUpdateDate:         "01 Aug 2024",
-		LastIncreaseCreditLimitUpdate: "",
-		LastReduceCreditLimitUpdate:   "",
-		LastIncomeUpdate:              "29 Aug 2023",
-		SuggestedAction:               "Update salary slip",
-		TypeOfJob:                     "PRIVATE COMPANY",
-		MaritalStatus:                 "Single",
-		Gender:                        "Female",
-		LastEStatementSentDate:        "",
-		EStatementSentStatus:          "",
-		StatementChannel:              "Paper",
-		ConsentForDisclose:            "Incomplete",
-		BlockMedia:                    "No blocked",
-		ConsentForCollectUse:          "Incomplete",
+	aeonId := ctx.Query("aeon_id")
+	if aeonId == "" {
+		lib.HandleError(ctx, fmt.Errorf("missing aeon_id parameter"))
+		return
 	}
-	lib.HandleResponse(ctx, http.StatusOK, customerMock)
+
+	cfg, err := config.Load("sit")
+	if err != nil {
+		lib.HandleError(ctx, fmt.Errorf("internal server error"))
+		return
+	}
+
+	c := ctx.Request.Context()
+	c = context.WithValue(c, utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+
+	reqID := ctx.GetHeader("X-Request-ID")
+	if reqID != "" {
+		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+	}
+
+	resp, err := h.UseCase.CustProfile(c, ctx, aeonId)
+	if err != nil {
+		log.Println("[Handler] Error from UseCase:", err)
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }
 
 func (h *DashboardHandler) GetCustSegment(ctx *gin.Context) {
-	// id := ctx.Param("id")
-	// customer, err := h.UseCase.CustSegment(ctx, id)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
+	log.Println("[Handler] => Entering GetCustSegment")
 
-	customerMock := &model.GetCustSegmentResponse{
-		Sweetheart:      "",
-		ComplaintLevel:  "Complaint Level: ",
-		CustomerGroup:   "NORMAL",
-		ComplaintGroup:  "",
-		CustomerType:    "MD",
-		MemberStatus:    "BAD CREDIT",
-		CustomerSegment: "Existing Customer - Active",
-		UpdateData:      "01 Jan 0001",
+	aeonId := ctx.Query("aeon_id")
+	if aeonId == "" {
+		lib.HandleError(ctx, fmt.Errorf("missing aeon_id parameter"))
+		return
 	}
-	lib.HandleResponse(ctx, http.StatusOK, customerMock)
+
+	cfg, err := config.Load("sit")
+	if err != nil {
+		lib.HandleError(ctx, fmt.Errorf("internal server error"))
+		return
+	}
+
+	c := ctx.Request.Context()
+	c = context.WithValue(c, utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+
+	reqID := ctx.GetHeader("X-Request-ID")
+	if reqID != "" {
+		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+	}
+
+	resp, err := h.UseCase.CustSegment(c, ctx, aeonId)
+	if err != nil {
+		log.Println("[Handler] Error from UseCase:", err)
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }
 
 func (h *DashboardHandler) GetCustSuggestion(ctx *gin.Context) {
-	// id := ctx.Param("id")
-	// customer, err := h.UseCase.CustSuggestion(ctx, id)
-	// if err != nil {
-	// 	lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
-	// 	return
-	// }
+	log.Println("[Handler] => Entering GetCustSuggestion")
 
-	customerMock := model.GetCustSuggestionResponse{
-		SuggestCards: []string{"No suggestion"},
-		SuggestPromotions: []model.GetCustSuggestionPromotionResponse{
-			{
-				PromotionCode:            "P24099EEBE",
-				PromotionName:            "BIC CAMERA Coupon with Aeon Credit Card",
-				PromotionDetails:         "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-				Action:                   "Apply",
-				PromotionResultTimestamp: "10 Feb 2025, 16.07",
-				Period:                   "4 Sep 2024 - 31 Aug 2025",
-				EligibleCard:             []string{"BIG C WORLD MASTERCARD"},
-			},
-		},
+	aeonId := ctx.Query("aeon_id")
+	if aeonId == "" {
+		lib.HandleError(ctx, fmt.Errorf("missing aeon_id parameter"))
+		return
 	}
 
-	lib.HandleResponse(ctx, http.StatusOK, customerMock)
+	cfg, err := config.Load("sit")
+	if err != nil {
+		lib.HandleError(ctx, fmt.Errorf("internal server error"))
+		return
+	}
+
+	c := ctx.Request.Context()
+	c = context.WithValue(c, utils.CtxKeyApisKey, cfg.Headers.ApiKey)
+	c = context.WithValue(c, utils.CtxKeyApiLang, cfg.Headers.ApiLanguage)
+	c = context.WithValue(c, utils.CtxKeyDeviceOS, cfg.Headers.ApiDeviceOS)
+	c = context.WithValue(c, utils.CtxKeyChannel, cfg.Headers.ApiChannel)
+
+	reqID := ctx.GetHeader("X-Request-ID")
+	if reqID != "" {
+		c = context.WithValue(c, utils.CtxKeyRequestID, reqID)
+	}
+
+	resp, err := h.UseCase.CustSuggestion(c, ctx, aeonId)
+	if err != nil {
+		log.Println("[Handler] Error from UseCase:", err)
+		lib.HandleError(ctx, lib.BadRequest.WithDetails(err.Error()))
+		return
+	}
+
+	lib.HandleResponse(ctx, http.StatusOK, resp)
 }

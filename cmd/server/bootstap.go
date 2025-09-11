@@ -65,7 +65,7 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	caseRepo := database.NewCasePg(db)
 	caseUsecase := usecase.NewCaseUseCase(caseRepo)
 	updaters := map[string]updatecaseupdater.CaseUpdater{
-		"Change Info": updatecaseupdater.NewChangeCustomerInfoUpdater(caseRepo),
+		"ChangeCustomerInfo": updatecaseupdater.NewChangeCustomerInfoUpdater(caseRepo),
 	}
 	updateCaseUsecase := usecase.NewUpdateCaseUseCase(updaters)
 
@@ -73,9 +73,15 @@ func initializeApp(cfg *config.Config, appLogger *zap.SugaredLogger) (*gin.Engin
 	customerRepo := database.NewCustomerPg(db)
 	customerUsecase := usecase.NewCustomerUseCase(customerRepo)
 
+	// Connector repository
+	connectorRepo := api.NewDashboardAPIClient(cfg)
+	tdRepo := api.NewDashboardAPIProxyClient(cfg)
+
 	// Dashboard repository
+	dashboardRepo := database.NewDashboardPg(db)
 	dashboardAPIClient := api.NewDashboardAPIClient(cfg)
-	dashboardUsecase := usecase.NewDashboardUseCase(dashboardAPIClient)
+	dashboardAPIProxyClient := api.NewDashboardAPIProxyClient(cfg)
+	dashboardUsecase := usecase.NewDashboardUseCase(dashboardRepo, dashboardAPIClient, dashboardAPIProxyClient, connectorRepo, tdRepo)
 
 	// Queue repository
 	queueRepo := database.NewQueuePg(db)

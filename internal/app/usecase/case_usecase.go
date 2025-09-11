@@ -110,8 +110,14 @@ func (uc *CaseUseCase) GetCaseByID(ctx context.Context, caseID uuid.UUID) (*mode
 }
 
 func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, caseReq *model.CreateCaseRequest) (uuid.UUID, error) {
+	// ======================================================
+	// 1) Load case status
+	// ======================================================
 	statusMap, _ := uc.repo.LoadCaseStatus(ctx)
 
+	// ======================================================
+	// 2) Parse & Validate Request
+	// ======================================================
 	caseTypeID, err := utils.ParseUUID(caseReq.CaseTypeID)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("invalid caseTypeId format: %v", err)
@@ -147,9 +153,25 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 		return uuid.Nil, fmt.Errorf("invalid dueDate format: %v", err)
 	}
 
+	// ======================================================
+	// 3) Generate Case Code & Get CaseType
+	// ======================================================
 	code, err := uc.repo.GenCaseCode(ctx)
 	if err != nil {
 		return uuid.Nil, err
+	}
+
+	caseType, err := uc.repo.GetCaseTypeByID(ctx, caseTypeID)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("caseTypeId not found")
+	}
+
+	// ======================================================
+	// 4) Prepare Case Entity
+	// ======================================================
+	var assignedToUserID *uuid.UUID
+	if caseType.Group != "Inquiry" {
+		assignedToUserID = &createdByID
 	}
 
 	caseToSave := &model.Cases{
@@ -164,7 +186,7 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 		Channel:           caseReq.Channel,
 		Description:       caseReq.CaseDescription,
 		ReasonCodeID:      reasonCodeID,
-		AssignedToUserID:  &createdByID,
+		AssignedToUserID:  assignedToUserID,
 		ProductID:         productID,
 		Priority:          caseReq.Priority,
 		StatusID:          statusMap["created"],
@@ -175,54 +197,69 @@ func (uc *CaseUseCase) CreateCase(ctx context.Context, createdByID uuid.UUID, ca
 		UpdatedBy:         createdByID,
 	}
 
+	// ======================================================
+	// 5) Save Case
+	// ======================================================
 	caseId, err := uc.repo.CreateCase(ctx, caseToSave)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	// ##### Flow add case note #####
-	content := &model.CaseNoteRequest{
-		Content: caseReq.CaseNote[0],
-	}
-	uc.AddCaseNote(ctx, createdByID, caseId, content)
-
-	// ##### Flow add disposition by case #####
-	dispositionMain := []*model.CaseDispositionMain{}
-	for _, v := range caseReq.DispositionMains {
-		dispositionMainID, err := utils.ParseUUID(v)
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid dispositionMainID format: %v", err)
+	// ======================================================
+	// 6) Extra Flow: Inquiry Case
+	// ======================================================
+	if caseType.Group == "Inquiry" {
+		// --- 6.1 Add Case Note ---
+		if len(caseReq.CaseNote) > 0 {
+			content := &model.CaseNoteRequest{
+				Content: caseReq.CaseNote[0],
+			}
+			uc.AddCaseNote(ctx, createdByID, caseId, content)
 		}
-		dispositionMain = append(dispositionMain, &model.CaseDispositionMain{
-			CaseId:            caseId,
-			DispositionMainId: dispositionMainID,
-			CreatedBy:         createdByID,
-			CreatedAt:         time.Now(),
-			UpdatedBy:         createdByID,
-			UpdatedAt:         time.Now(),
-		})
-	}
-	if err := uc.repo.CreateCaseDispositionMains(ctx, dispositionMain); err != nil {
-		return uuid.Nil, err
-	}
 
-	dispositionSub := []*model.CaseDispositionSub{}
-	for _, v := range caseReq.DispositionSubs {
-		dispositionSubID, err := utils.ParseUUID(v)
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid dispositionSubID format: %v", err)
+		// --- 6.2 Add Disposition Mains ---
+		if len(caseReq.DispositionMains) > 0 {
+			dispositionMains := make([]*model.CaseDispositionMain, 0, len(caseReq.DispositionMains))
+			for _, v := range caseReq.DispositionMains {
+				id, err := utils.ParseUUID(v)
+				if err != nil {
+					return uuid.Nil, fmt.Errorf("invalid dispositionMainID format: %v", err)
+				}
+				dispositionMains = append(dispositionMains, &model.CaseDispositionMain{
+					CaseId:            caseId,
+					DispositionMainId: id,
+					CreatedBy:         createdByID,
+					CreatedAt:         time.Now(),
+					UpdatedBy:         createdByID,
+					UpdatedAt:         time.Now(),
+				})
+			}
+			if err := uc.repo.CreateCaseDispositionMains(ctx, dispositionMains); err != nil {
+				return uuid.Nil, err
+			}
 		}
-		dispositionSub = append(dispositionSub, &model.CaseDispositionSub{
-			CaseId:           caseId,
-			DispositionSubId: dispositionSubID,
-			CreatedBy:        createdByID,
-			CreatedAt:        time.Now(),
-			UpdatedBy:        createdByID,
-			UpdatedAt:        time.Now(),
-		})
-	}
-	if err := uc.repo.CreateCaseDispositionSubs(ctx, dispositionSub); err != nil {
-		return uuid.Nil, err
+
+		// --- 6.3 Add Disposition Subs ---
+		if len(caseReq.DispositionSubs) > 0 {
+			dispositionSubs := make([]*model.CaseDispositionSub, 0, len(caseReq.DispositionSubs))
+			for _, v := range caseReq.DispositionSubs {
+				id, err := utils.ParseUUID(v)
+				if err != nil {
+					return uuid.Nil, fmt.Errorf("invalid dispositionSubID format: %v", err)
+				}
+				dispositionSubs = append(dispositionSubs, &model.CaseDispositionSub{
+					CaseId:           caseId,
+					DispositionSubId: id,
+					CreatedBy:        createdByID,
+					CreatedAt:        time.Now(),
+					UpdatedBy:        createdByID,
+					UpdatedAt:        time.Now(),
+				})
+			}
+			if err := uc.repo.CreateCaseDispositionSubs(ctx, dispositionSubs); err != nil {
+				return uuid.Nil, err
+			}
+		}
 	}
 
 	return caseId, nil

@@ -62,8 +62,18 @@ func (h *CaseHandler) GetAllCases(c *gin.Context) {
 
 	var q model.CaseQuery
 	if err := c.ShouldBindQuery(&q); err != nil {
-		lib.HandleError(c, lib.BadRequest.WithDetails("invalid query params"))
+		lib.HandleError(c, lib.BadRequest.WithDetails("Invalid query params: "+err.Error()))
 		return
+	}
+
+	var uuids []uuid.UUID
+	for _, s := range q.StatusID {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			lib.HandleError(c, lib.BadRequest.WithDetails("invalid statusId"))
+			return
+		}
+		uuids = append(uuids, id)
 	}
 
 	sort := c.DefaultQuery("sort", "created_at")
@@ -71,7 +81,7 @@ func (h *CaseHandler) GetAllCases(c *gin.Context) {
 	// compose filter
 	filter := model.CaseFilter{
 		Keyword:  q.Keyword,
-		StatusID: q.StatusID,
+		StatusID: uuids,
 		QueueID:  q.QueueID,
 		Priority: q.Priority,
 		Sort:     sort,

@@ -26,13 +26,21 @@ var (
 	ErrInternal       = errors.New("INTERNAL_SERVER_ERROR")
 )
 
-type dashboardAPIClient struct {
-	baseURL    string
+type DashboardAPIClient struct {
+	BaseURL    string
+	TDURL      string
 	httpClient *http.Client
 	cfg        *config.Config
 }
 
-func NewDashboardAPIClient(cfg *config.Config) *dashboardAPIClient {
+type DashboardAPIProxyClient struct {
+	BaseURL    string
+	TDURL      string
+	httpClient *http.Client
+	cfg        *config.Config
+}
+
+func NewDashboardAPIClient(cfg *config.Config) *DashboardAPIClient {
 
 	defaultTr := http.DefaultTransport.(*http.Transport)
 	transpot := defaultTr.Clone()
@@ -43,64 +51,95 @@ func NewDashboardAPIClient(cfg *config.Config) *dashboardAPIClient {
 		Transport: transpot,
 	}
 
-	return &dashboardAPIClient{
-		baseURL:    cfg.ConnectorAPIConfig.BaseURL,
+	return &DashboardAPIClient{
+		BaseURL:    cfg.ConnectorAPIConfig.BaseURL,
+		TDURL:      cfg.TDAPIConfig.BaseURL,
 		httpClient: client,
 		cfg:        cfg,
 	}
 }
 
-func (c *dashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, aeonID string) (*model.GetCustInfoResponse, error) {
+func NewDashboardAPIProxyClient(cfg *config.Config) *DashboardAPIProxyClient {
 
-	url := fmt.Sprintf("%s/Common/GetCustomerInfo", c.baseURL)
+	defaultTr := http.DefaultTransport.(*http.Transport)
+	transpot := defaultTr.Clone()
+	transpot.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	payload := externalmodel.ConnectorGetCustomerInfoRequest{
-		UserRef: aeonID,
-		Mode:    "F",
-	}
-
-	reqBody, err := json.Marshal(payload)
+	proxyURLStr := "http://10.255.100.10:8080"
+	proxyURL, err := url.Parse(proxyURLStr)
 	if err != nil {
-		return nil, fmt.Errorf("cannot marshal request body: %w", err)
+		log.Printf("[NewDashboardAPIClient] Invalid proxy URL: %v", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, io.NopCloser(bytes.NewReader(reqBody)))
-	if err != nil {
-		return nil, fmt.Errorf("cannot create request: %w", err)
+	transpot.Proxy = http.ProxyURL(proxyURL)
+
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: transpot,
 	}
+
+	return &DashboardAPIProxyClient{
+		BaseURL:    cfg.ConnectorAPIConfig.BaseURL,
+		TDURL:      cfg.TDAPIConfig.BaseURL,
+		httpClient: client,
+		cfg:        cfg,
+	}
+}
+
+func (c *DashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, reqData model.ConnectorCustomerInfoRequest) (*model.GetCustInfoResponse, http.Header, error) {
+	url := fmt.Sprintf("%s/Api/Common/GetCustomerInfo", c.BaseURL)
+
+	reqBody, err := json.Marshal(reqData)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
 	req.Header.Set("Content-Type", "application/json")
+
+	// ใช้ SetHeadersFormContext เพื่อเซ็ต header จาก gin.Context
 	utils.SetHeadersFormContext(ctx, req, []utils.CtxKey{
 		utils.CtxKeyApisKey,
 		utils.CtxKeyApiLang,
 		utils.CtxKeyChannel,
 		utils.CtxKeyDeviceOS,
+		utils.CtxKeyRequestID, // เพิ่ม RequestID ไปด้วยถ้าจำเป็น
 	})
+
+	log.Println("[API Client] => Request Headers:")
+	for k, v := range req.Header {
+		log.Printf("  %s: %v\n", k, v)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read response: %w", err)
+		return nil, nil, fmt.Errorf("cannot read response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		var apiErr externalmodel.ConnectorErrorResponse
 		if json.Unmarshal(bodyBytes, &apiErr) == nil && apiErr.ErrorCode == "COM001" {
-			return nil, ErrBadRequest
+			return nil, nil, ErrBadRequest
 		}
-		return nil, fmt.Errorf("API returned status: %d", resp.StatusCode)
+		return nil, nil, fmt.Errorf("API returned status: %d", resp.StatusCode)
 	}
 
 	var apiResp externalmodel.ConnectorGetCustomerInfoResponse
 	if err := json.Unmarshal(bodyBytes, &apiResp); err != nil {
-		return nil, fmt.Errorf("cannot parse response: %w", err)
+		return nil, nil, fmt.Errorf("cannot parse response: %w", err)
 	}
 
 	customer := &model.GetCustInfoResponse{
@@ -122,191 +161,195 @@ func (c *dashboardAPIClient) GetCustInfoByAeonID(ctx context.Context, aeonID str
 		}
 	}
 
-	return customer, nil
+	return customer, resp.Header, nil
 }
 
 // GetCustProfileByAeonID retrieves customer profile information by Aeon ID.
-func (c *dashboardAPIClient) GetCustProfileByAeonID(ctx context.Context, aeonID string) (*model.GetCustProfileResponse, error) {
-
+func (c *DashboardAPIProxyClient) GetCustProfileByAeonID(ctx context.Context, aeonID string) (*model.GetCustProfileResponse, http.Header, error) {
 	version := "2"
 	token := "f3eedb05-f578-40c6-94c3-5a5ee60e9376,802e5979-3abf-41f5-b2b6-015af1146f03,d7743e18-320e-4647-bfcd-da0676c300e7,ef158183-1c6e-4559-82a7-4b6d629e0cf3,1861457b-8d6c-4797-9bdd-184d8ce4d01a"
 
 	url, err := c.buildURL(version, token, aeonID)
 	if err != nil {
-		return nil, err
+		log.Println("[GetCustProfileByAeonID] Failed to build URL:", err)
+		return nil, nil, err
 	}
+
+	log.Println("[GetCustProfileByAeonID] Request URL:", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
+		log.Println("[GetCustProfileByAeonID] Failed to create request:", err)
 		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("cannot create request: %w", err)
+		return nil, nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		log.Println("[GetCustProfileByAeonID] Request failed:", err)
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read response: %w", err)
-	}
-
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(bodyBytes))
+		// อ่านแค่ขนาดจำกัดของ body ในกรณี error เพื่อป้องกันใช้หน่วยความจำมากเกินไป
+		limitedBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1024*10)) // 10 KB
+		log.Printf("[GetCustProfileByAeonID] API returned status: %d, body: %s\n", resp.StatusCode, string(limitedBody))
+		return nil, nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(limitedBody))
 	}
 
-	var items []externalmodel.Item
-	if err := json.Unmarshal(bodyBytes, &items); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal API response into items array: %w", err)
+	// ใช้ json.Decoder แทนการอ่าน body ทั้งหมด
+	decoder := json.NewDecoder(resp.Body)
+
+	var items []struct {
+		Attributes map[string]string `json:"attributes"`
+	}
+
+	if err := decoder.Decode(&items); err != nil {
+		log.Println("[GetCustProfileByAeonID] Failed to decode JSON:", err)
+		return nil, nil, fmt.Errorf("cannot decode API response: %w", err)
 	}
 
 	if len(items) == 0 {
-		return nil, ErrNotFound
+		log.Println("[GetCustProfileByAeonID] No items found in response")
+		return nil, nil, ErrNotFound
 	}
 
-	// Initialize a new customer profile response object
-	var custprofile model.GetCustProfileResponse
-
-	profilesMap := make(map[string]externalmodel.Profile)
+	respData := &model.GetCustProfileResponse{}
 
 	for _, item := range items {
-		if len(item.Attributes) == 0 || string(item.Attributes) == "{}" {
-			continue
+		attrs := item.Attributes
+
+		// เอาข้อมูลจาก attributes มาแมปใส่ struct ทีละฟิลด์
+		if v, ok := attrs["last_card_apply_date"]; ok {
+			respData.LastCardApplyDate = v
+		}
+		if v, ok := attrs["customer_sentiment"]; ok {
+			respData.CustomerSentiment = v
+		}
+		if v, ok := attrs["phone_no_last_update_date"]; ok {
+			respData.PhoneNoLastUpdateDate = v
+		}
+		if v, ok := attrs["last_increase_credit_limit_update"]; ok {
+			respData.LastIncreaseCreditLimitUpdate = v
+		}
+		if v, ok := attrs["last_reduce_credit_limit_update"]; ok {
+			respData.LastReduceCreditLimitUpdate = v
+		}
+		if v, ok := attrs["last_income_update"]; ok {
+			respData.LastIncomeUpdate = v
+		}
+		if v, ok := attrs["suggested_action"]; ok {
+			respData.SuggestedAction = v
+		}
+		if v, ok := attrs["type_of_job"]; ok {
+			respData.TypeOfJob = v
+		}
+		if v, ok := attrs["marital_status"]; ok {
+			respData.MaritalStatus = v
+		}
+		if v, ok := attrs["gender"]; ok {
+			respData.Gender = v
+		}
+		if v, ok := attrs["last_e_statement_sent_date"]; ok {
+			respData.LastEStatementSentDate = v
+		}
+		if v, ok := attrs["e_statement_sent_status"]; ok {
+			respData.EStatementSentStatus = v
+		}
+		if v, ok := attrs["statement_channel"]; ok {
+			respData.StatementChannel = v
+		}
+		if v, ok := attrs["consent_for_disclose"]; ok {
+			respData.ConsentForDisclose = v
+		}
+		if v, ok := attrs["block_media"]; ok {
+			respData.BlockMedia = v
+		}
+		if v, ok := attrs["consent_for_collect_use"]; ok {
+			respData.ConsentForCollectUse = v
 		}
 
-		// Unmarshal based on the profile type
-		switch item.Key.AeonID {
-		case "profile1":
-			var profile externalmodel.Profile1Response
-			if err := json.Unmarshal(item.Attributes, &profile); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal Profile1: %w", err)
-			}
-			profilesMap["profile1"] = profile
-		case "profile2":
-			var profile externalmodel.Profile2Response
-			if err := json.Unmarshal(item.Attributes, &profile); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal Profile2: %w", err)
-			}
-			profilesMap["profile2"] = profile
-		case "profile3":
-			var profile externalmodel.Profile3Response
-			if err := json.Unmarshal(item.Attributes, &profile); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal Profile3: %w", err)
-			}
-			profilesMap["profile3"] = profile
-		case "profile4":
-			var profile externalmodel.Profile4Response
-			if err := json.Unmarshal(item.Attributes, &profile); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal Profile4: %w", err)
-			}
-			profilesMap["profile4"] = profile
-		case "profile5":
-			var profile externalmodel.Profile5Response
-			if err := json.Unmarshal(item.Attributes, &profile); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal Profile5: %w", err)
-			}
-			profilesMap["profile5"] = profile
+		// อื่น ๆ เช่น payment_status, day_past_due, last_overdue_date
+		if v, ok := attrs["payment_status"]; ok {
+			respData.PaymentStatus = v
+		}
+		if v, ok := attrs["day_past_due"]; ok {
+			respData.DayPastDue = v
+		}
+		if v, ok := attrs["last_overdue_date"]; ok {
+			respData.LastOverdueDate = v
 		}
 	}
 
-	// Assign the unmarshaled data to the final response struct
-	if p1, ok := profilesMap["profile1"].(externalmodel.Profile1Response); ok {
-		custprofile.LastCardApplyDate = formatDateIfValid(p1.LastCardApplyDate)
-		custprofile.PhoneNoLastUpdateDate = formatDateIfValid(p1.PhoneNoLastUpdateDate)
-	}
+	log.Println("[GetCustProfileByAeonID] Successfully built profile response")
 
-	if p2, ok := profilesMap["profile2"].(externalmodel.Profile2Response); ok {
-		custprofile.Gender = p2.Gender
-		custprofile.MaritalStatus = p2.MaritalStatus
-		custprofile.TypeOfJob = p2.TypeOfJob
-	}
-
-	if p3, ok := profilesMap["profile3"].(externalmodel.Profile3Response); ok {
-		custprofile.LastIncreaseCreditLimitUpdate = formatDateIfValid(p3.LastIncreaseCreditLimitUpdate)
-		custprofile.LastIncomeUpdate = formatDateIfValid(p3.LastIncomeUpdate)
-		custprofile.LastReduceCreditLimitUpdate = formatDateIfValid(p3.LastReduceCreditLimitUpdate)
-		custprofile.SuggestedAction = p3.SuggestedAction
-	}
-
-	if p4, ok := profilesMap["profile4"].(externalmodel.Profile4Response); ok {
-		custprofile.LastEStatementSentDate = formatDateIfValid(p4.LastEStatementSentDate)
-		custprofile.EStatementSentStatus = p4.EStatementSentStatus
-		custprofile.StatementChannel = p4.StatementChannel
-	}
-
-	if p5, ok := profilesMap["profile5"].(externalmodel.Profile5Response); ok {
-		custprofile.ConsentForCollectUse = p5.ConsentForCollectUse
-		custprofile.BlockMedia = p5.BlockMedia
-		custprofile.ConsentForDisclose = p5.ConsentForDisclose
-	}
-
-	return &custprofile, nil
+	return respData, resp.Header, nil
 }
 
 // GetCustSegmentByAeonID retrieves customer segment information by Aeon ID.
-func (c *dashboardAPIClient) GetCustSegmentByAeonID(ctx context.Context, aeonID string) (*model.GetCustSegmentResponse, error) {
+func (c *DashboardAPIProxyClient) GetCustSegmentByAeonID(ctx context.Context, aeonID string) (*model.GetCustSegmentResponse, http.Header, error) {
 
 	version := "2"
 	token := "0fc5ded4-4b84-40f3-83e5-9711310a87df,9b6245ff-a10e-4e49-b039-e43039c5c1d3"
 
 	url, err := c.buildURL(version, token, aeonID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	log.Println("Path URL : ", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("cannot create request: %w", err)
+		return nil, nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read response: %w", err)
+		return nil, nil, fmt.Errorf("cannot read response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(bodyBytes))
+		return nil, nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var items []externalmodel.Item
 	if err := json.Unmarshal(bodyBytes, &items); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal API response into items array: %w", err)
+		return nil, nil, fmt.Errorf("cannot unmarshal API response into items array: %w", err)
 	}
 
 	if len(items) < 2 || len(items[0].Attributes) == 0 || len(items[1].Attributes) == 0 {
-		return nil, ErrNotFound
+		return nil, nil, ErrNotFound
 	}
 
 	var attr1 externalmodel.Attributes
 	if err := json.Unmarshal(items[0].Attributes, &attr1); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal first attributes: %w", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal first attributes: %w", err)
 	}
 
 	var attr2 externalmodel.Attributes
 	if err := json.Unmarshal(items[1].Attributes, &attr2); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal second attributes: %w", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal second attributes: %w", err)
 	}
 
-	// Map the unmarshaled data to the final response struct with a more compact syntax.
 	custsegment := &model.GetCustSegmentResponse{
 		Sweetheart:      attr1.SweetheartCustomerGroupFlag,
 		CustomerType:    attr2.CustomerType,
@@ -330,69 +373,69 @@ func (c *dashboardAPIClient) GetCustSegmentByAeonID(ctx context.Context, aeonID 
 	}
 
 	// ComplaintGroup
-	if strings.TrimSpace(attr2.ComplaintTopic) != "" {
-		custsegment.ComplaintGroup = attr2.ComplaintGroup + " (" + attr2.ComplaintTopic + ")"
+	if strings.TrimSpace(attr1.VvipCustomerPosition) != "" {
+		custsegment.ComplaintGroup = attr1.VvipCustomerGroupFlag + " - " + attr1.VvipCustomerPosition
 	} else {
-		custsegment.ComplaintGroup = attr2.ComplaintGroup
+		custsegment.ComplaintGroup = attr1.VvipCustomerGroupFlag
 	}
 
-	return custsegment, nil
+	return custsegment, resp.Header, nil
 }
 
 // GetCustSuggestionByAeonID retrieves customer suggestions by Aeon ID.
-func (c *dashboardAPIClient) GetCustSuggestionByAeonID(ctx context.Context, aeonID string) (*model.GetCustSuggestionResponse, error) {
+func (c *DashboardAPIProxyClient) GetCustSuggestionByAeonID(ctx context.Context, aeonID string) (*model.GetCustSuggestionResponse, http.Header, error) {
 
 	version := "2"
 	token := "51fb37b4-618e-4c66-8f15-9177e7f646d3,4071bc51-4dbb-449f-9d71-f929936fed1b"
 
 	url, err := c.buildURL(version, token, aeonID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("cannot create request: %w", err)
+		return nil, nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, ErrRequestTimeout
+			return nil, nil, ErrRequestTimeout
 		}
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read response: %w", err)
+		return nil, nil, fmt.Errorf("cannot read response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(bodyBytes))
+		return nil, nil, fmt.Errorf("API returned status: %d, response body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var items []externalmodel.Item
 	if err := json.Unmarshal(bodyBytes, &items); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal API response into items array: %w", err)
+		return nil, nil, fmt.Errorf("cannot unmarshal API response into items array: %w", err)
 	}
 
 	if len(items) < 2 || len(items[0].Attributes) == 0 || len(items[1].Attributes) == 0 {
-		return nil, ErrNotFound
+		return nil, nil, ErrNotFound
 	}
 
 	var attr1 externalmodel.Attributes
 	if err := json.Unmarshal(items[0].Attributes, &attr1); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal first attributes: %w", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal first attributes: %w", err)
 	}
 
 	var attr2 externalmodel.Attributes
 	if err := json.Unmarshal(items[1].Attributes, &attr2); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal second attributes: %w", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal second attributes: %w", err)
 	}
 
 	// Initialize the final response object.
@@ -433,23 +476,21 @@ func (c *dashboardAPIClient) GetCustSuggestionByAeonID(ctx context.Context, aeon
 		suggestion.SuggestPromotions = append(suggestion.SuggestPromotions, promotion)
 	}
 
-	return suggestion, nil
+	return suggestion, resp.Header, nil
 }
 
 // buildURL creates the complete API URL with all necessary query parameters
-func (c *dashboardAPIClient) buildURL(version, token, aeonID string) (string, error) {
-	u, err := url.Parse(c.baseURL)
+func (c *DashboardAPIProxyClient) buildURL(version, token, aeonID string) (string, error) {
+	baseURL, err := url.Parse(c.TDURL)
 	if err != nil {
 		return "", fmt.Errorf("invalid base URL: %w", err)
 	}
 
-	queryParams := u.Query()
-	queryParams.Set("version", version)
-	queryParams.Set("token", token)
-	queryParams.Set("key.aeon_id", aeonID)
-	u.RawQuery = queryParams.Encode()
+	query := fmt.Sprintf("version=%s&token=%s&key.aeon_id=%s", version, token, aeonID)
 
-	return u.String(), nil
+	fullURL := fmt.Sprintf("%s?%s", baseURL, query)
+	return fullURL, nil
+
 }
 
 func trimMobilePrefix(mobile string) string {

@@ -28,6 +28,11 @@ func (uc *CaseUseCase) GetAllCases(ctx context.Context, page, limit int, filter 
 
 	caseResponses := make([]*model.CaseResponse, 0, len(caseRepo))
 	for _, c := range caseRepo {
+		var currentUser string
+		if c.AssignedToUser != nil {
+			currentUser = utils.UserNameCenter(*c.AssignedToUser)
+		}
+
 		caseResponses = append(caseResponses, &model.CaseResponse{
 			Code:         c.Code,
 			CustomerID:   c.CustomerID,
@@ -35,7 +40,7 @@ func (uc *CaseUseCase) GetAllCases(ctx context.Context, page, limit int, filter 
 			Status:       c.Status.Name,
 			CaseType:     c.CaseType.Name,
 			CurrentQueue: c.Queue.Name,
-			CurrentUser:  utils.UserNameCenter(*c.AssignedToUser),
+			CurrentUser:  currentUser,
 			SLADate:      utils.FormatDate(&c.EndDate, "2006-01-02 15:04"),
 			CaseID:       c.ID.String(),
 			AeonID:       c.AeonID,
